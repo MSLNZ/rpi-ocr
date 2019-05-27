@@ -43,6 +43,9 @@ class CameraClient(LinkedClient):
     def configure(self, image=None):
         # pop up GUI -> dict of parameters to pass to self.ocr
         gui = Gui(self)
-        gui.set_image(image)
+        if image is None:
+            gui.stream()
+        else:
+            gui.set_image(image)
         gui.show()
         return gui.ocr_params

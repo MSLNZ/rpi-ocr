@@ -65,7 +65,7 @@ class Gui(object):
         self._crop_history.append((0, 0, width, length))
 
     def stream(self):
-        animation.FuncAnimation(self.current_ax, self._client.capture(), 25, interval=50)
+        self._ani = animation.FuncAnimation(self.fig, self.stream_plot, frames=25, interval=50)
 
     def show(self):
         # Define events for button, sliders and rectangle selector
@@ -171,6 +171,9 @@ class Gui(object):
         self.ocr_params['Dilation'] = self.s_dilation.val
         self.ocr_params['Language'] = self.choose_ocr.value_selected
         plt.close(self.fig)
+
+    def stream_plot(self, *args):
+        self._image_plt = self.current_ax.imshow(to_cv2(self._client.capture()), cmap='Greys_r')
 
 
 class KeyPressHandler(object):
