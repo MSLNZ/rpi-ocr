@@ -3,15 +3,6 @@ import platform
 from distutils.cmd import Command
 from setuptools import setup
 
-install_requires = ['msl-network>=0.4', 'opencv-python', 'pillow', 'numpy', 'pytesseract']
-
-on_rpi = platform.machine().startswith('arm')
-if not on_rpi:
-    install_requires.append('matplotlib')
-else:
-    install_requires.append('picamera')
-    install_requires.append('pytesseract')
-
 
 class ApiDocs(Command):
     """
@@ -91,10 +82,25 @@ testing = {'test', 'tests', 'pytest'}.intersection(sys.argv)
 pytest_runner = ['pytest-runner'] if testing else []
 tests_require = ['pytest', 'pytest-cov']
 
+install_requires = ['msl-network>=0.4', 'opencv-python', 'pillow']
+
+on_rpi = platform.machine().startswith('arm')
+if on_rpi:
+    install_requires.extend([
+        'picamera',
+        'pytesseract'
+    ])
+else:
+    install_requires.extend([
+        'msl-qt @ https://github.com/MSLNZ/msl-qt/archive/master.tar.gz',
+        'pyqtgraph',
+    ])
+
+
 setup(
-    name='rpi_ocr',
+    name='ocr',
     version='0.1.0.dev0',
-    author='Measurement Standard Laboratory of New Zealand',
+    author='Measurement Standards Laboratory of New Zealand',
     author_email='info@measurement.govt.nz',
     url='https://github.com/MSLNZ/rpi-ocr',
     description='Performs OCR with a Raspberry Pi',
@@ -104,7 +110,6 @@ setup(
         'Development Status :: 4 - Beta',
         'Environment :: Console',
         'License :: OSI Approved :: MIT License',
-        'Operating System :: Linux',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
@@ -113,10 +118,10 @@ setup(
     setup_requires=sphinx + pytest_runner,
     tests_require=tests_require,
     install_requires=install_requires,
-    packages=['rpi_ocr'],
+    packages=['ocr'],
     entry_points={
         'console_scripts': [
-            'rpi-ocr = rpi_ocr:start_service_on_rpi',
+            'ocr = ocr:start_service_on_rpi',
         ],
     },
 )
