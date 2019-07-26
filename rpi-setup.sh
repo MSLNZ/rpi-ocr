@@ -1,17 +1,7 @@
 #!/bin/bash
 
 # install prerequisites
-sudo apt update
-sudo apt upgrade -y
-sudo apt install python3-venv libffi-dev libssl-dev build-essential libimlib2 libimlib2-dev automake libtool libleptonica-dev make pkg-config libicu-dev libpango1.0-dev libcairo2-dev -y
-
-# create a python virtual environment and install rpi-ocr
-python3 -m venv ocrenv
-source ocrenv/bin/activate
-pip install --upgrade pip
-pip install --upgrade setuptools
-pip install https://github.com/MSLNZ/rpi-ocr/archive/master.tar.gz
-deactivate
+sudo apt install python3-venv libffi-dev libssl-dev build-essential libimlib2 libimlib2-dev automake libtool libleptonica-dev make pkg-config libicu-dev libpango1.0-dev libcairo2-dev libatlas-base-dev -y
 
 # build tesseract with training tools
 git clone https://github.com/tesseract-ocr/tesseract.git
@@ -52,3 +42,11 @@ rm -rf ssocr/
 rm six_digits.png
 rm sample2.36f8074c5273.jpg
 rm out.txt
+
+# create a python virtual environment and install rpi-ocr
+python3 -m venv ocrenv
+source ocrenv/bin/activate
+pip install --upgrade pip
+pip install --upgrade setuptools
+pip install https://github.com/MSLNZ/rpi-ocr/archive/master.tar.gz
+deactivate
