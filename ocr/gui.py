@@ -14,18 +14,26 @@ if not platform.machine().startswith('arm'):
         application,
         excepthook,
         prompt,
+        Thread,
+        Worker
     )
+else:
+    Thread = object
+    Worker = object
+
+    class QtWidgets(object):
+        QWidget = object
 
 from .ocr import ocr, process
 from . import utils
 
 
-def configure(client=None, **kwargs):
+def configure(client, **kwargs):
     """Create a Qt application to interact with the image and the OCR algorithm.
 
     Parameters
     ----------
-    client : :class:`~ocr.client.OCRClient`, optional
+    client : :class:`~ocr.client.OCRClient`
         The client that is connected to the Raspberry Pi.
     kwargs
         All key-value pairs are passed to the :class:`Gui`.
@@ -46,14 +54,12 @@ def configure(client=None, **kwargs):
 class Gui(QtWidgets.QWidget):
 
     def __init__(self, client, **kwargs):
-        super().__init__()
-        self.setAcceptDrops(True)
-        self.setWindowTitle('OCR')
-
+        super(Gui, self).__init__()
         self.path = kwargs.pop('path', None)
         self.client = client
         self.original_image = None
         self.delta = 0.01  # the amount to translate image on UP DOWN LEFT RIGHT key presses
+        self.client_queue = {}  # a queue of requests to send to the RPi
 
         zoom = kwargs.get('zoom')
         if zoom:
@@ -196,14 +202,16 @@ class Gui(QtWidgets.QWidget):
         self.iso_combobox.setCurrentText(iso)
         self.update_iso(self.iso_combobox.currentText())
         self.iso_combobox.currentTextChanged.connect(self.update_iso)
+        self.iso_combobox.setEnabled(not self.path)
 
         # resolution
         self.resolution_combobox = QtWidgets.QComboBox()
         self.resolution_combobox.setToolTip('The resolution of the camera')
         self.resolution_combobox.addItems(['VGA', 'SVGA', 'XGA', '720p', 'SXGA', 'UXGA', '1080p', 'MAX'])
-        self.resolution_combobox.setCurrentText(str(kwargs.pop('resolution', '720p')))
+        self.resolution_combobox.setCurrentText(str(kwargs.pop('resolution', 'VGA')))
         self.update_resolution(self.resolution_combobox.currentText())
         self.resolution_combobox.currentTextChanged.connect(self.update_resolution)
+        self.resolution_combobox.setEnabled(not self.path)
 
         # exposure mode
         self.exposure_mode_combobox = QtWidgets.QComboBox()
@@ -214,6 +222,7 @@ class Gui(QtWidgets.QWidget):
         self.exposure_mode_combobox.setCurrentText(str(kwargs.pop('exposure_mode', 'auto')))
         self.update_exposure_mode(self.exposure_mode_combobox.currentText())
         self.exposure_mode_combobox.currentTextChanged.connect(self.update_exposure_mode)
+        self.exposure_mode_combobox.setEnabled(not self.path)
 
         camera_layout = QtWidgets.QGridLayout()
         camera_layout.addWidget(QtWidgets.QLabel('ISO'), 0, 0)
@@ -269,12 +278,24 @@ class Gui(QtWidgets.QWidget):
         layout.addLayout(options_layout)
         self.setLayout(layout)
 
-        self.original_image = utils.to_cv2(self.path)
-
-        try:  # could pass in an already-opened image object (which isn't a path)
-            self.setWindowTitle('OCR || ' + os.path.basename(self.path))
-        except OSError:
-            pass
+        if self.path:
+            self.setAcceptDrops(True)
+            self.capture_thread = None
+            self.original_image = utils.to_cv2(self.path)
+            height, width = self.original_image.shape[:2]
+            try:  # could pass in an already-opened image object (which isn't a path)
+                basename = os.path.basename(self.path)
+            except OSError:
+                basename = 'UNKNOWN'
+            self.setWindowTitle('OCR || {} [{} x {}]'.format(basename, width, height))
+        else:
+            self.setAcceptDrops(False)
+            self.original_image = None
+            self.capture_index = 0
+            self.setWindowTitle('OCR || Capture 0')
+            self.capture_thread = Capture()
+            self.capture_thread.add_callback(self.capture)
+            self.capture_thread.start(self.client)
 
         self.apply_ocr()
 
@@ -296,8 +317,7 @@ class Gui(QtWidgets.QWidget):
             io.prompt.critical(e)
         else:
             self.setWindowTitle('OCR || ' + os.path.basename(self.path))
-            self.zoom_history.clear()
-            self.apply_ocr()
+            self.append_zoom(None, None, None, None)
 
     def keyPressEvent(self, event):
         """Override the keyPressEvent method of a QWidget."""
@@ -308,10 +328,9 @@ class Gui(QtWidgets.QWidget):
                 pass  # tried to pop from an empty list
             else:
                 if self.zoom_history:
-                    self.ocr_params['zoom'] = self.zoom_history[-1]
+                    self.append_zoom(*self.zoom_history[-1])
                 else:
-                    self.ocr_params['zoom'] = None
-                self.apply_ocr()
+                    self.append_zoom(None, None, None, None)
 
         elif event.key() == QtCore.Qt.Key_Escape:
             self.append_zoom(None, None, None, None)
@@ -379,21 +398,28 @@ class Gui(QtWidgets.QWidget):
         if x is None:
             self.zoom_history.clear()
             self.ocr_params['zoom'] = None
+            self.client_queue['set_zoom'] = [0, 0, 1, 1]
         else:
             self.zoom_history.append((x, y, w, h))
             self.ocr_params['zoom'] = (x, y, w, h)
+            self.client_queue['set_zoom'] = [x, y, w, h]
         self.apply_ocr()
 
     def apply_ocr(self):
         if self.original_image is None:
             return
-        try:
-            text, img = ocr(self.original_image, **self.ocr_params)
-        except Exception as e:
-            msg = str(e)
-            if msg.startswith('tesseract is not installed') or msg.endswith('Call ocr.set_ssocr_path(...)'):
-                raise
-            text, img = '', process(self.original_image, **self.ocr_params)
+        # try:
+        #     text, img = ocr(self.original_image, **self.ocr_params)
+        # except Exception as e:
+        #     msg = str(e)
+        #     if msg.startswith('tesseract is not installed') or msg.endswith('Call ocr.set_ssocr_path(...)'):
+        #         raise
+        #     text, img = '', process(self.original_image, **self.ocr_params)
+        if self.client is not None:
+            zoom = self.ocr_params.pop('zoom')
+        text, img = 'Not calling OCR', process(self.original_image, **self.ocr_params)
+        if self.client is not None:
+            self.ocr_params['zoom'] = zoom
         self.ocr_label.setText(text)
         self.canvas.setImage(img)
 
@@ -461,16 +487,24 @@ class Gui(QtWidgets.QWidget):
         self.apply_ocr()
 
     def update_iso(self, value):
-        if self.client is not None:
-            self.client.set_iso(value)
+        self.client_queue['set_iso'] = value
 
     def update_resolution(self, value):
-        if self.client is not None:
-            self.client.set_resolution(value)
+        self.client_queue['set_resolution'] = value
 
     def update_exposure_mode(self, value):
-        if self.client is not None:
-            self.client.set_exposure_mode(value)
+        self.client_queue['set_exposure_mode'] = value
+
+    def capture(self):
+        self.capture_index += 1
+        self.original_image = self.capture_thread.original_image
+        height, width = self.original_image.shape[:2]
+        self.setWindowTitle('OCR || Capture {} [{} x {}]'.format(self.capture_index, width, height))
+        self.apply_ocr()
+        for k, v in self.client_queue.items():
+            getattr(self.client, k)(v)
+        self.client_queue.clear()
+        self.capture_thread.start(self.client)
 
 
 def rotate_zoom(angle, rect, width, height):
@@ -574,3 +608,20 @@ def get_intersection(a1, a2, b1, b2):
     line2 = np.cross(h[2], h[3])
     x, y, z = np.cross(line1, line2)
     return x/z, y/z
+
+
+class CaptureWorker(Worker):
+
+    def __init__(self, client):
+        super(CaptureWorker, self).__init__()
+        self.client = client
+        self.original_image = None
+
+    def process(self):
+        self.original_image = utils.to_cv2(self.client.capture())
+
+
+class Capture(Thread):
+
+    def __init__(self):
+        super(Capture, self).__init__(CaptureWorker)
