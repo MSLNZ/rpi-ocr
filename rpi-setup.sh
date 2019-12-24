@@ -28,7 +28,10 @@ cd ssocr/
 sudo make install
 cd ..
 
-# create a python virtual environment and install rpi-ocr
+# install the rpi-ocr package in a virtual environment named 'ocrenv'
+# which is located in the home directory. If you change the name of the
+# virtual environment then you must also change the value of RPI_EXE_PATH
+# in ocr/__init__.py
 python3 -m venv ocrenv
 source ocrenv/bin/activate
 pip install --upgrade pip
