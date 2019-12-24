@@ -10,7 +10,7 @@ from .utils import (
 class OCRClient(LinkedClient):
 
     def __init__(self, service_name, **kwargs):
-        super().__init__(service_name, **kwargs)
+        super(OCRClient, self).__init__(service_name, **kwargs)
 
     def configure(self, **kwargs):
         """Display a GUI to configure the OCR parameters.
@@ -50,8 +50,18 @@ class OCRClient(LinkedClient):
         Shut down the :class:`~ocr.service.OCRService` and the Network
         :class:`~msl.network.manager.Manager`.
         """
-        self.disconnect_service()
-        super().disconnect()
+        try:
+            self.wait()  # wait for all pending requests to finish before sending the disconnect request
+        except:
+            pass
+        try:
+            self.disconnect_service()
+        except:
+            pass
+        try:
+            super(OCRClient, self).disconnect()
+        except:
+            pass
 
     # make 'stop' an alias for the 'disconnect' method
     stop = disconnect
