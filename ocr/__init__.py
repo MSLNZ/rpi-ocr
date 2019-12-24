@@ -20,6 +20,10 @@ from .ocr import (
     tesseract,
 )
 
+# if you change this value then you must also update the name of the
+# virtual environment that is created in rpi-setup.sh
+RPI_EXE_PATH = 'ocrenv/bin/ocr'
+
 
 def set_ssocr_path(path):
     """Set the path to the ``ssocr`` directory.
@@ -72,7 +76,7 @@ def start_camera(*, host='raspberrypi', rpi_username='pi', rpi_password=None, ti
     :class:`OCRClient`
         A connection to the Raspberry Pi.
     """
-    console_script_path = '/home/{}/ocrenv/bin/ocr'.format(rpi_username)
+    console_script_path = '/home/{}/{}'.format(rpi_username, RPI_EXE_PATH)
     ssh.start_manager(host, console_script_path, ssh_username=rpi_username,
                       ssh_password=rpi_password, timeout=timeout, as_sudo=True, **kwargs)
 
@@ -93,3 +97,30 @@ def start_service_on_rpi():
         )
 
     manager.run_services(OCRService(), **kwargs)
+
+
+def kill_manager(*, host='raspberrypi', rpi_username='pi', rpi_password=None, timeout=10, **kwargs):
+    """Kill the Network :class:`~msl.network.manager.Manager` on the Raspberry Pi.
+
+    Parameters
+    ----------
+    host : :class:`str`, optional
+        The hostname or IP address of the Raspberry Pi.
+    rpi_username : :class:`str`, optional
+        The username for the Raspberry Pi.
+    rpi_password : :class:`str`, optional
+        The password for `rpi_username`.
+    timeout : :class:`float`, optional
+        The maximum number of seconds to wait for the connection.
+    kwargs
+        Keyword arguments that are passed to :meth:`~paramiko.client.SSHClient.connect`.
+    """
+    ssh_client = ssh.connect(host, username=rpi_username, password=rpi_password, timeout=timeout, **kwargs)
+    lines = ssh.exec_command(ssh_client, 'ps aux | grep ocr')
+    pids = [line.split()[1] for line in lines if RPI_EXE_PATH in line]
+    for pid in pids:
+        try:
+            ssh.exec_command(ssh_client, 'sudo kill -9 ' + pid)
+        except:
+            pass
+    ssh_client.close()
