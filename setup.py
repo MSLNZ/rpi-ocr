@@ -95,7 +95,7 @@ sphinx = ['sphinx', 'sphinx_rtd_theme'] + install_requires if needs_sphinx else 
 
 testing = {'test', 'tests', 'pytest'}.intersection(sys.argv)
 pytest_runner = ['pytest-runner'] if testing else []
-tests_require = ['pytest', 'pytest-cov', 'matplotlib']
+tests_require = ['pytest', 'pytest-cov', 'matplotlib', 'pytesseract']
 
 setup(
     name='ocr',
