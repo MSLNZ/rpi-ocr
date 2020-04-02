@@ -55,7 +55,7 @@ class OCRClient(LinkedClient):
         except:
             pass
         try:
-            self.disconnect_service()
+            self.shutdown_service()
         except:
             pass
         try:

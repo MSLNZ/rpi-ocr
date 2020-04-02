@@ -82,7 +82,7 @@ testing = {'test', 'tests', 'pytest'}.intersection(sys.argv)
 pytest_runner = ['pytest-runner'] if testing else []
 tests_require = ['pytest', 'pytest-cov']
 
-install_requires = ['msl-network>=0.4', 'opencv-python', 'pillow']
+install_requires = ['msl-network>=0.5', 'opencv-python', 'pillow']
 
 on_rpi = platform.machine().startswith('arm')
 if on_rpi:

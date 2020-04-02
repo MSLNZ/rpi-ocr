@@ -39,9 +39,8 @@ class OCRService(Service):
         self._camera.capture(buffer, DEFAULT_IMAGE_FORMAT)
         return b64encode(buffer.getvalue()).decode('utf-8')
 
-    def disconnect_service(self):
+    def shutdown_service(self):
         self._camera.close()
-        self._disconnect()
 
     def ocr(self, *, image=None, original=True, **parameters):
         """Apply the OCR algorithm using the specified parameters.
