@@ -75,13 +75,6 @@ class BuildDocs(Command):
         sys.exit(0)
 
 
-needs_sphinx = {'doc', 'docs', 'apidoc', 'apidocs', 'build_sphinx'}.intersection(sys.argv)
-sphinx = ['sphinx', 'sphinx_rtd_theme'] if needs_sphinx else []
-
-testing = {'test', 'tests', 'pytest'}.intersection(sys.argv)
-pytest_runner = ['pytest-runner'] if testing else []
-tests_require = ['pytest', 'pytest-cov']
-
 install_requires = ['msl-network>=0.5', 'opencv-python', 'pillow']
 
 on_rpi = platform.machine().startswith('arm')
@@ -96,6 +89,13 @@ else:
         'pyqtgraph',
     ])
 
+
+needs_sphinx = {'doc', 'docs', 'apidoc', 'apidocs', 'build_sphinx'}.intersection(sys.argv)
+sphinx = ['sphinx', 'sphinx_rtd_theme'] + install_requires if needs_sphinx else []
+
+testing = {'test', 'tests', 'pytest'}.intersection(sys.argv)
+pytest_runner = ['pytest-runner'] if testing else []
+tests_require = ['pytest', 'pytest-cov']
 
 setup(
     name='ocr',
