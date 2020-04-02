@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # install prerequisites
-sudo apt install python3-venv libffi-dev libssl-dev build-essential libimlib2 libimlib2-dev automake libtool libleptonica-dev make pkg-config libicu-dev libpango1.0-dev libcairo2-dev libatlas-base-dev libjasper-dev libqtgui4 libqt4-test -y
+sudo apt install python3-dev python3-venv libffi-dev libssl-dev build-essential libimlib2 libimlib2-dev automake libtool libleptonica-dev make pkg-config libicu-dev libpango1.0-dev libcairo2-dev libatlas-base-dev libjasper-dev libqtgui4 libqt4-test -y
 
 # build tesseract with training tools
 git clone https://github.com/tesseract-ocr/tesseract.git
