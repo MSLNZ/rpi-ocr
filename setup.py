@@ -95,7 +95,7 @@ sphinx = ['sphinx', 'sphinx_rtd_theme'] + install_requires if needs_sphinx else 
 
 testing = {'test', 'tests', 'pytest'}.intersection(sys.argv)
 pytest_runner = ['pytest-runner'] if testing else []
-tests_require = ['pytest', 'pytest-cov']
+tests_require = ['pytest', 'pytest-cov', 'matplotlib']
 
 setup(
     name='ocr',
@@ -103,7 +103,7 @@ setup(
     author='Measurement Standards Laboratory of New Zealand',
     author_email='info@measurement.govt.nz',
     url='https://github.com/MSLNZ/rpi-ocr',
-    description='Perform OCR with a Raspberry Pi',
+    description='Optical Character Recognition with a Raspberry Pi',
     long_description=open('README.rst').read().strip(),
     license='MIT',
     classifiers=[
