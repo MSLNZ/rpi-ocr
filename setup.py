@@ -103,7 +103,7 @@ setup(
     author='Measurement Standards Laboratory of New Zealand',
     author_email='info@measurement.govt.nz',
     url='https://github.com/MSLNZ/rpi-ocr',
-    description='Performs OCR with a Raspberry Pi',
+    description='Perform OCR with a Raspberry Pi',
     long_description=open('README.rst').read().strip(),
     license='MIT',
     classifiers=[
@@ -114,6 +114,7 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
     setup_requires=sphinx + pytest_runner,
     tests_require=tests_require,
