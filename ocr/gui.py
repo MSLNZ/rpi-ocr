@@ -1,6 +1,7 @@
 import os
 import sys
 import math
+import time
 import platform
 
 import numpy as np
@@ -60,6 +61,7 @@ class Gui(QtWidgets.QWidget):
         self.original_image = None
         self.delta = 0.01  # the amount to translate image on UP DOWN LEFT RIGHT key presses
         self.client_queue = {}  # a queue of requests to send to the RPi
+        self.close_event_occurred = False
 
         zoom = kwargs.get('zoom')
         if zoom:
@@ -294,13 +296,22 @@ class Gui(QtWidgets.QWidget):
             self.capture_index = 0
             self.setWindowTitle('OCR || Capture 0')
             self.capture_thread = Capture()
-            self.capture_thread.add_callback(self.capture)
             self.capture_thread.start(self.client)
+            self.capture_thread.finished.connect(self.capture)
 
         self.apply_ocr()
 
+    def closeEvent(self, event):
+        """Override the QWidget.closeEvent method."""
+        self.close_event_occurred = True
+        if self.capture_thread is not None:
+            self.capture_thread.stop()
+            while self.capture_thread.is_running():
+                time.sleep(0.01)
+        super(Gui, self).closeEvent(event)
+
     def dragEnterEvent(self, event):
-        """Override the dragEnterEvent method of a QWidget."""
+        """Override the QWidget.dragEnterEvent method."""
         path = io.get_drag_enter_paths(event)[0]
         ext = os.path.splitext(path)[1].lower()
         if ext in ('.jpeg', '.jpg', '.bmp', '.png'):
@@ -310,17 +321,17 @@ class Gui(QtWidgets.QWidget):
             event.ignore()
 
     def dropEvent(self, event=None):
-        """Override the dropEvent method of a QWidget."""
+        """Override the QWidget.dropEvent method."""
         try:
             self.original_image = utils.to_cv2(self.path)
         except Exception as e:
-            io.prompt.critical(e)
+            prompt.critical(e)
         else:
             self.setWindowTitle('OCR || ' + os.path.basename(self.path))
             self.append_zoom(None, None, None, None)
 
     def keyPressEvent(self, event):
-        """Override the keyPressEvent method of a QWidget."""
+        """Override the QWidget.keyPressEvent method."""
         if event.key() == (QtCore.Qt.Key_Control and QtCore.Qt.Key_Z):
             try:
                 self.zoom_history.pop()
@@ -504,7 +515,8 @@ class Gui(QtWidgets.QWidget):
         for k, v in self.client_queue.items():
             getattr(self.client, k)(v)
         self.client_queue.clear()
-        self.capture_thread.start(self.client)
+        if not self.close_event_occurred:
+            self.capture_thread.start(self.client)
 
 
 def rotate_zoom(angle, rect, width, height):
