@@ -89,12 +89,11 @@ def ssocr(image, iter_threshold=False, **ignored):
     """
     is_windows = sys.platform == 'win32'
 
-    command = ['ssocr.bat'] if is_windows else ['ssocr']
+    command = ['ssocr.exe'] if is_windows else ['ssocr']
 
+    # TODO implement all ssocr options as kwargs
     if iter_threshold:
         command.append('-T')
-
-    # TODO implement all options
 
     # TODO use a PIPE on Windows and pass this as STDIN to Cygwin's bash.exe
     #  For now, save the image to a file and let ssocr reload it

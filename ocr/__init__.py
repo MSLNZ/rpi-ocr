@@ -35,6 +35,10 @@ def set_ssocr_path(path):
     """
     if os.path.isfile(path):  # only want the directory
         path = os.path.dirname(path)
+    if not os.path.isfile(os.path.join(path, 'ssocr.exe')):
+        path = os.path.join(path, 'bin')
+        if not os.path.isfile(os.path.join(path, 'ssocr.exe')):
+            raise FileNotFoundError('The ssocr.exe executable cannot be found in the specified path')
     os.environ['PATH'] += os.pathsep + path
 
 
