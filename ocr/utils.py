@@ -3,33 +3,98 @@ Utility functions for performing image conversion and image processing.
 """
 import base64
 from io import BytesIO
+from os.path import splitext
 
 import cv2
 import numpy as np
-from PIL import (
-    Image,
-    ImageFilter,
-)
+from PIL import Image
+from PIL.Image import Image as PillowImage
+from PIL import ImageFilter
 
-DEFAULT_IMAGE_FORMAT = 'jpeg'
+DEFAULT_IMAGE_FORMAT = 'jpg'
+DEFAULT_FILE_EXTENSION = '.' + DEFAULT_IMAGE_FORMAT
+SIGNATURE_MAP = {
+    'bmp': b'BM',
+    'dib': b'BM',
+    'jpg': b'\xff\xd8\xff',
+    'jpeg': b'\xff\xd8\xff',
+    'jpe': b'\xff\xd8\xff',
+    'png': b'\x89PNG\r\n\x1a\n',
+    'tif': b'II*\x00',
+    'tiff': b'II*\x00',
+}
 
 
-def save(image, filename, params=None):
+class OpenCVImage(np.ndarray):
+    """A :class:`numpy.ndarray` that has an `ext` attribute.
+
+    The `ext` attribute represents the file extension that defines the output
+    format. It can be used by the :func:`cv2.imencode` function.
+    """
+
+    def __new__(cls, array, ext=DEFAULT_FILE_EXTENSION):
+        obj = np.asarray(array).view(cls)
+        obj.ext = ext
+        return obj
+
+    def __array_finalize__(self, obj):
+        if obj is None:
+            return
+        self.ext = getattr(obj, 'ext', DEFAULT_FILE_EXTENSION)
+
+
+def save(filename, image, params=None):
     """Save the image.
 
     Parameters
     ----------
-    image : :class:`str`, :class:`numpy.ndarray` or :class:`Image.Image`
-        The image to save.
     filename : :class:`str`
-        The name to use to save the image file. The image format is chosen
-        based on the `filename` extension.
+        The name to use to save the image file. The image format is chosen based on the filename extension
+    image : :class:`bytes`, :class:`str`, :class:`OpenCVImage` or :class:`PIL.Image.Image`
+        The image to save.
     params : :class:`tuple`, optional
-        Format-specific parameters encoded as pairs (paramId_1, paramValue_1, paramId_2, paramValue_2, ... .)
         See :func:`cv2.imwrite` for more details.
     """
     img = cv2.cvtColor(to_cv2(image), cv2.COLOR_RGB2BGR)
     cv2.imwrite(filename, img, params=params)
+
+
+def to_bytes(obj):
+    """Convert an object to the :class:`bytes` representation of the image.
+
+    Parameters
+    ----------
+    obj : :class:`bytes`, :class:`str`, :class:`OpenCVImage` or :class:`PIL.Image.Image`
+        The object to convert.
+
+    Returns
+    -------
+    :class:`bytes`
+        The image as bytes.
+    """
+    if isinstance(obj, str):
+        try:
+            with open(obj, 'rb') as fp:
+                return fp.read()
+        except OSError:
+            return base64.b64decode(obj)
+
+    if isinstance(obj, OpenCVImage):
+        bgr_image = cv2.cvtColor(obj, code=cv2.COLOR_RGB2BGR)
+        ret, buf = cv2.imencode(obj.ext, bgr_image)
+        if not ret:
+            raise RuntimeError('error calling cv2.imencode')
+        return buf.tobytes()
+
+    if isinstance(obj, PillowImage):
+        b = BytesIO()
+        obj.save(b, obj.format)
+        return b.getvalue()
+
+    if isinstance(obj, bytes):
+        return obj
+
+    raise TypeError('Cannot convert {} to bytes'.format(type(obj)))
 
 
 def to_base64(obj):
@@ -37,67 +102,55 @@ def to_base64(obj):
 
     Parameters
     ----------
-    obj : :class:`str`, :class:`numpy.ndarray` or :class:`Image.Image`
-        The object to convert to :mod:`base64`. Can be the name of a
-        file to open.
+    obj : :class:`bytes`, :class:`str`, :class:`OpenCVImage` or :class:`PIL.Image.Image`
+        The object to convert to base64.
 
     Returns
     -------
     :class:`str`
         A :mod:`base64` representation of the image.
     """
-    if isinstance(obj, str):
-        try:
-            with open(obj, 'rb') as fp:
-                byte_buffer = fp.read()
-        except OSError:  # assume img is already a base64 string
-            return obj
-
-    elif isinstance(obj, np.ndarray):
-        bgr_image = cv2.cvtColor(obj, code=cv2.COLOR_RGB2BGR)
-        _, byte_buffer = cv2.imencode('.'+DEFAULT_IMAGE_FORMAT, bgr_image)
-
-    elif isinstance(obj, Image.Image):
-        b = BytesIO()
-        obj.save(b, DEFAULT_IMAGE_FORMAT)
-        byte_buffer = b.getvalue()
-
-    else:
-        raise TypeError('Cannot convert {!r} to a base64 string'.format(obj))
-
-    return base64.b64encode(byte_buffer).decode('utf-8')
+    return base64.b64encode(to_bytes(obj)).decode('ascii')
 
 
 def to_pil(obj):
-    """Convert an object to a PIL :class:`Image.Image`.
+    """Convert an object to a Pillow :class:`~PIL.Image.Image`.
 
     Parameters
     ----------
-    obj : :class:`str`, :class:`numpy.ndarray` or :class:`Image.Image`
-        The object to convert to an :class:`Image.Image`.
+    obj : :class:`bytes`, :class:`str`, :class:`OpenCVImage` or :class:`PIL.Image.Image`
+        The object to convert to a Pillow image.
 
     Returns
     -------
-    :class:`Image.Image`
-        A PIL :class:`Image.Image`.
+    :class:`PIL.Image.Image`
+        The Pillow image.
     """
-    if isinstance(obj, Image.Image):
-        return obj
+    if isinstance(obj, OpenCVImage):
+        im = Image.fromarray(obj)
+        im.format = obj.ext[1:].upper()
+        return im
 
-    if isinstance(obj, np.ndarray):
-        return Image.fromarray(obj)
-
-    if isinstance(obj, str):
-        try:
-            image = Image.open(obj)
-        except OSError:
-            image = Image.open(BytesIO(base64.b64decode(obj)))
+    if isinstance(obj, (str, bytes)):
+        if isinstance(obj, bytes):
+            image = Image.open(BytesIO(obj))
+        else:
+            try:
+                image = Image.open(obj)
+            except OSError:
+                image = Image.open(BytesIO(base64.b64decode(obj)))
 
         if image.mode != 'RGB':
-            return image.convert('RGB')
+            converted = image.convert(mode='RGB')
+            converted.format = image.format
+            return converted
+
         return image
 
-    raise TypeError('Cannot convert {!r} to a PIL Image'.format(obj))
+    if isinstance(obj, PillowImage):
+        return obj
+
+    raise TypeError('Cannot convert {} to a Pillow image'.format(type(obj)))
 
 
 def to_cv2(obj):
@@ -105,28 +158,51 @@ def to_cv2(obj):
 
     Parameters
     ----------
-    obj : :class:`str`, :class:`numpy.ndarray` or :class:`Image.Image`
+    obj : :class:`bytes`, :class:`str`, :class:`numpy.ndarray` or :class:`PIL.Image.Image`
         The object to convert to an OpenCV image.
 
     Returns
     -------
-    :class:`numpy.ndarray`
+    :class:`OpenCVImage`
         An OpenCV image.
     """
-    if isinstance(obj, np.ndarray):
-        return obj
+    def get_ext_from_bytes(buffer):
+        for key, value in SIGNATURE_MAP.items():
+            if buffer.startswith(value):
+                return '.' + key
+        return DEFAULT_FILE_EXTENSION
 
-    if isinstance(obj, Image.Image):
-        return np.array(obj)
+    if isinstance(obj, PillowImage):
+        if obj.format is None:
+            return OpenCVImage(np.array(obj))
+        return OpenCVImage(np.array(obj), ext='.'+obj.format)
 
     if isinstance(obj, str):
         image = cv2.imread(obj)
         if image is None:
-            arr = np.frombuffer(base64.b64decode(obj), dtype=np.uint8)
+            buf = base64.b64decode(obj)
+            arr = np.frombuffer(buf, dtype=np.uint8)
             image = cv2.imdecode(arr, flags=cv2.IMREAD_COLOR)
-        return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            ext = get_ext_from_bytes(buf)
+        else:
+            ext = splitext(obj)[1]
+        array = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        return OpenCVImage(array, ext=ext)
 
-    raise TypeError('Cannot convert {!r} to an OpenCV image'.format(obj))
+    if isinstance(obj, bytes):
+        arr = np.frombuffer(obj, dtype=np.uint8)
+        image = cv2.imdecode(arr, flags=cv2.IMREAD_COLOR)
+        array = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        ext = get_ext_from_bytes(obj)
+        return OpenCVImage(array, ext=ext)
+
+    if isinstance(obj, OpenCVImage):
+        return obj
+
+    if isinstance(obj, np.ndarray):
+        return OpenCVImage(obj)
+
+    raise TypeError('Cannot convert {} to an OpenCV image'.format(type(obj)))
 
 
 def threshold(image, value):
@@ -134,7 +210,7 @@ def threshold(image, value):
 
     Parameters
     ----------
-    image : :class:`numpy.ndarray` or :class:`Image.Image`
+    image : :class:`OpenCVImage` or :class:`PIL.Image.Image`
         The image object.
     value : :class:`int`
         The threshold value.
@@ -143,12 +219,18 @@ def threshold(image, value):
     -------
     The `image` with a threshold applied.
     """
-    if isinstance(image, np.ndarray):
-        return cv2.threshold(image, value, 255, cv2.THRESH_BINARY)[1]
-    elif isinstance(image, Image.Image):
-        return image.point(lambda p: p > value and 255)
-    else:
-        raise TypeError('Expect a PIL or OpenCV image')
+    if isinstance(image, OpenCVImage):
+        ret, out = cv2.threshold(image, value, 255, cv2.THRESH_BINARY)
+        if not ret:
+            raise RuntimeError('error in cv2.threshold')
+        return OpenCVImage(out, ext=image.ext)
+
+    if isinstance(image, PillowImage):
+        out = image.point(lambda p: p > value and 255)
+        out.format = image.format
+        return out
+
+    raise TypeError('Expect a Pillow or OpenCV image')
 
 
 def erode(image, radius, iterations=1):
@@ -156,7 +238,7 @@ def erode(image, radius, iterations=1):
 
     Parameters
     ----------
-    image : :class:`numpy.ndarray` or :class:`Image.Image`
+    image : :class:`OpenCVImage` or :class:`PIL.Image.Image`
         The image object.
     radius : :class:`int`
         The number of pixels to include in each direction. For example, if
@@ -171,16 +253,21 @@ def erode(image, radius, iterations=1):
     """
     if radius is None or radius < 1 or iterations < 1:
         return image
+
     size = 2 * radius + 1
-    if isinstance(image, np.ndarray):
+    if isinstance(image, OpenCVImage):
         kernel = np.ones((size, size), dtype=np.uint8)
-        return cv2.erode(image, kernel, iterations=iterations)
-    elif isinstance(image, Image.Image):
+        out = cv2.erode(image, kernel, iterations=iterations)
+        return OpenCVImage(out, ext=image.ext)
+
+    if isinstance(image, PillowImage):
+        fmt = image.format
         for i in range(iterations):
             image = image.filter(ImageFilter.MinFilter(size=size))
+        image.format = fmt
         return image
-    else:
-        raise TypeError('Expect a PIL or OpenCV image')
+
+    raise TypeError('Expect a Pillow or OpenCV image')
 
 
 def dilate(image, radius, iterations=1):
@@ -188,7 +275,7 @@ def dilate(image, radius, iterations=1):
 
     Parameters
     ----------
-    image : :class:`numpy.ndarray` or :class:`Image.Image`
+    image : :class:`OpenCVImage` or :class:`PIL.Image.Image`
         The image object.
     radius : :class:`int`
         The number of pixels to include in each direction. For example, if
@@ -203,16 +290,21 @@ def dilate(image, radius, iterations=1):
     """
     if radius is None or radius < 1 or iterations < 1:
         return image
+
     size = 2 * radius + 1
-    if isinstance(image, np.ndarray):
+    if isinstance(image, OpenCVImage):
         kernel = np.ones((size, size), dtype=np.uint8)
-        return cv2.dilate(image, kernel, iterations=iterations)
-    elif isinstance(image, Image.Image):
+        out = cv2.dilate(image, kernel, iterations=iterations)
+        return OpenCVImage(out, ext=image.ext)
+
+    if isinstance(image, PillowImage):
+        fmt = image.format
         for i in range(iterations):
             image = image.filter(ImageFilter.MaxFilter(size=size))
+        image.format = fmt
         return image
-    else:
-        raise TypeError('Expect a PIL or OpenCV image')
+
+    raise TypeError('Expect a Pillow or OpenCV image')
 
 
 def gaussian_blur(image, radius):
@@ -220,7 +312,7 @@ def gaussian_blur(image, radius):
 
     Parameters
     ----------
-    image : :class:`numpy.ndarray` or :class:`Image.Image`
+    image : :class:`numpy.ndarray` or :class:`PIL.Image.Image`
         The image object.
     radius : :class:`int`
         The number of pixels to include in each direction. For example, if
@@ -233,14 +325,19 @@ def gaussian_blur(image, radius):
     """
     if radius is None or radius < 1:
         return image
-    if isinstance(image, np.ndarray):
+
+    if isinstance(image, OpenCVImage):
         size = 2 * radius + 1
         sigma = 0.3 * (radius - 1) + 0.8  # taken from the docstring of cv2.getGaussianKernel
-        return cv2.GaussianBlur(image, (size, size), sigmaX=sigma, sigmaY=sigma)
-    elif isinstance(image, Image.Image):
-        return image.filter(ImageFilter.GaussianBlur(radius=radius))
-    else:
-        raise TypeError('Expect a PIL or OpenCV image')
+        out = cv2.GaussianBlur(image, (size, size), sigmaX=sigma, sigmaY=sigma)
+        return OpenCVImage(out, ext=image.ext)
+
+    if isinstance(image, PillowImage):
+        out = image.filter(ImageFilter.GaussianBlur(radius=radius))
+        out.format = image.format
+        return out
+
+    raise TypeError('Expect a Pillow or OpenCV image')
 
 
 def rotate(image, angle):
@@ -248,7 +345,7 @@ def rotate(image, angle):
 
     Parameters
     ----------
-    image : :class:`numpy.ndarray` or :class:`Image.Image`
+    image : :class:`OpenCVImage` or :class:`PIL.Image.Image`
         The image object.
     angle : :class:`float`
         The angle, in degrees, to rotate the image. Can be between
@@ -264,7 +361,7 @@ def rotate(image, angle):
     if angle < 0:
         angle += 360.
 
-    if isinstance(image, np.ndarray):
+    if isinstance(image, OpenCVImage):
         # the following will expand the image size to fill the view
 
         # we also reuse this code to rotate a bounding box
@@ -294,13 +391,15 @@ def rotate(image, angle):
         # perform the actual rotation and return the image/bounding box
         if is_bounding_box:
             return np.dot(matrix, [x, y, 1.0])
-        return cv2.warpAffine(image, matrix, (new_w, new_h))
+        out = cv2.warpAffine(image, matrix, (new_w, new_h))
+        return OpenCVImage(out, ext=image.ext)
 
-    elif isinstance(image, Image.Image):
-        return image.rotate(angle, expand=True)
+    if isinstance(image, PillowImage):
+        out = image.rotate(angle, expand=True)
+        out.format = image.format
+        return out
 
-    else:
-        raise TypeError('Expect a PIL or OpenCV image')
+    raise TypeError('Expect a Pillow or OpenCV image')
 
 
 def zoom(image, x, y, w, h):
@@ -308,31 +407,31 @@ def zoom(image, x, y, w, h):
 
     Parameters
     ----------
-    image : :class:`numpy.ndarray` or :class:`Image.Image`
+    image : :class:`OpenCVImage` or :class:`PIL.Image.Image`
         The image object.
     x : :class:`int` or :class:`float`
         The x value of the top-left corner of the ROI.
-        If a :class:`float then a number between 0 and 1.
+        If a :class:`float` then a number between 0 and 1.
     y : :class:`int` or :class:`float`
         The y value of the top-left corner of the ROI.
-        If a :class:`float then a number between 0 and 1.
+        If a :class:`float` then a number between 0 and 1.
     w : :class:`int` or :class:`float`
-        The width of the ROI. If a :class:`float then a
+        The width of the ROI. If a :class:`float` then a
         number between 0 and 1.
     h : :class:`int` or :class:`float`
-        The height of the ROI. If a :class:`float then a
+        The height of the ROI. If a :class:`float` then a
         number between 0 and 1.
 
     Returns
     -------
     The region of interest.
     """
-    if isinstance(image, np.ndarray):
+    if isinstance(image, OpenCVImage):
         height, width = image.shape[:2]
-    elif isinstance(image, Image.Image):
+    elif isinstance(image, PillowImage):
         width, height = image.size
     else:
-        raise TypeError('Expect a PIL or OpenCV image')
+        raise TypeError('Expect a Pillow or OpenCV image')
 
     # rescale the input parameters if any of the parameters is a float
     if isinstance(x, float) or isinstance(y, float) or isinstance(w, float) or isinstance(h, float):
@@ -341,7 +440,9 @@ def zoom(image, x, y, w, h):
         w = int(width * w)
         h = int(height * h)
 
-    if isinstance(image, np.ndarray):
+    if isinstance(image, OpenCVImage):
         return image[y:y+h, x:x+w]
-    else:
-        return image.crop((x, y, x+w, y+h))
+
+    out = image.crop((x, y, x + w, y + h))
+    out.format = image.format
+    return out
