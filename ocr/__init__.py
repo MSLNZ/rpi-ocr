@@ -39,7 +39,7 @@ def set_ssocr_path(path):
         path = os.path.join(path, 'bin')
         if not os.path.isfile(os.path.join(path, 'ssocr.exe')):
             raise FileNotFoundError('The ssocr.exe executable cannot be found in the specified path')
-    os.environ['PATH'] += os.pathsep + path
+    os.environ['PATH'] = path + os.pathsep + os.environ['PATH']
 
 
 def set_tesseract_path(path):
@@ -56,7 +56,7 @@ def set_tesseract_path(path):
     if os.path.isfile(path):
         pytesseract.pytesseract.tesseract_cmd = path
     else:
-        os.environ['PATH'] += os.pathsep + path
+        os.environ['PATH'] = path + os.pathsep + os.environ['PATH']
 
 
 def start_camera(*, host='raspberrypi', rpi_username='pi', rpi_password=None, timeout=10, **kwargs):
