@@ -2,6 +2,7 @@
 Utility functions for performing image conversion and image processing.
 """
 import base64
+import logging
 from io import BytesIO
 from os.path import splitext
 
@@ -23,6 +24,8 @@ SIGNATURE_MAP = {
     'tif': b'II*\x00',
     'tiff': b'II*\x00',
 }
+
+logger = logging.getLogger('ocr')
 
 
 class OpenCVImage(np.ndarray):
@@ -77,7 +80,10 @@ def to_bytes(obj):
             with open(obj, 'rb') as fp:
                 return fp.read()
         except OSError:
-            return base64.b64decode(obj)
+            try:
+                return base64.b64decode(obj)
+            except ValueError:
+                raise ValueError('Invalid path or base64 string, {!r}'.format(obj)) from None
 
     if isinstance(obj, OpenCVImage):
         bgr_image = cv2.cvtColor(obj, code=cv2.COLOR_RGB2BGR)
@@ -138,7 +144,12 @@ def to_pil(obj):
             try:
                 image = Image.open(obj)
             except OSError:
-                image = Image.open(BytesIO(base64.b64decode(obj)))
+                try:
+                    buf = base64.b64decode(obj)
+                except ValueError:
+                    raise ValueError('Invalid path or base64 string, {!r}'.format(obj)) from None
+                else:
+                    image = Image.open(BytesIO(buf))
 
         if image.mode != 'RGB':
             converted = image.convert(mode='RGB')
@@ -174,13 +185,16 @@ def to_cv2(obj):
 
     if isinstance(obj, PillowImage):
         if obj.format is None:
-            return OpenCVImage(np.array(obj))
-        return OpenCVImage(np.array(obj), ext='.'+obj.format)
+            return OpenCVImage(np.asarray(obj))
+        return OpenCVImage(np.asarray(obj), ext='.'+obj.format)
 
     if isinstance(obj, str):
         image = cv2.imread(obj)
         if image is None:
-            buf = base64.b64decode(obj)
+            try:
+                buf = base64.b64decode(obj)
+            except ValueError:
+                raise ValueError('Invalid path or base64 string, {!r}'.format(obj)) from None
             arr = np.frombuffer(buf, dtype=np.uint8)
             image = cv2.imdecode(arr, flags=cv2.IMREAD_COLOR)
             ext = get_ext_from_bytes(buf)
@@ -446,3 +460,66 @@ def zoom(image, x, y, w, h):
     out = image.crop((x, y, x + w, y + h))
     out.format = image.format
     return out
+
+
+def process(image, *, params=None, **ignored):
+    """Perform image processing.
+
+    Parameters
+    ----------
+    image : :class:`OpenCVImage` or :class:`PIL.Image.Image`
+        The image to process.
+    params : :class:`tuple`, optional
+        The order to apply the transformations and the filters
+        as (name, args/kwargs) pairs. For example::
+
+        ('rotate', 90)
+        ('threshold', 20)
+        ('gaussian_blur', 5),
+        ('zoom': (230, 195, 220, 60))
+        ('zoom': {'x': 230, 'y': 195, 'w': 220, 'h': 60})
+        ('dilate', (3, 4))
+        ('dilate', {'radius': 3, 'iterations': 4})
+        ('dilate', 3)
+        ('erode', (4, 2))
+        ('erode', {'radius': 4, 'iterations': 2})
+        ('erode', 4)
+
+    ignored
+        All other keyword arguments are silently ignored.
+
+    Returns
+    -------
+    The processed image.
+    """
+    if not params:
+        return image
+
+    for name, value in params:
+        if name == 'zoom':
+            if isinstance(value, dict):
+                image = zoom(image, **value)
+            else:
+                image = zoom(image, *value)
+        elif name == 'rotate':
+            image = rotate(image, value)
+        elif name == 'threshold':
+            image = threshold(image, value)
+        elif name == 'dilate':
+            if isinstance(value, dict):
+                image = dilate(image, **value)
+            elif isinstance(value, (list, tuple)):
+                image = dilate(image, *value)
+            else:
+                image = dilate(image, value)
+        elif name == 'erode':
+            if isinstance(value, dict):
+                image = erode(image, **value)
+            elif isinstance(value, (list, tuple)):
+                image = erode(image, *value)
+            else:
+                image = erode(image, value)
+        elif name == 'gaussian_blur':
+            image = gaussian_blur(image, value)
+
+    return image
