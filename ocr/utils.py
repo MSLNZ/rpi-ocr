@@ -80,10 +80,14 @@ def to_bytes(obj):
     if isinstance(obj, str):
         try:
             with open(obj, 'rb') as fp:
-                return fp.read()
+                data = fp.read()
+            logger.debug('converted {!r} to bytes'.format(obj))
+            return data
         except OSError:
             try:
-                return base64.b64decode(obj)
+                data = base64.b64decode(obj)
+                logger.debug('converted base64 to bytes')
+                return data
             except ValueError:
                 raise ValueError('Invalid path or base64 string, {!r}'.format(obj)) from None
 
@@ -92,14 +96,17 @@ def to_bytes(obj):
         ret, buf = cv2.imencode(obj.ext, bgr_image)
         if not ret:
             raise RuntimeError('error calling cv2.imencode')
+        logger.debug('converted {!r} to bytes'.format(obj.__class__.__name__))
         return buf.tobytes()
 
     if isinstance(obj, PillowImage):
         b = BytesIO()
         obj.save(b, obj.format)
+        logger.debug('converted {!r} to bytes'.format(obj.__class__.__name__))
         return b.getvalue()
 
     if isinstance(obj, bytes):
+        logger.debug('returning original bytes object')
         return obj
 
     raise TypeError('Cannot convert {} to bytes'.format(type(obj)))
@@ -118,7 +125,9 @@ def to_base64(obj):
     :class:`str`
         A :mod:`base64` representation of the image.
     """
-    return base64.b64encode(to_bytes(obj)).decode('ascii')
+    b64 = base64.b64encode(to_bytes(obj)).decode('ascii')
+    logger.debug('converted bytes to base64')
+    return b64
 
 
 def to_pil(obj):
@@ -137,14 +146,17 @@ def to_pil(obj):
     if isinstance(obj, OpenCVImage):
         im = Image.fromarray(obj)
         im.format = obj.ext[1:].upper()
+        logger.debug('converted {!r} to Pillow image'.format(obj.__class__.__name__))
         return im
 
     if isinstance(obj, (str, bytes)):
         if isinstance(obj, bytes):
             image = Image.open(BytesIO(obj))
+            logger.debug('converted bytes to Pillow image')
         else:
             try:
                 image = Image.open(obj)
+                logger.debug('converted {!r} to Pillow image'.format(obj))
             except OSError:
                 try:
                     buf = base64.b64decode(obj)
@@ -152,15 +164,18 @@ def to_pil(obj):
                     raise ValueError('Invalid path or base64 string, {!r}'.format(obj)) from None
                 else:
                     image = Image.open(BytesIO(buf))
+                    logger.debug('converted base64 to Pillow image')
 
         if image.mode != 'RGB':
             converted = image.convert(mode='RGB')
             converted.format = image.format
+            logger.debug('converted Pillow image mode from {!r} to {!r}'.format(image.mode, converted.mode))
             return converted
 
         return image
 
     if isinstance(obj, PillowImage):
+        logger.debug('returning original {!r} object'.format(obj.__class__.__name__))
         return obj
 
     raise TypeError('Cannot convert {} to a Pillow image'.format(type(obj)))
@@ -187,8 +202,11 @@ def to_cv2(obj):
 
     if isinstance(obj, PillowImage):
         if obj.format is None:
-            return OpenCVImage(np.asarray(obj))
-        return OpenCVImage(np.asarray(obj), ext='.'+obj.format)
+            img = OpenCVImage(np.asarray(obj))
+        else:
+            img = OpenCVImage(np.asarray(obj), ext='.'+obj.format)
+        logger.debug("converted {!r} to 'OpenCVImage'".format(obj.__class__.__name__))
+        return img
 
     if isinstance(obj, str):
         image = cv2.imread(obj)
@@ -200,8 +218,10 @@ def to_cv2(obj):
             arr = np.frombuffer(buf, dtype=np.uint8)
             image = cv2.imdecode(arr, flags=cv2.IMREAD_COLOR)
             ext = get_ext_from_bytes(buf)
+            logger.debug("converted base64 to 'OpenCVImage'")
         else:
             ext = splitext(obj)[1]
+            logger.debug("converted {!r} to 'OpenCVImage'".format(obj))
         array = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         return OpenCVImage(array, ext=ext)
 
@@ -210,13 +230,18 @@ def to_cv2(obj):
         image = cv2.imdecode(arr, flags=cv2.IMREAD_COLOR)
         array = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         ext = get_ext_from_bytes(obj)
-        return OpenCVImage(array, ext=ext)
+        img = OpenCVImage(array, ext=ext)
+        logger.debug("converted bytes to 'OpenCVImage'")
+        return img
 
     if isinstance(obj, OpenCVImage):
+        logger.debug("returning original 'OpenCVImage' object")
         return obj
 
     if isinstance(obj, np.ndarray):
-        return OpenCVImage(obj)
+        img = OpenCVImage(obj)
+        logger.debug("converted {!r} to 'OpenCVImage'".format(obj.__class__.__name__))
+        return img
 
     raise TypeError('Cannot convert {} to an OpenCV image'.format(type(obj)))
 
@@ -235,6 +260,7 @@ def threshold(image, value):
     -------
     The `image` with a threshold applied.
     """
+    logger.debug('threshold: value={}'.format(value))
     if isinstance(image, OpenCVImage):
         ret, out = cv2.threshold(image, value, 255, cv2.THRESH_BINARY)
         if not ret:
@@ -267,6 +293,7 @@ def erode(image, radius, iterations=1):
     -------
     The `image` with erosion applied.
     """
+    logger.debug('erode: radius={} iterations={}'.format(radius, iterations))
     if radius is None or radius < 1 or iterations < 1:
         return image
 
@@ -304,6 +331,7 @@ def dilate(image, radius, iterations=1):
     -------
     The `image` with dilation applied.
     """
+    logger.debug('dilate: radius={} iterations={}'.format(radius, iterations))
     if radius is None or radius < 1 or iterations < 1:
         return image
 
@@ -328,7 +356,7 @@ def gaussian_blur(image, radius):
 
     Parameters
     ----------
-    image : :class:`numpy.ndarray` or :class:`PIL.Image.Image`
+    image : :class:`OpenCVImage` or :class:`PIL.Image.Image`
         The image object.
     radius : :class:`int`
         The number of pixels to include in each direction. For example, if
@@ -339,6 +367,7 @@ def gaussian_blur(image, radius):
     -------
     The `image` with a Gaussian blur applied.
     """
+    logger.debug('gaussian_blur: radius={}'.format(radius))
     if radius is None or radius < 1:
         return image
 
@@ -371,6 +400,7 @@ def rotate(image, angle):
     -------
     The rotated image.
     """
+    logger.debug('rotate: angle={}'.format(angle))
     if angle is None or angle == 0:
         return image
 
@@ -456,10 +486,12 @@ def zoom(image, x, y, w, h):
         w = int(width * w)
         h = int(height * h)
 
+    logger.debug('zoom: x={} y={} w={} h={}'.format(x, y, w, h))
+
     if isinstance(image, OpenCVImage):
         return image[y:y+h, x:x+w]
 
-    out = image.crop((x, y, x + w, y + h))
+    out = image.crop(box=(x, y, x + w, y + h))
     out.format = image.format
     return out
 
