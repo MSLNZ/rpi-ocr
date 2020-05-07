@@ -75,19 +75,18 @@ class BuildDocs(Command):
         sys.exit(0)
 
 
-install_requires = ['msl-network>=0.5', 'opencv-python', 'pillow']
+install_requires = [
+    'msl-network>=0.5',
+    'opencv-python',
+    'pillow',
+    'msl-qt @ https://github.com/MSLNZ/msl-qt/archive/master.tar.gz',
+    'pyqtgraph',
+    'PySide2',
+]
 
 on_rpi = platform.machine().startswith('arm')
 if on_rpi:
-    install_requires.extend([
-        'picamera',
-        'pytesseract'
-    ])
-else:
-    install_requires.extend([
-        'msl-qt @ https://github.com/MSLNZ/msl-qt/archive/master.tar.gz',
-        'pyqtgraph',
-    ])
+    install_requires.extend(['picamera', 'pytesseract'])
 
 
 needs_sphinx = {'doc', 'docs', 'apidoc', 'apidocs', 'build_sphinx'}.intersection(sys.argv)

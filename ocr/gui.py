@@ -1,59 +1,24 @@
 import os
-import sys
 import math
 import time
 
 import numpy as np
+import pyqtgraph as pg
+from msl.qt import (
+    io,
+    QtCore,
+    QtGui,
+    QtWidgets,
+    prompt,
+    Thread,
+    Worker
+)
 
 from . import (
     ocr,
-    ON_RPI,
+    process,
+    utils,
 )
-from . import utils
-from .utils import process
-
-if not ON_RPI:
-    import pyqtgraph as pg
-    from msl.qt import (
-        io,
-        QtCore,
-        QtGui,
-        QtWidgets,
-        application,
-        excepthook,
-        prompt,
-        Thread,
-        Worker
-    )
-else:
-    Thread = object
-    Worker = object
-
-    class QtWidgets(object):
-        QWidget = object
-
-
-def configure(client, **kwargs):
-    """Create a Qt application to interact with the image and the OCR algorithm.
-
-    Parameters
-    ----------
-    client : :class:`~ocr.client.OCRClient`
-        The client that is connected to the Raspberry Pi.
-    kwargs
-        All key-value pairs are passed to the :class:`Gui`.
-
-    Returns
-    -------
-    :class:`dict`
-        The OCR parameters.
-    """
-    sys.excepthook = excepthook
-    app = application()
-    gui = Gui(client, **kwargs)
-    gui.show()
-    app.exec()
-    return gui.ocr_params
 
 
 class Gui(QtWidgets.QWidget):
