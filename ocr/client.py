@@ -1,6 +1,5 @@
 from msl.network import LinkedClient
 
-from .gui import configure
 from .utils import (
     to_base64,
     save,
@@ -43,6 +42,7 @@ class OCRClient(LinkedClient):
             The parameters to use for the OCR algorithm. These parameters
             should be passed to :meth:`ocr`.
         """
+        from . import configure
         return configure(self, **kwargs)
 
     def disconnect(self):

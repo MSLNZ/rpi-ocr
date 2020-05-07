@@ -28,7 +28,7 @@ def set_tesseract_path(path):
         os.environ['PATH'] = path + os.pathsep + os.environ['PATH']
 
 
-def tesseract(image, lang='eng', config='-c tessedit_char_whitelist=0123456789+-,.', **ignored):
+def tesseract(image, lang='eng', config='-c tessedit_char_whitelist=0123456789+-,.'):
     """Apply the `Tesseract <https://github.com/tesseract-ocr/tesseract>`_ algorithm.
 
     Parameters
@@ -39,8 +39,6 @@ def tesseract(image, lang='eng', config='-c tessedit_char_whitelist=0123456789+-
         The language code.
     config : :class:`str`
         The configuration options.
-    ignored
-        All other keyword arguments are silently ignored.
 
     Returns
     -------

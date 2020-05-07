@@ -12,6 +12,20 @@ from PIL import Image
 from PIL.Image import Image as PillowImage
 from PIL import ImageFilter
 
+__all__ = (
+    'dilate',
+    'erode',
+    'gaussian_blur',
+    'rotate',
+    'save',
+    'threshold',
+    'to_base64',
+    'to_bytes',
+    'to_cv2',
+    'to_pil',
+    'zoom',
+)
+
 DEFAULT_IMAGE_FORMAT = 'jpg'
 DEFAULT_FILE_EXTENSION = '.' + DEFAULT_IMAGE_FORMAT
 SIGNATURE_MAP = {
@@ -494,66 +508,3 @@ def zoom(image, x, y, w, h):
     out = image.crop(box=(x, y, x + w, y + h))
     out.format = image.format
     return out
-
-
-def process(image, *, params=None, **ignored):
-    """Perform image processing.
-
-    Parameters
-    ----------
-    image : :class:`OpenCVImage` or :class:`PIL.Image.Image`
-        The image to process.
-    params : :class:`tuple`, optional
-        The order to apply the transformations and the filters
-        as (name, args/kwargs) pairs. For example::
-
-        ('rotate', 90)
-        ('threshold', 20)
-        ('gaussian_blur', 5),
-        ('zoom': (230, 195, 220, 60))
-        ('zoom': {'x': 230, 'y': 195, 'w': 220, 'h': 60})
-        ('dilate', (3, 4))
-        ('dilate', {'radius': 3, 'iterations': 4})
-        ('dilate', 3)
-        ('erode', (4, 2))
-        ('erode', {'radius': 4, 'iterations': 2})
-        ('erode', 4)
-
-    ignored
-        All other keyword arguments are silently ignored.
-
-    Returns
-    -------
-    The processed image.
-    """
-    if not params:
-        return image
-
-    for name, value in params:
-        if name == 'zoom':
-            if isinstance(value, dict):
-                image = zoom(image, **value)
-            else:
-                image = zoom(image, *value)
-        elif name == 'rotate':
-            image = rotate(image, value)
-        elif name == 'threshold':
-            image = threshold(image, value)
-        elif name == 'dilate':
-            if isinstance(value, dict):
-                image = dilate(image, **value)
-            elif isinstance(value, (list, tuple)):
-                image = dilate(image, *value)
-            else:
-                image = dilate(image, value)
-        elif name == 'erode':
-            if isinstance(value, dict):
-                image = erode(image, **value)
-            elif isinstance(value, (list, tuple)):
-                image = erode(image, *value)
-            else:
-                image = erode(image, value)
-        elif name == 'gaussian_blur':
-            image = gaussian_blur(image, value)
-
-    return image

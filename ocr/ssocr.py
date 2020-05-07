@@ -156,7 +156,7 @@ def ssocr(image, *,
           as_hex=False,
           omit_decimal_point=False,
           charset=Charset.FULL,
-          **ignored):
+          ):
     """Apply the `ssocr <https://www.unix-ag.uni-kl.de/~auerswal/ssocr/>`_ algorithm.
 
     None of the image-process commands in ssocr are currently supported.
@@ -197,8 +197,6 @@ def ssocr(image, *,
         Whether to omit decimal points from the output text.
     charset : :class:`str` or :class:`Charset`, optional
         The character set to use.
-    ignored
-        All other keyword arguments are silently ignored.
 
     Returns
     -------

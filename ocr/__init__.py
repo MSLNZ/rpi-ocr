@@ -1,11 +1,26 @@
 """
 Optical Character Recognition with a Raspberry Pi.
 """
+import sys
 import platform
+from collections import OrderedDict
 
 from msl.network import (
     manager,
     ssh,
+)
+
+from .client import OCRClient
+from .service import OCRService
+from . import utils
+from .utils import save
+from .ssocr import (
+    ssocr,
+    set_ssocr_path,
+)
+from .tesseract import (
+    tesseract,
+    set_tesseract_path,
 )
 
 # if you change this value then you must also update the name of the
@@ -86,18 +101,44 @@ def kill_manager(*, host='raspberrypi', rpi_username='pi', rpi_password=None, ti
     ssh_client.close()
 
 
-def ocr(image, *, algorithm='tesseract', **parameters):
+def configure(client, **kwargs):
+    """Create a Qt application to interact with the image and the OCR algorithm.
+
+    Parameters
+    ----------
+    client : :class:`~ocr.client.OCRClient`
+        The client that is connected to the Raspberry Pi.
+    kwargs
+        All key-value pairs are passed to the :class:`Gui`.
+
+    Returns
+    -------
+    :class:`dict`
+        The OCR parameters.
+    """
+    from msl.qt import application, excepthook
+    from .gui import Gui
+    sys.excepthook = excepthook
+    app = application()
+    gui = Gui(client, **kwargs)
+    gui.show()
+    app.exec()
+    return gui.ocr_params
+
+
+def ocr(image, *, tasks=None, algorithm='tesseract', **parameters):
     """Perform OCR on an image.
 
     Parameters
     ----------
-    image : :class:`str`, :class:`numpy.ndarray` or :class:`Image.Image`
+    image : :class:`str`, :class:`~.utils.OpenCVImage` or :class:`PIL.Image.Image`
         The image to perform OCR on.
+    tasks :
+        Passed to the :func:`.process` function.
     algorithm : :class:`str`, optional
         The OCR algorithm to use: ``tesseract`` or ``ssocr``.
     parameters
-        Keyword arguments that are passed to :func:`.process` and to
-        the OCR algorithm.
+        Keyword arguments that are passed to the specified OCR algorithm.
 
     Returns
     -------
@@ -106,7 +147,7 @@ def ocr(image, *, algorithm='tesseract', **parameters):
     :class:`~.utils.OpenCVImage` or :class:`PIL.Image.Image`
         The processed image.
     """
-    img = process(image, **parameters)
+    img = process(image, tasks=tasks)
 
     if algorithm == 'tesseract':
         text = tesseract(img, **parameters)
@@ -118,18 +159,47 @@ def ocr(image, *, algorithm='tesseract', **parameters):
     return text, img
 
 
-from . import gui
-from .client import OCRClient
-from .service import OCRService
-from .utils import (
-    save,
-    process,
-)
-from .ssocr import (
-    ssocr,
-    set_ssocr_path,
-)
-from .tesseract import (
-    tesseract,
-    set_tesseract_path,
-)
+def process(image, tasks=None):
+    """Perform image-processing tasks.
+
+    Parameters
+    ----------
+    image : :class:`OpenCVImage` or :class:`PIL.Image.Image`
+        The image to process.
+    tasks : :class:`list` of :class:`tuple` or :class:`dict`, optional
+        Apply the transformations and the filters to the image. The
+        object is a sequence of `name`, `value` pairs. The `name` parameter
+        is the name of the transformation or filter (e.g., erode, rotate) and the
+        `value` can be a number, a sequence of numbers or a dictionary, for example,
+
+        * [('dilate', (3, 4))] apply dilation with a radius of 3 and using 4 iterations
+        * [('dilate', {'radius': 3, 'iterations': 4})]
+        * [('dilate', 3)] apply dilation with a radius of 3 and use the default number of iterations
+        * [('rotate', 90), ('dilate', 3)] specify multiple tasks, first rotate then dilate
+        * {'rotate': 90, 'dilate': 3} using a dict instead of a list of tuple
+
+    Returns
+    -------
+    The processed image.
+    """
+    if not tasks:
+        return image
+
+    if isinstance(tasks, dict):
+        if sys.version_info[:2] < (3, 6) and not isinstance(tasks, OrderedDict):
+            # PEP 468 -- Preserving the order of **kwargs in a function.
+            raise TypeError('Cannot use a dict in Python <3.6 since the order is not preserved')
+        name_value = tasks.items()
+    else:
+        name_value = tasks
+
+    for name, value in name_value:
+        obj = getattr(utils, name)
+        if isinstance(value, dict):
+            image = obj(image, **value)
+        elif isinstance(value, (list, tuple)):
+            image = obj(image, *value)
+        else:
+            image = obj(image, value)
+
+    return image
