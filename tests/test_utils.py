@@ -1,6 +1,5 @@
 import os
 import base64
-import binascii
 import tempfile
 
 import pytest
@@ -116,6 +115,11 @@ def test_to_bytes():
     b = b'get_out_whatever_is_sent_in'
     assert utils.to_bytes(b) is b
 
+    # invalid str
+    for obj in ['does/not/exist.jpg', 'X'*10000 + '.png']:
+        with pytest.raises(ValueError, match=r'^Invalid path or base64 string'):
+            utils.to_bytes(obj)
+
     for obj in [1, 2.0, None, True, bytearray(), [], Image.ImageTransformHandler()]:
         with pytest.raises(TypeError, match=r'^Cannot convert'):
             utils.to_bytes(obj)
@@ -140,20 +144,25 @@ def test_to_base64():
         assert isinstance(b64, str)
         assert b64 == base64_expected
 
-        # PIL -> bytes
+        # PIL -> base64
         pil = utils.to_pil(path)
         assert isinstance(pil, utils.PillowImage)
         base64_pil = utils.to_base64(pil)
         assert isinstance(base64_pil, str)
         assert base64_pil.startswith(signature)
 
-        # OpenCV -> bytes
+        # OpenCV -> base64
         cv2 = utils.to_cv2(path)
         assert isinstance(cv2, utils.OpenCVImage)
         assert cv2.ext == '.'+key
         base64_cv2 = utils.to_base64(cv2)
         assert isinstance(base64_cv2, str)
         assert base64_cv2.startswith(signature)
+
+    # invalid str
+    for obj in ['does/not/exist.jpg', 'X'*10000 + '.png']:
+        with pytest.raises(ValueError, match=r'^Invalid path or base64 string'):
+            utils.to_base64(obj)
 
     for obj in [1, 2.0, None, True, bytearray(), [], Image.ImageTransformHandler()]:
         with pytest.raises(TypeError, match=r'^Cannot convert'):
@@ -206,9 +215,10 @@ def test_to_pil():
             assert isinstance(img_expected, utils.PillowImage)
             assert utils.to_pil(img_expected) is img_expected
 
-    # invalid str -> not a valid file and not base64 encoded
-    with pytest.raises(binascii.Error):
-        utils.to_pil('doesnotexist.png')
+    # invalid str
+    for obj in ['does/not/exist.jpg', 'X'*10000 + '.png']:
+        with pytest.raises(ValueError, match=r'^Invalid path or base64 string'):
+            utils.to_pil(obj)
 
     for obj in [1, 2.0, None, True, bytearray(), [], Image.ImageTransformHandler()]:
         with pytest.raises(TypeError, match=r'^Cannot convert'):
@@ -269,8 +279,12 @@ def test_to_cv2():
         assert np.array_equal(array, cv2)
 
         # cv2 -> cv2
-        cv2 = utils.to_cv2(path)
         assert utils.to_cv2(cv2) is cv2
+
+    # invalid str
+    for obj in ['does/not/exist.jpg', 'X'*10000 + '.png']:
+        with pytest.raises(ValueError, match=r'^Invalid path or base64 string'):
+            utils.to_cv2(obj)
 
     for obj in [1, 2.0, None, True, bytearray(), [], Image.ImageTransformHandler()]:
         with pytest.raises(TypeError, match=r'^Cannot convert'):
