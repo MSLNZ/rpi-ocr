@@ -16,7 +16,7 @@ def test_english():
     assert ocr.tesseract(eng, config='') == expected
 
     for p in temp_paths:
-        ocr.save(p, eng)
+        ocr.save(eng, p)
 
         assert ocr.tesseract(p, config='') == expected
         assert ocr.tesseract(ocr.utils.to_cv2(p), config='') == expected
@@ -40,7 +40,7 @@ def test_numbers():
     assert ocr.tesseract(numbers) == expected
 
     for p in temp_paths:
-        ocr.save(p, numbers)
+        ocr.save(numbers, p)
 
         assert ocr.tesseract(p) == expected
         assert ocr.tesseract(ocr.utils.to_cv2(p)) == expected

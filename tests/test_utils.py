@@ -44,7 +44,7 @@ def test_save():
     for original_image in [BMP_PATH, PNG_PATH, JPG_PATH]:
         for ext in exts:
             new_image = base_path + ext
-            utils.save(new_image, original_image)
+            utils.save(original_image, new_image)
             raw = utils.to_bytes(new_image)
             assert raw.startswith(utils.SIGNATURE_MAP[ext])
             os.remove(new_image)  # cleanup
@@ -52,22 +52,22 @@ def test_save():
 
     save_to_path = base_path + '.jpg'
 
-    utils.save(save_to_path, JPG_PATH)
+    utils.save(JPG_PATH, save_to_path)
     assert utils.to_bytes(save_to_path).startswith(utils.SIGNATURE_MAP['jpg'])
 
-    utils.save(save_to_path, utils.to_base64(JPG_PATH))
+    utils.save(utils.to_base64(JPG_PATH), save_to_path)
     assert utils.to_bytes(save_to_path).startswith(utils.SIGNATURE_MAP['jpg'])
 
-    utils.save(save_to_path, utils.to_cv2(JPG_PATH))
+    utils.save(utils.to_cv2(JPG_PATH), save_to_path)
     assert utils.to_bytes(save_to_path).startswith(utils.SIGNATURE_MAP['jpg'])
 
-    utils.save(save_to_path, utils.to_pil(JPG_PATH))
+    utils.save(utils.to_pil(JPG_PATH), save_to_path)
     assert utils.to_bytes(save_to_path).startswith(utils.SIGNATURE_MAP['jpg'])
 
-    utils.save(save_to_path, utils.to_pil(utils.to_base64(JPG_PATH)))
+    utils.save(utils.to_pil(utils.to_base64(JPG_PATH)), save_to_path)
     assert utils.to_bytes(save_to_path).startswith(utils.SIGNATURE_MAP['jpg'])
 
-    utils.save(save_to_path, utils.to_base64(utils.to_pil(utils.to_base64(JPG_PATH))))
+    utils.save(utils.to_base64(utils.to_pil(utils.to_base64(JPG_PATH))), save_to_path)
     assert utils.to_bytes(save_to_path).startswith(utils.SIGNATURE_MAP['jpg'])
 
     # cleanup

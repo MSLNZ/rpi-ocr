@@ -46,20 +46,22 @@ class OpenCVImage(np.ndarray):
         self.ext = getattr(obj, 'ext', DEFAULT_FILE_EXTENSION)
 
 
-def save(filename, image, params=None):
-    """Save the image.
+def save(image, path, params=None):
+    """Save an image to a file.
 
     Parameters
     ----------
-    filename : :class:`str`
-        The name to use to save the image file. The image format is chosen based on the filename extension
-    image : :class:`bytes`, :class:`str`, :class:`OpenCVImage` or :class:`PIL.Image.Image`
-        The image to save.
+    image
+        The image to save. See :func:`to_cv2` for the supported data types.
+    path : :class:`str`
+        A file path to save the image to. The image format is chosen based
+        on the filename extension.
     params : :class:`tuple`, optional
         See :func:`cv2.imwrite` for more details.
     """
     img = cv2.cvtColor(to_cv2(image), cv2.COLOR_RGB2BGR)
-    cv2.imwrite(filename, img, params=params)
+    cv2.imwrite(path, img, params=params)
+    logger.debug('image saved to {!r}'.format(path))
 
 
 def to_bytes(obj):

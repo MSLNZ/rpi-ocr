@@ -59,7 +59,7 @@ def test_six_digits():
                   for ext in ['bmp', 'jpg', 'jpeg', 'png', 'tif', 'tiff']]
 
     for p in temp_paths:
-        ocr.save(p, six_digits_path)
+        ocr.save(six_digits_path, p)
 
         assert ocr.ssocr(p, iter_threshold=True) == expected
         assert ocr.ssocr(ocr.utils.to_bytes(p), iter_threshold=True) == expected
