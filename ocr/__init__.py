@@ -1,62 +1,18 @@
-import os
+"""
+Optical Character Recognition with a Raspberry Pi.
+"""
+import platform
 
 from msl.network import (
     manager,
     ssh,
 )
 
-try:
-    import pytesseract
-except ImportError:
-    pytesseract = None
-
-from .client import OCRClient
-from .service import OCRService
-from .utils import save
-from . import gui
-from .ocr import (
-    ocr,
-    ssocr,
-    tesseract,
-)
-
 # if you change this value then you must also update the name of the
 # virtual environment that is created in rpi-setup.sh
 RPI_EXE_PATH = 'ocrenv/bin/ocr'
 
-
-def set_ssocr_path(path):
-    """Set the path to the ``ssocr`` directory.
-
-    Parameters
-    ----------
-    path : :class:`str`
-        The path to the ``ssocr`` directory.
-    """
-    if os.path.isfile(path):  # only want the directory
-        path = os.path.dirname(path)
-    if not os.path.isfile(os.path.join(path, 'ssocr.exe')):
-        path = os.path.join(path, 'bin')
-        if not os.path.isfile(os.path.join(path, 'ssocr.exe')):
-            raise FileNotFoundError('The ssocr.exe executable cannot be found in the specified path')
-    os.environ['PATH'] = path + os.pathsep + os.environ['PATH']
-
-
-def set_tesseract_path(path):
-    """Set the path to the ``Tesseract`` directory.
-
-    Parameters
-    ----------
-    path : :class:`str`
-        The path to the ``Tesseract`` directory.
-    """
-    if pytesseract is None:
-        raise ImportError('You must install and configure tesseract and pytesseract')
-
-    if os.path.isfile(path):
-        pytesseract.pytesseract.tesseract_cmd = path
-    else:
-        os.environ['PATH'] = path + os.pathsep + os.environ['PATH']
+ON_RPI = platform.machine().startswith('arm')
 
 
 def start_camera(*, host='raspberrypi', rpi_username='pi', rpi_password=None, timeout=10, **kwargs):
@@ -128,3 +84,52 @@ def kill_manager(*, host='raspberrypi', rpi_username='pi', rpi_password=None, ti
         except:
             pass
     ssh_client.close()
+
+
+def ocr(image, *, algorithm='tesseract', **parameters):
+    """Perform OCR on an image.
+
+    Parameters
+    ----------
+    image : :class:`str`, :class:`numpy.ndarray` or :class:`Image.Image`
+        The image to perform OCR on.
+    algorithm : :class:`str`, optional
+        The OCR algorithm to use: ``tesseract`` or ``ssocr``.
+    parameters
+        Keyword arguments that are passed to :func:`.process` and to
+        the OCR algorithm.
+
+    Returns
+    -------
+    :class:`str`
+        The OCR text.
+    :class:`~.utils.OpenCVImage` or :class:`PIL.Image.Image`
+        The processed image.
+    """
+    img = process(image, **parameters)
+
+    if algorithm == 'tesseract':
+        text = tesseract(img, **parameters)
+    elif algorithm == 'ssocr':
+        text = ssocr(img, **parameters)
+    else:
+        raise ValueError('Invalid algorithm {!r} to use for OCR'.format(algorithm))
+
+    return text, img
+
+
+from . import gui
+from .client import OCRClient
+from .service import OCRService
+from .utils import (
+    save,
+    process,
+)
+from .ssocr import (
+    ssocr,
+    set_ssocr_path,
+)
+from .tesseract import (
+    tesseract,
+    set_tesseract_path,
+)
