@@ -83,16 +83,13 @@ def test_six_digits():
 
 def test_inside_box():
     expected = '086861'
-    xywh = (230, 195, 220, 60)
-    threshold = 21
-
     cv2 = ocr.utils.to_cv2(inside_box_path)
-    zoomed = ocr.utils.zoom(cv2, *xywh)
-    assert ocr.ssocr(zoomed, threshold=threshold) == expected
-
     pil = ocr.utils.to_pil(inside_box_path)
-    zoomed = ocr.utils.zoom(pil, *xywh)
-    assert ocr.ssocr(zoomed, threshold=threshold) == expected
+    for obj in [cv2, pil]:
+        zoomed = ocr.utils.zoom(obj, 230, 195, 220, 60)
+        assert ocr.ssocr(zoomed, threshold=21) == expected
+        thresholded = ocr.utils.threshold(zoomed, 55)
+        assert ocr.ssocr(thresholded) == expected
 
 
 def test_version():

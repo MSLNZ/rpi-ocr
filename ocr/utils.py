@@ -253,7 +253,7 @@ def threshold(image, value):
     ----------
     image : :class:`OpenCVImage` or :class:`PIL.Image.Image`
         The image object.
-    value : :class:`int`
+    value : :class:`int` or :class:`float`
         The threshold value.
 
     Returns
