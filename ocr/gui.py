@@ -2,10 +2,17 @@ import os
 import sys
 import math
 import time
-import platform
 
 import numpy as np
-if not platform.machine().startswith('arm'):
+
+from . import (
+    ocr,
+    ON_RPI,
+)
+from . import utils
+from .utils import process
+
+if not ON_RPI:
     import pyqtgraph as pg
     from msl.qt import (
         io,
@@ -24,9 +31,6 @@ else:
 
     class QtWidgets(object):
         QWidget = object
-
-from .ocr import ocr, process
-from . import utils
 
 
 def configure(client, **kwargs):
