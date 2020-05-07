@@ -159,7 +159,7 @@ def ocr(image, *, tasks=None, algorithm='tesseract', **parameters):
     return text, img
 
 
-def process(image, tasks=None):
+def process(image, *, tasks=None):
     """Perform image-processing tasks.
 
     Parameters
