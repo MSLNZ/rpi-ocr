@@ -247,7 +247,7 @@ def ssocr(image, *,
 
 def _run(command, stdin=None, debug=False):
     # runs the ssocr command
-    logger.debug(' '.join(command))
+    logger.debug('ssocr command: {}'.format(' '.join(command)))
     try:
         p = subprocess.run(command, input=stdin, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except FileNotFoundError:
