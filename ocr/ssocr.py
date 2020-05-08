@@ -2,13 +2,13 @@
 The `ssocr <https://www.unix-ag.uni-kl.de/~auerswal/ssocr/>`_ algorithm.
 """
 import os
-import sys
 import subprocess
 from enum import Enum
 
 from .utils import (
     to_bytes,
     logger,
+    get_executable_path,
 )
 
 ssocr_exe = 'ssocr'
@@ -66,33 +66,13 @@ def set_ssocr_path(path):
         directory that contains the executable.
     """
     global ssocr_exe
-
-    # allows for specifying '~' in the path and de-references symbolic links
-    path = os.path.realpath(os.path.expanduser(path))
-    filename = 'ssocr' + '.exe' if sys.platform == 'win32' else ''
-
-    if os.path.isfile(path):
-        if os.path.basename(path) != filename:
-            raise FileNotFoundError('Invalid ssocr path')
-    elif os.path.isdir(path):
-        found_it = False
-        for root, _, _ in os.walk(path):
-            url = os.path.join(root, filename)
-            if os.path.isfile(url):
-                path = url
-                found_it = True
-                break
-        if not found_it:
-            raise FileNotFoundError('Cannot find the ssocr executable')
-    else:
-        raise FileNotFoundError('The path is not a valid file or directory')
-
-    logger.debug('set ssocr executable to {!r}'.format(path))
-    ssocr_exe = path
+    exe = get_executable_path(path, 'ssocr')
+    logger.debug('set ssocr executable to {!r}'.format(exe))
+    ssocr_exe = exe
 
 
 def version(include_copyright=False):
-    """Get the version number of ssocr.
+    """Get the version number of ``ssocr``.
 
     Equivalent of running: ``ssocr --version``
 

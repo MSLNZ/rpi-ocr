@@ -1,6 +1,8 @@
 """
 Utility functions for performing image conversion and image processing.
 """
+import os
+import sys
 import base64
 import logging
 from io import BytesIO
@@ -76,6 +78,46 @@ def save(image, path, params=None):
     img = cv2.cvtColor(to_cv2(image), cv2.COLOR_RGB2BGR)
     cv2.imwrite(path, img, params=params)
     logger.debug('image saved to {!r}'.format(path))
+
+
+def get_executable_path(path, executable):
+    """Get the full path to the OCR executable.
+
+    Parameters
+    ----------
+    path : :class:`str`
+        The full path to the executable or a top-level
+        directory that contains the executable.
+    executable : :class:`str`
+        The name of the executable, e.g., ssocr or tesseract.
+
+    Returns
+    -------
+    :class:`str`
+        The full path to the executable.
+    """
+    # allows for specifying '~' in the path and de-references symbolic links
+    path = os.path.realpath(os.path.expanduser(path))
+    if sys.platform == 'win32' and not executable.endswith('.exe'):
+        executable += '.exe'
+
+    if os.path.isfile(path):
+        if os.path.basename(path) != executable:
+            raise FileNotFoundError('Invalid path to {!r}'.format(executable))
+    elif os.path.isdir(path):
+        found_it = False
+        for root, _, _ in os.walk(path):
+            url = os.path.join(root, executable)
+            if os.path.isfile(url):
+                path = url
+                found_it = True
+                break
+        if not found_it:
+            raise FileNotFoundError('Cannot find the {!r} executable'.format(executable))
+    else:
+        raise FileNotFoundError('The path is not a valid file or directory')
+
+    return path
 
 
 def to_bytes(obj):
@@ -421,14 +463,16 @@ def rotate(image, angle):
     if angle < 0:
         angle += 360.
 
-    if isinstance(image, OpenCVImage):
+    if isinstance(image, np.ndarray):
         # the following will expand the image size to fill the view
 
-        # we also reuse this code to rotate a bounding box
-        is_bounding_box = image.shape == (4,)
+        # we also reuse this code to rotate a corner of a bounding box
+        # do not include that this in the docstring above since it's
+        # not meant to be publicly known. See :func:`ocr.gui.rotate_image_corners`
+        is_corner = not isinstance(image, OpenCVImage)
 
         # grab the dimensions of the image and then determine the center
-        if is_bounding_box:
+        if is_corner:
             x, y, w, h = image
         else:
             h, w = image.shape[:2]
@@ -448,8 +492,9 @@ def rotate(image, angle):
         matrix[0, 2] += new_w * 0.5 - cx
         matrix[1, 2] += new_h * 0.5 - cy
 
-        # perform the actual rotation and return the image/bounding box
-        if is_bounding_box:
+        # perform the actual rotation and return the image or corner
+        if is_corner:
+            # the corner rotated, has shape (2,)
             return np.dot(matrix, [x, y, 1.0])
         out = cv2.warpAffine(image, matrix, (new_w, new_h))
         return OpenCVImage(out, ext=image.ext)

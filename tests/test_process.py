@@ -35,8 +35,9 @@ def test_wrong_datatype():
     with pytest.raises(AttributeError, match=r'no attribute \'invalid\''):
         ocr.process(None, tasks=[('invalid', 2)])
 
-    with pytest.raises(TypeError, match=r'Pillow or OpenCV'):
-        ocr.process(None, tasks=[('rotate', 90)])
+    # the `tasks` is valid, but the `image` data type is not valid
+    with pytest.raises(TypeError, match=r'Pillow or OpenCV image$'):
+        ocr.process('not an image or ndarray', tasks=[('rotate', 90)])
 
 
 def test_order_preserved():

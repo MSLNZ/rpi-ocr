@@ -404,8 +404,25 @@ def test_rotate():
 
     assert pil_rot.size[::-1] == cv2_rot.shape[:2]
 
-    with pytest.raises(TypeError, match='Pillow or OpenCV'):
-        utils.rotate(np.arange(10), 10)
+    # the rotate function is also used to rotate a corner of a bounding box
+    x, y, w, h = 100, 200, 50, 75
+    corners = ((x, y), (x + w, y), (x + w, y + h), (x, y + h))
+    rotated = utils.rotate(np.array([*corners[0], w, h]), 90)
+    assert np.allclose(rotated, [y, -w])
+    rotated = utils.rotate(np.array([*corners[1], w, h]), 90)
+    assert np.allclose(rotated, [y, -x])
+    rotated = utils.rotate(np.array([*corners[2], w, h]), 90)
+    assert np.allclose(rotated, [y+h, -x])
+    rotated = utils.rotate(np.array([*corners[3], w, h]), 90)
+    assert np.allclose(rotated, [y+h, -w])
+
+    # bounding box must have shape (4,) and be an ndarray
+    with pytest.raises(ValueError, match=r'not enough values to unpack'):
+        utils.rotate(np.array([1, 2]), 10)
+    with pytest.raises(ValueError, match=r'too many values to unpack'):
+        utils.rotate(np.array([1, 2, 3, 4, 5]), 10)
+    with pytest.raises(TypeError, match=r'Pillow or OpenCV image$'):
+        utils.rotate([100, 200, 300, 400], 10)  # must be an ndarray not a list
 
 
 def test_zoom():
