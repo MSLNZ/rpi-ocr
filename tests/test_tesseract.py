@@ -1,9 +1,16 @@
 import os
+import sys
 import tempfile
+from distutils.version import LooseVersion
 
 import pytest
+from pytesseract import TesseractNotFoundError
 
 import ocr
+from ocr.tesseract import (
+    version,
+    set_tesseract_path,
+)
 
 
 def test_english():
@@ -60,3 +67,35 @@ def test_numbers():
     for obj in ['does/not/exist.jpg', 'X'*10000 + '.png']:
         with pytest.raises(ValueError, match=r'^Invalid path or base64 string'):
             ocr.tesseract(obj)
+
+
+def test_version():
+    assert isinstance(version(), LooseVersion)
+
+
+def test_set_tesseract_path():
+    expected = '619121'
+    numbers_path = os.path.join(os.path.dirname(__file__), 'images', 'tesseract_numbers.jpg')
+
+    # make sure tesseract is available
+    assert ocr.tesseract(numbers_path) == expected
+
+    # make sure the executable is not available on PATH
+    tesseract_exe = 'tesseract'
+    if sys.platform == 'win32':
+        tesseract_exe += '.exe'
+    environ_path = None
+    for path in os.environ['PATH'].split(os.pathsep):
+        if os.path.isfile(os.path.join(path, tesseract_exe)):
+            environ_path = path
+            os.environ['PATH'] = os.environ['PATH'].replace(path, '')
+            break
+    assert environ_path is not None
+
+    # tesseract not available
+    with pytest.raises(TesseractNotFoundError):
+        ocr.tesseract(numbers_path)
+
+    # this should work again
+    set_tesseract_path(environ_path)
+    assert ocr.tesseract(numbers_path) == expected
