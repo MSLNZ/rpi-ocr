@@ -87,8 +87,9 @@ def test_inside_box():
     pil = ocr.utils.to_pil(inside_box_path)
     for obj in [cv2, pil]:
         zoomed = ocr.utils.zoom(obj, 230, 195, 220, 60)
-        assert ocr.ssocr(zoomed, threshold=21) == expected
-        thresholded = ocr.utils.threshold(zoomed, 55)
+        assert ocr.ssocr(zoomed, threshold=21) == expected  # 21%
+
+        thresholded = ocr.utils.threshold(zoomed, 255 * 0.21)  # 21% rescaled
         assert ocr.ssocr(thresholded) == expected
 
 
@@ -182,3 +183,26 @@ def test_enums():
 
     with pytest.raises(TypeError):
         Luminance.get_value(1)
+
+
+def test_debug_enabled():
+    out = ocr.ssocr(six_digits_path, iter_threshold=True, debug=True)
+    assert out.startswith('======')
+    assert 'image width: 280\nimage height: 73' in out
+    assert 'Display as seen by ssocr:' in out
+    assert out.endswith('431432')
+
+
+def test_hexadecimal_enabled():
+    out = ocr.ssocr(six_digits_path, iter_threshold=True, as_hex=True)
+    assert out == '2e:6d:24:2e:6d:5d'
+
+
+def test_absolute_threshold_enabled():
+    with pytest.raises(RuntimeError, match=r'found only 1 of 6 digits'):
+        ocr.ssocr(six_digits_path, absolute_threshold=True, num_digits=6)
+
+
+def test_omit_decimal_point():
+    out = ocr.ssocr(six_digits_path, iter_threshold=True, omit_decimal_point=True)
+    assert out == '431432'

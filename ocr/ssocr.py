@@ -235,7 +235,7 @@ def _run(command, stdin=None, debug=False):
         ) from None
 
     if debug:
-        return p.stderr.decode() + p.stdout.decode()
+        return p.stderr.decode() + p.stdout.rstrip().decode()
 
     if p.stderr:
         # ssocr uses imlib2 which can write warnings to stderr if a TIFF image is loaded, e.g.
