@@ -126,7 +126,7 @@ def test_set_ssocr_path():
         root = os.path.join(os.path.dirname(__file__), '..')
         set_ssocr_path(root)
     else:
-        set_ssocr_path('/usr/bin/ssocr')
+        set_ssocr_path('/usr/local/bin/ssocr')
 
 
 def test_enums():
