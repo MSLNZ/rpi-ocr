@@ -77,17 +77,18 @@ class BuildDocs(Command):
 
 install_requires = [
     'msl-network>=0.5',
-    'opencv-python',
+    'msl-qt @ git+https://github.com/MSLNZ/msl-qt.git',
     'pillow',
-    'msl-qt @ https://github.com/MSLNZ/msl-qt/archive/master.tar.gz',
+    'opencv-python!=4.1.1.26',  # there's an issue with opencv-python 4.1.1.26 on the RPi
     'pyqtgraph',
-    'PySide2',
 ]
 
 on_rpi = platform.machine().startswith('arm')
 if on_rpi:
     install_requires.extend(['picamera', 'pytesseract'])
-
+else:
+    # the rpi-setup.sh script installs PySide2 in the virtual environment
+    install_requires.append('PySide2')
 
 needs_sphinx = {'doc', 'docs', 'apidoc', 'apidocs', 'build_sphinx'}.intersection(sys.argv)
 sphinx = ['sphinx', 'sphinx_rtd_theme'] + install_requires if needs_sphinx else []
