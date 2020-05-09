@@ -11,7 +11,7 @@ else:
 
     import numpy as np
 
-    from .ocr import ocr
+    from . import ocr
     from .utils import (
         DEFAULT_IMAGE_FORMAT,
         to_base64,
