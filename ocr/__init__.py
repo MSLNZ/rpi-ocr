@@ -10,19 +10,6 @@ from msl.network import (
     ssh,
 )
 
-from .client import OCRClient
-from .service import OCRService
-from . import utils
-from .utils import save
-from .ssocr import (
-    ssocr,
-    set_ssocr_path,
-)
-from .tesseract import (
-    tesseract,
-    set_tesseract_path,
-)
-
 # if you change this value then you must also update the name of the
 # virtual environment that is created in rpi-setup.sh
 RPI_EXE_PATH = 'ocrenv/bin/ocr'
@@ -203,3 +190,17 @@ def process(image, *, tasks=None):
             image = obj(image, value)
 
     return image
+
+
+from .client import OCRClient
+from .service import OCRService
+from . import utils
+from .utils import save
+from .ssocr import (
+    ssocr,
+    set_ssocr_path,
+)
+from .tesseract import (
+    tesseract,
+    set_tesseract_path,
+)
