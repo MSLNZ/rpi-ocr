@@ -3,7 +3,6 @@ import math
 import time
 
 import numpy as np
-import pyqtgraph as pg
 from msl.qt import (
     io,
     QtCore,
@@ -18,7 +17,18 @@ from . import (
     ocr,
     process,
     utils,
+    ON_RPI,
 )
+
+# pyqtgraph calls PySide2.__version__ when it is imported.
+# The PySide2 that gets installed on the Raspberry Pi does not have
+# a __version__ attribute so define it from QtCore.__version__
+if ON_RPI:
+    import PySide2
+    if not hasattr(PySide2, '__version__'):
+        PySide2.__version__ = QtCore.__version__
+
+import pyqtgraph as pg
 
 
 class Gui(QtWidgets.QWidget):
