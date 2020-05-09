@@ -51,6 +51,10 @@ for f in *.deb; do dpkg -x $f ./pyside2; done;
 cp -r ./pyside2/usr/lib/python3/dist-packages/* ~/$ENV_NAME/lib/python*/site-packages/
 cd ~
 
+# install rpi-ocr
+cd rpi-ocr
+pip install .
+
 # check tesseract and ssocr installation
 echo Testing tesseract installation... you should see 619121
 tesseract rpi-ocr/tests/images/tesseract_numbers.jpg stdout
@@ -59,11 +63,7 @@ ssocr -T rpi-ocr/tests/images/six_digits.png
 
 # run the rpi-ocr tests
 pip install pytest pytest-cov
-cd rpi-ocr
 pytest
-
-# install rpi-ocr
-pip install .
 
 # cleanup
 cd ~
