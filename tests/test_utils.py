@@ -452,3 +452,25 @@ def test_zoom():
 
     with pytest.raises(TypeError, match='Pillow or OpenCV'):
         utils.zoom(np.arange(10), 200, 100, 180, 200)
+
+
+def test_greyscale():
+    cv2 = utils.to_cv2(BMP_PATH)
+    assert cv2.shape == (720, 720, 3)
+
+    pil = utils.to_pil(BMP_PATH)
+    assert pil.mode == 'RGB'
+    assert pil.size == (720, 720)
+    assert pil.getbands() == ('R', 'G', 'B')
+
+    cv2_grey = utils.greyscale(cv2)
+    assert isinstance(cv2_grey, utils.OpenCVImage)
+    assert cv2_grey.ext == '.bmp'
+    assert cv2_grey.shape == (720, 720)
+
+    pil_grey = utils.greyscale(pil)
+    assert isinstance(pil_grey, utils.PillowImage)
+    assert pil_grey.format == 'BMP'
+    assert pil_grey.mode == 'L'
+    assert pil_grey.size == (720, 720)
+    assert pil_grey.getbands() == ('L',)

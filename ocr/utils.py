@@ -62,21 +62,25 @@ class OpenCVImage(np.ndarray):
         self.ext = getattr(obj, 'ext', DEFAULT_FILE_EXTENSION)
 
 
-def save(image, path, params=None):
+def save(image, path, **kwargs):
     """Save an image to a file.
 
     Parameters
     ----------
-    image
-        The image to save. See :func:`to_cv2` for the supported data types.
+    image : :class:`OpenCVImage` or :class:`PIL.Image.Image`
+        The image to save.
     path : :class:`str`
         A file path to save the image to. The image format is chosen based
         on the filename extension.
-    params : :class:`tuple`, optional
-        See :func:`cv2.imwrite` for more details.
+    kwargs
+        If `image` is an :class:`OpenCVImage` then see :func:`cv2.imwrite` for more details.
+        Otherwise see :class:`PIL.Image.Image.save` for more details.
     """
-    img = cv2.cvtColor(to_cv2(image), cv2.COLOR_RGB2BGR)
-    cv2.imwrite(path, img, params=params)
+    if isinstance(image, PillowImage):
+        image.save(path, **kwargs)
+    else:
+        img = cv2.cvtColor(to_cv2(image), cv2.COLOR_RGB2BGR)
+        cv2.imwrite(path, img, **kwargs)
     logger.debug('image saved to {!r}'.format(path))
 
 
@@ -137,7 +141,7 @@ def to_bytes(obj):
         try:
             with open(obj, 'rb') as fp:
                 data = fp.read()
-            logger.debug('converted {!r} to bytes'.format(obj))
+            logger.debug('opened {!r} as bytes'.format(obj))
             return data
         except OSError:
             try:
@@ -212,7 +216,7 @@ def to_pil(obj):
         else:
             try:
                 image = Image.open(obj)
-                logger.debug('converted {!r} to Pillow image'.format(obj))
+                logger.debug('opened {!r} as a Pillow image'.format(obj))
             except OSError:
                 try:
                     buf = base64.b64decode(obj)
@@ -261,7 +265,7 @@ def to_cv2(obj):
             img = OpenCVImage(np.asarray(obj))
         else:
             img = OpenCVImage(np.asarray(obj), ext='.'+obj.format)
-        logger.debug("converted {!r} to 'OpenCVImage'".format(obj.__class__.__name__))
+        logger.debug('converted {!r} to an OpenCVImage'.format(obj.__class__.__name__))
         return img
 
     if isinstance(obj, str):
@@ -274,10 +278,10 @@ def to_cv2(obj):
             arr = np.frombuffer(buf, dtype=np.uint8)
             image = cv2.imdecode(arr, flags=cv2.IMREAD_COLOR)
             ext = get_ext_from_bytes(buf)
-            logger.debug("converted base64 to 'OpenCVImage'")
+            logger.debug('converted base64 to an OpenCVImage')
         else:
             ext = splitext(obj)[1]
-            logger.debug("converted {!r} to 'OpenCVImage'".format(obj))
+            logger.debug('opened {!r} as an OpenCVImage'.format(obj))
         array = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         return OpenCVImage(array, ext=ext)
 
@@ -287,11 +291,11 @@ def to_cv2(obj):
         array = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         ext = get_ext_from_bytes(obj)
         img = OpenCVImage(array, ext=ext)
-        logger.debug("converted bytes to 'OpenCVImage'")
+        logger.debug('converted bytes to OpenCVImage')
         return img
 
     if isinstance(obj, OpenCVImage):
-        logger.debug("returning original 'OpenCVImage' object")
+        logger.debug('returning original OpenCVImage')
         return obj
 
     if isinstance(obj, np.ndarray):
@@ -309,14 +313,14 @@ def threshold(image, value):
     ----------
     image : :class:`OpenCVImage` or :class:`PIL.Image.Image`
         The image object.
-    value : :class:`int` or :class:`float`
-        The threshold value.
+    value : :class:`int`
+        The threshold value, between 0 and 255.
 
     Returns
     -------
-    The `image` with a threshold applied.
+    The image with the threshold applied.
     """
-    logger.debug('threshold: value={}'.format(value))
+    logger.debug('threshold value={}'.format(value))
     if isinstance(image, OpenCVImage):
         ret, out = cv2.threshold(image, value, 255, cv2.THRESH_BINARY)
         if not ret:
@@ -349,7 +353,7 @@ def erode(image, radius, iterations=1):
     -------
     The `image` with erosion applied.
     """
-    logger.debug('erode: radius={} iterations={}'.format(radius, iterations))
+    logger.debug('erode radius={} iterations={}'.format(radius, iterations))
     if radius is None or radius < 1 or iterations < 1:
         return image
 
@@ -387,7 +391,7 @@ def dilate(image, radius, iterations=1):
     -------
     The `image` with dilation applied.
     """
-    logger.debug('dilate: radius={} iterations={}'.format(radius, iterations))
+    logger.debug('dilate radius={} iterations={}'.format(radius, iterations))
     if radius is None or radius < 1 or iterations < 1:
         return image
 
@@ -423,7 +427,7 @@ def gaussian_blur(image, radius):
     -------
     The `image` with a Gaussian blur applied.
     """
-    logger.debug('gaussian_blur: radius={}'.format(radius))
+    logger.debug('gaussian_blur radius={}'.format(radius))
     if radius is None or radius < 1:
         return image
 
@@ -456,7 +460,7 @@ def rotate(image, angle):
     -------
     The rotated image.
     """
-    logger.debug('rotate: angle={}'.format(angle))
+    logger.debug('rotate angle={}'.format(angle))
     if angle is None or angle == 0:
         return image
 
@@ -545,7 +549,7 @@ def zoom(image, x, y, w, h):
         w = int(width * w)
         h = int(height * h)
 
-    logger.debug('zoom: x={} y={} w={} h={}'.format(x, y, w, h))
+    logger.debug('zoom x={} y={} w={} h={}'.format(x, y, w, h))
 
     if isinstance(image, OpenCVImage):
         return image[y:y+h, x:x+w]
@@ -553,3 +557,28 @@ def zoom(image, x, y, w, h):
     out = image.crop(box=(x, y, x + w, y + h))
     out.format = image.format
     return out
+
+
+def greyscale(image):
+    """Convert an image to greyscale.
+
+    Parameters
+    ----------
+    image : :class:`OpenCVImage` or :class:`PIL.Image.Image`
+        The image object.
+
+    Returns
+    -------
+    The image converted to greyscale.
+    """
+    logger.debug('convert image to greyscale')
+    if isinstance(image, OpenCVImage):
+        converted = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+        return OpenCVImage(converted, ext=image.ext)
+
+    if isinstance(image, PillowImage):
+        converted = image.convert(mode='L')
+        converted.format = image.format
+        return converted
+
+    raise TypeError('Expect a Pillow or OpenCV image')

@@ -134,6 +134,8 @@ def ocr(image, *, tasks=None, algorithm='tesseract', **parameters):
     :class:`~.utils.OpenCVImage` or :class:`PIL.Image.Image`
         The processed image.
     """
+    if isinstance(image, str):
+        image = utils.to_cv2(image)
     img = process(image, tasks=tasks)
 
     if algorithm == 'tesseract':
@@ -163,6 +165,7 @@ def process(image, *, tasks=None):
         * [('dilate', {'radius': 3, 'iterations': 4})]
         * [('dilate', 3)] apply dilation with a radius of 3 and use the default number of iterations
         * [('rotate', 90), ('dilate', 3)] specify multiple tasks, first rotate then dilate
+        * [('rotate', 180), ('greyscale',)] greyscale does not accept arguments
         * {'rotate': 90, 'dilate': 3} using a dict instead of a list of tuple
 
     Returns
@@ -176,16 +179,23 @@ def process(image, *, tasks=None):
         if sys.version_info[:2] < (3, 6) and not isinstance(tasks, OrderedDict):
             # PEP 468 -- Preserving the order of **kwargs in a function.
             raise TypeError('Cannot use a dict in Python <3.6 since the order is not preserved')
-        name_value = tasks.items()
+        items = tasks.items()
     else:
-        name_value = tasks
+        items = tasks
 
-    for name, value in name_value:
+    for item in items:
+        if len(item) == 1:
+            name, value = item[0], None
+        else:
+            name, value = item
+
         obj = getattr(utils, name)
-        if isinstance(value, dict):
-            image = obj(image, **value)
-        elif isinstance(value, (list, tuple)):
+        if isinstance(value, (list, tuple)):
             image = obj(image, *value)
+        elif isinstance(value, dict):
+            image = obj(image, **value)
+        elif value is None:
+            image = obj(image)
         else:
             image = obj(image, value)
 

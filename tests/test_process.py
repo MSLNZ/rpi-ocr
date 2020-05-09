@@ -20,7 +20,10 @@ def test_wrong_datatype():
         with pytest.raises(TypeError, match=r'Python <3.6'):
             ocr.process(None, tasks={'erode': 3})
 
-    with pytest.raises(ValueError, match=r'not enough values to unpack'):
+    with pytest.raises(ValueError, match=r'too many values to unpack'):
+        ocr.process(None, tasks=['greyscale'])
+
+    with pytest.raises(TypeError, match=r'missing 1 required positional argument'):
         ocr.process(None, tasks=[('rotate',)])
 
     with pytest.raises(ValueError, match=r'too many values to unpack'):
@@ -49,6 +52,7 @@ def test_order_preserved():
     manual = ocr.utils.rotate(manual, 45)
     manual = ocr.utils.dilate(manual, 3, 2)
     manual = ocr.utils.gaussian_blur(manual, 3)
+    manual = ocr.utils.greyscale(manual)
     manual = ocr.utils.erode(manual, 5, 2)
 
     tasks = [
@@ -57,6 +61,7 @@ def test_order_preserved():
         ('rotate', 45),
         ('dilate', (3, 2)),
         ('gaussian_blur', 3),
+        ('greyscale',),
         ('erode', (5, 2)),
     ]
     processed = ocr.process(ocr.utils.to_cv2(path), tasks=tasks)
@@ -72,6 +77,7 @@ def test_order_preserved():
             'rotate': {'angle': 45},
             'dilate': {'radius': 3, 'iterations': 2},
             'gaussian_blur': (3,),
+            'greyscale': None,
             'erode': (5, 2),
         }
         processed = ocr.process(ocr.utils.to_cv2(path), tasks=tasks)
