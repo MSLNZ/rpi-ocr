@@ -1,6 +1,8 @@
 """
 The `Tesseract <https://github.com/tesseract-ocr/tesseract>`_ algorithm.
 """
+import subprocess
+
 try:
     import pytesseract
 except ImportError:
@@ -40,7 +42,21 @@ def version():
     return pytesseract.get_tesseract_version()
 
 
-def tesseract(image, *, lang='eng', config='-c tessedit_char_whitelist=0123456789+-,.', **kwargs):
+def languages():
+    """Get the list of languages that are available to ``tesseract``.
+
+    Returns
+    -------
+    :class:`list` of :class:`str`
+        The languages.
+    """
+    _check_pytessseract_installed()
+    cmd = [pytesseract.pytesseract.tesseract_cmd, '--list-langs']
+    out = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+    return out.decode('utf-8').splitlines()[1:]
+
+
+def tesseract(image, *, lang='eng', psm=7, oem=3, whitelist='0123456789+-.', timeout=0, nice=0, config=''):
     """Apply the `Tesseract <https://github.com/tesseract-ocr/tesseract>`_ algorithm.
 
     Parameters
@@ -50,10 +66,38 @@ def tesseract(image, *, lang='eng', config='-c tessedit_char_whitelist=012345678
         by :func:`~.utils.to_cv2`.
     lang : :class:`str`, optional
         The language name.
+    psm : :class:`int`, optional
+        Page segmentation mode:
+          * 0  Orientation and script detection (OSD) only.
+          * 1  Automatic page segmentation with OSD.
+          * 2  Automatic page segmentation, but no OSD, or OCR. (not implemented)
+          * 3  Fully automatic page segmentation, but no OSD. (Tesseract's default option)
+          * 4  Assume a single column of text of variable sizes.
+          * 5  Assume a single uniform block of vertically aligned text.
+          * 6  Assume a single uniform block of text.
+          * 7  Treat the image as a single text line.
+          * 8  Treat the image as a single word.
+          * 9  Treat the image as a single word in a circle.
+          * 10 Treat the image as a single character.
+          * 11 Sparse text. Find as much text as possible in no particular order.
+          * 12 Sparse text with OSD.
+          * 13 Raw line. Treat the image as a single text line, bypassing hacks that are Tesseract-specific.
+    oem : :class:`int`, optional
+        OCR Engine mode:
+          * 0 Legacy engine only.
+          * 1 Neural nets LSTM engine only.
+          * 2 Legacy + LSTM engines.
+          * 3 Based on what is available. (Tesseract's default)
+    whitelist : :class:`str`, optional
+        The character set that the result must be in (equivalent to ``-c tessedit_char_whitelist``).
+        Set to :data:`None` or an empty string to not use a whitelist.
+    timeout : :class:`float`, optional
+        The number of seconds to wait for the result before raising a :exc:`RuntimeError`.
+    nice : :class:`int`, optional
+        Modifies the processor priority for the Tesseract run. Not supported on Windows.
+        Nice adjusts the niceness of unix-like processes.
     config : :class:`str`, optional
-        The configuration options.
-    kwargs
-        Additional keyword arguments are passed to :func:`pytesseract.image_to_string`.
+        Any additional configuration parameters.
 
     Returns
     -------
@@ -61,7 +105,13 @@ def tesseract(image, *, lang='eng', config='-c tessedit_char_whitelist=012345678
         The OCR text.
     """
     _check_pytessseract_installed()
-    return pytesseract.image_to_string(to_cv2(image), lang=lang, config=config, **kwargs)
+    cfg = '--psm {} --oem {}'.format(psm, oem)
+    if whitelist:
+        cfg += ' -c tessedit_char_whitelist=' + whitelist
+    if config:
+        cfg += ' ' + config
+    logger.debug('tesseract parameters: lang={!r} config={!r} nice={} timeout={}'.format(lang, cfg, nice, timeout))
+    return pytesseract.image_to_string(to_cv2(image), lang=lang, config=cfg, nice=nice, timeout=timeout)
 
 
 def _check_pytessseract_installed():

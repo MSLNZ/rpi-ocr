@@ -10,6 +10,7 @@ import ocr
 from ocr.tesseract import (
     version,
     set_tesseract_path,
+    languages,
 )
 
 
@@ -20,18 +21,20 @@ def test_english():
     temp_paths = [tempfile.gettempdir() + '/tesseract_eng_text.' + ext
                   for ext in ['bmp', 'jpg', 'jpeg', 'png', 'tif', 'tiff']]
 
-    assert ocr.tesseract(eng, config='') == expected
+    params = {'psm': 3, 'whitelist': None}
+
+    assert ocr.tesseract(eng, **params) == expected
 
     for p in temp_paths:
         ocr.save(eng, p)
 
-        assert ocr.tesseract(p, config='') == expected
-        assert ocr.tesseract(ocr.utils.to_cv2(p), config='') == expected
-        assert ocr.tesseract(ocr.utils.to_pil(p), config='') == expected
-        assert ocr.tesseract(ocr.utils.to_base64(p), config='') == expected
-        assert ocr.tesseract(ocr.utils.to_bytes(p), config='') == expected
+        assert ocr.tesseract(p, **params) == expected
+        assert ocr.tesseract(ocr.utils.to_cv2(p), **params) == expected
+        assert ocr.tesseract(ocr.utils.to_pil(p), **params) == expected
+        assert ocr.tesseract(ocr.utils.to_base64(p), **params) == expected
+        assert ocr.tesseract(ocr.utils.to_bytes(p), **params) == expected
         with open(p, 'rb') as fp:
-            assert ocr.tesseract(fp.read(), config='') == expected
+            assert ocr.tesseract(fp.read(), **params) == expected
 
         os.remove(p)
         assert not os.path.isfile(p)
@@ -99,3 +102,16 @@ def test_set_tesseract_path():
     # this should work again
     set_tesseract_path(environ_path)
     assert ocr.tesseract(numbers_path) == expected
+
+
+def test_languages():
+    langs = languages()
+    assert 'eng' in langs
+    assert 'letsgodigital' in langs
+
+
+def test_letsgodigital():
+    path = os.path.join(os.path.dirname(__file__), 'images', 'letsgodigital.png')
+    tasks = [('greyscale',), ('threshold', 40), ('erode', 3)]
+    text, _ = ocr.ocr(path, tasks=tasks, algorithm='tesseract', lang='letsgodigital')
+    assert text == '22.3'
