@@ -113,25 +113,28 @@ def configure(client, **kwargs):
     return gui.ocr_params
 
 
-def ocr(image, *, tasks=None, algorithm='tesseract', **parameters):
+def ocr(image, *, tasks=None, algorithm='tesseract', **kwargs):
     """Perform OCR on an image.
 
     Parameters
     ----------
     image : :class:`str`, :class:`~.utils.OpenCVImage` or :class:`PIL.Image.Image`
-        The image to perform OCR on.
-    tasks :
-        Passed to the :func:`.process` function.
+        The image to perform OCR on. If a :class:`str` then a file path or a
+        base64 representation of the image.
+    tasks : :class:`list` of :class:`tuple` or :class:`dict`, optional
+        The image-processing tasks to apply to `image` before calling the
+        OCR algorithm. The value is passed to the :func:`.process` function.
     algorithm : :class:`str`, optional
         The OCR algorithm to use: ``tesseract`` or ``ssocr``.
-    parameters
-        Keyword arguments that are passed to the specified OCR algorithm.
+    kwargs
+        All additional keyword arguments are passed to the specified OCR algorithm,
+        :func:`~ocr.tesseract.tesseract` or :func:`~ocr.ssocr.ssocr`.
 
     Returns
     -------
     :class:`str`
         The OCR text.
-    :class:`~.utils.OpenCVImage` or :class:`PIL.Image.Image`
+    :class:`~ocr.utils.OpenCVImage` or :class:`PIL.Image.Image`
         The processed image.
     """
     if isinstance(image, str):
@@ -139,21 +142,21 @@ def ocr(image, *, tasks=None, algorithm='tesseract', **parameters):
     img = process(image, tasks=tasks)
 
     if algorithm == 'tesseract':
-        text = tesseract(img, **parameters)
+        text = tesseract(img, **kwargs)
     elif algorithm == 'ssocr':
-        text = ssocr(img, **parameters)
+        text = ssocr(img, **kwargs)
     else:
         raise ValueError('Invalid algorithm {!r} to use for OCR'.format(algorithm))
 
     return text, img
 
 
-def process(image, *, tasks=None):
+def process(image, tasks=None):
     """Perform image-processing tasks.
 
     Parameters
     ----------
-    image : :class:`OpenCVImage` or :class:`PIL.Image.Image`
+    image : :class:`~ocr.utils.OpenCVImage` or :class:`PIL.Image.Image`
         The image to process.
     tasks : :class:`list` of :class:`tuple` or :class:`dict`, optional
         Apply the transformations and the filters to the image. The
@@ -170,7 +173,8 @@ def process(image, *, tasks=None):
 
     Returns
     -------
-    The processed image.
+    :class:`~ocr.utils.OpenCVImage` or :class:`PIL.Image.Image`
+        The processed image.
     """
     if not tasks:
         return image
