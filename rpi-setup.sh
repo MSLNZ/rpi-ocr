@@ -14,8 +14,8 @@ sudo apt install -y g++ autoconf automake libtool pkg-config libpng-dev libjpeg8
 # prerequisites for ssocr
 sudo apt install -y make build-essential libimlib2 libimlib2-dev
 
-# prerequisites for opencv
-sudo apt install -y libavcodec-dev libavformat-dev libswscale-dev libgstreamer-plugins-base1.0-dev libgstreamer1.0-dev libgtk-3-dev libpng-dev libjpeg-dev libopenexr-dev libtiff-dev libwebp-dev libjasper-dev libatlas-base-dev libqtgui4 libqt4-test
+# prerequisites for opencv-python
+sudo apt install -y libavutil56 libcairo-gobject2 libgtk-3-0 libqtgui4 libpango-1.0-0 libqtcore4 libavcodec58 libcairo2 libswscale5 libtiff5 libqt4-test libatk1.0-0 libavformat58 libgdk-pixbuf2.0-0 libilmbase23 libjasper1 libopenexr23 libpangocairo-1.0-0 libwebp6
 
 # install Qt5
 sudo apt install -y qt5-default libqt5qml5 libpyside2-py3-5.11 libqt53dcore5 libqt53dinput5 libqt53dlogic5 libqt53drender5 libqt5charts5 libqt5location5 libqt5positioningquick5 libqt5positioning5 libqt5quick5 libqt5multimedia5 libqt5multimediawidgets5 libqt5quickwidgets5 libqt5script5 libqt5scripttools5 libqt5sensors5 libqt5texttospeech5 libqt5webchannel5 libqt5websockets5 libqt5x11extras5 libqt5xmlpatterns5
@@ -31,8 +31,8 @@ sudo make install
 sudo ldconfig
 make training
 sudo make training-install
-export TESSDATA_PREFIX=/usr/local/share/tessdata
-echo -e "\nexport TESSDATA_PREFIX="$TESSDATA_PREFIX >> ~/.bashrc
+echo -e "\n#Used by tesseract-ocr\nexport TESSDATA_PREFIX=/usr/local/share/tessdata" >> ~/.bashrc
+source ~/.bashrc
 cd ~
 
 # add trained models for tesseract to the tessdata directory
