@@ -28,8 +28,8 @@ cd ~
 
 # add trained data for tesseract
 wget https://github.com/tesseract-ocr/tessdata/raw/master/eng.traineddata
-wget https://github.com/arturaugusto/display_ocr/raw/master/letsgodigital/letsgodigital.traineddata
-sudo mv *.traineddata $TESSDATA_PREFIX
+sudo mv *.traineddata $TESSDATA_PREFIX/tessdata
+sudo cp ~/rpi-ocr/resources/tessdata/*.traineddata $TESSDATA_PREFIX/tessdata
 
 # build ssocr
 git clone https://github.com/auerswal/ssocr.git
