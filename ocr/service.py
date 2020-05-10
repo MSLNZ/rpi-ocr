@@ -17,8 +17,6 @@ else:
         to_base64,
     )
 
-    os.environ['TESSDATA_PREFIX'] = '/usr/local/share/'
-
 
 class OCRService(Service):
 
