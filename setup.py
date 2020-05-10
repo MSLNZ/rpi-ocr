@@ -80,7 +80,7 @@ install_requires = [
     'msl-qt @ git+https://github.com/MSLNZ/msl-qt.git',
     'pillow',
     'opencv-python!=4.1.1.26',  # there's an issue with opencv-python 4.1.1.26 on the RPi
-    'pyqtgraph',
+    'pyqtgraph>=0.11.0rc0',
 ]
 
 on_rpi = platform.machine().startswith('arm')
