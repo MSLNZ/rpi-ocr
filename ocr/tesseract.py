@@ -56,7 +56,7 @@ def languages():
     return out.decode('utf-8').splitlines()[1:]
 
 
-def tesseract(image, *, lang='eng', psm=7, oem=3, whitelist='0123456789+-.', timeout=0, nice=0, config=''):
+def tesseract(image, *, language='eng', psm=7, oem=3, whitelist='0123456789+-.', timeout=0, nice=0, config=''):
     """Apply the `Tesseract <https://github.com/tesseract-ocr/tesseract>`_ algorithm.
 
     Parameters
@@ -64,8 +64,8 @@ def tesseract(image, *, lang='eng', psm=7, oem=3, whitelist='0123456789+-.', tim
     image
         An image to apply the algorithm to. The data type must be supported
         by :func:`~.utils.to_cv2`.
-    lang : :class:`str`, optional
-        The language name.
+    language : :class:`str`, optional
+        The name of the language to use.
     psm : :class:`int`, optional
         Page segmentation mode:
           * 0  Orientation and script detection (OSD) only.
@@ -110,8 +110,8 @@ def tesseract(image, *, lang='eng', psm=7, oem=3, whitelist='0123456789+-.', tim
         cfg += ' -c tessedit_char_whitelist=' + whitelist
     if config:
         cfg += ' ' + config
-    logger.debug('tesseract parameters: lang={!r} config={!r} nice={} timeout={}'.format(lang, cfg, nice, timeout))
-    return pytesseract.image_to_string(to_cv2(image), lang=lang, config=cfg, nice=nice, timeout=timeout)
+    logger.debug('tesseract params: language={!r} config={!r} nice={} timeout={}'.format(language, cfg, nice, timeout))
+    return pytesseract.image_to_string(to_cv2(image), lang=language, config=cfg, nice=nice, timeout=timeout)
 
 
 def _check_pytessseract_installed():

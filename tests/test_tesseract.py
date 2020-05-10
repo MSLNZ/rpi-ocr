@@ -113,5 +113,5 @@ def test_languages():
 def test_letsgodigital():
     path = os.path.join(os.path.dirname(__file__), 'images', 'letsgodigital.png')
     tasks = [('greyscale',), ('threshold', 40), ('erode', 3)]
-    text, _ = ocr.ocr(path, tasks=tasks, algorithm='tesseract', lang='letsgodigital')
+    text, _ = ocr.ocr(path, tasks=tasks, algorithm='tesseract', language='letsgodigital')
     assert text == '22.3'
