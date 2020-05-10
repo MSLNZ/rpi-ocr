@@ -5,8 +5,17 @@
 # then you must also change the value of RPI_EXE_PATH in ocr/__init__.py
 ENV_NAME="ocrenv"
 
-# install prerequisites
-sudo apt install -y python3-dev python3-venv libffi-dev libssl-dev build-essential libimlib2 libimlib2-dev automake libtool libleptonica-dev make pkg-config libicu-dev libpango1.0-dev libcairo2-dev libatlas-base-dev libjasper-dev libqtgui4 libqt4-test
+# prerequisites for cryptography
+sudo apt install -y build-essential libssl-dev libffi-dev python3-dev
+
+# prerequisites for tesseract and the training tools
+sudo apt install -y g++ autoconf automake libtool pkg-config libpng-dev libjpeg8-dev libtiff5-dev zlib1g-dev libleptonica-dev libicu-dev libpango1.0-dev libcairo2-dev
+
+# prerequisites for ssocr
+sudo apt install -y make build-essential libimlib2 libimlib2-dev
+
+# prerequisites for opencv
+sudo apt install -y libavcodec-dev libavformat-dev libswscale-dev libgstreamer-plugins-base1.0-dev libgstreamer1.0-dev libgtk-3-dev libpng-dev libjpeg-dev libopenexr-dev libtiff-dev libwebp-dev libjasper-dev libatlas-base-dev libqtgui4 libqt4-test
 
 # install Qt5
 sudo apt install -y qt5-default libqt5qml5 libpyside2-py3-5.11 libqt53dcore5 libqt53dinput5 libqt53dlogic5 libqt53drender5 libqt5charts5 libqt5location5 libqt5positioningquick5 libqt5positioning5 libqt5quick5 libqt5multimedia5 libqt5multimediawidgets5 libqt5quickwidgets5 libqt5script5 libqt5scripttools5 libqt5sensors5 libqt5texttospeech5 libqt5webchannel5 libqt5websockets5 libqt5x11extras5 libqt5xmlpatterns5
@@ -22,14 +31,16 @@ sudo make install
 sudo ldconfig
 make training
 sudo make training-install
-echo -e "\nexport TESSDATA_PREFIX=/usr/local/share/" >> ~/.bashrc
-export TESSDATA_PREFIX=/usr/local/share/
+export TESSDATA_PREFIX=/usr/local/share/tessdata
+echo -e "\nexport TESSDATA_PREFIX="$TESSDATA_PREFIX >> ~/.bashrc
 cd ~
 
-# add trained data for tesseract
-wget https://github.com/tesseract-ocr/tessdata/raw/master/eng.traineddata
-sudo mv *.traineddata $TESSDATA_PREFIX/tessdata
-sudo cp ~/rpi-ocr/resources/tessdata/*.traineddata $TESSDATA_PREFIX/tessdata
+# add trained models for tesseract to the tessdata directory
+wget https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/master/eng.traineddata
+wget https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/master/osd.traineddata
+sudo mv *.traineddata $TESSDATA_PREFIX
+sudo cp -r ~/tesseract/tessdata $TESSDATA_PREFIX
+sudo cp ~/rpi-ocr/resources/tessdata/*.traineddata $TESSDATA_PREFIX
 
 # build ssocr
 git clone https://github.com/auerswal/ssocr.git
@@ -38,6 +49,7 @@ sudo make install
 cd ~
 
 # create virtual environment
+sudo apt install -y python3-venv
 python3 -m venv $ENV_NAME
 source $ENV_NAME/bin/activate
 pip install --upgrade pip
@@ -57,9 +69,9 @@ pip install .
 
 # check tesseract and ssocr installation
 echo Testing tesseract installation... you should see 619121
-tesseract rpi-ocr/tests/images/tesseract_numbers.jpg stdout
+tesseract ~/rpi-ocr/tests/images/tesseract_numbers.jpg stdout
 echo Testing ssocr installation... you should see 431432
-ssocr -T rpi-ocr/tests/images/six_digits.png
+ssocr -T ~/rpi-ocr/tests/images/six_digits.png
 
 # run the rpi-ocr tests
 pip install pytest pytest-cov
