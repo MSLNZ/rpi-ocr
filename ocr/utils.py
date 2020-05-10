@@ -67,8 +67,9 @@ def save(image, path, **kwargs):
 
     Parameters
     ----------
-    image : :class:`OpenCVImage` or :class:`PIL.Image.Image`
-        The image to save.
+    image : :class:`str`, :class:`OpenCVImage` or :class:`PIL.Image.Image`
+        The image to save. Can be a base64 string or a file path (e.g., if
+        you only wanted to convert an image to a new image format).
     path : :class:`str`
         A file path to save the image to. The image format is chosen based
         on the filename extension.
