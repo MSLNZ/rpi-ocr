@@ -9,13 +9,13 @@ ENV_NAME="ocrenv"
 sudo apt install -y build-essential libssl-dev libffi-dev python3-dev
 
 # prerequisites for tesseract and the training tools
-sudo apt install -y g++ autoconf automake libtool pkg-config libpng-dev libjpeg8-dev libtiff5-dev zlib1g-dev libleptonica-dev libicu-dev libpango1.0-dev libcairo2-dev
+sudo apt install -y g++ autoconf automake libtool pkg-config libpng-dev libjpeg-dev libtiff5-dev zlib1g-dev libleptonica-dev libicu-dev libpango1.0-dev libcairo2-dev
 
 # prerequisites for ssocr
 sudo apt install -y make build-essential libimlib2 libimlib2-dev
 
 # prerequisites for opencv-python
-sudo apt install -y libavutil56 libcairo-gobject2 libgtk-3-0 libqtgui4 libpango-1.0-0 libqtcore4 libavcodec58 libcairo2 libswscale5 libtiff5 libqt4-test libatk1.0-0 libavformat58 libgdk-pixbuf2.0-0 libilmbase23 libjasper1 libopenexr23 libpangocairo-1.0-0 libwebp6
+sudo apt install -y libavutil56 libcairo-gobject2 libgtk-3-0 libqtgui4 libpango-1.0-0 libqtcore4 libavcodec58 libcairo2 libswscale5 libtiff5 libqt4-test libatk1.0-0 libavformat58 libgdk-pixbuf2.0-0 libilmbase23 libjasper1 libopenexr23 libpangocairo-1.0-0 libwebp6 libatlas-base-dev
 
 # install Qt5
 sudo apt install -y qt5-default libqt5qml5 libpyside2-py3-5.11 libqt53dcore5 libqt53dinput5 libqt53dlogic5 libqt53drender5 libqt5charts5 libqt5location5 libqt5positioningquick5 libqt5positioning5 libqt5quick5 libqt5multimedia5 libqt5multimediawidgets5 libqt5quickwidgets5 libqt5script5 libqt5scripttools5 libqt5sensors5 libqt5texttospeech5 libqt5webchannel5 libqt5websockets5 libqt5x11extras5 libqt5xmlpatterns5
@@ -31,7 +31,7 @@ sudo make install
 sudo ldconfig
 make training
 sudo make training-install
-echo -e "\n#Used by tesseract-ocr\nexport TESSDATA_PREFIX=/usr/local/share/tessdata" >> ~/.bashrc
+echo -e "\n# Used by tesseract-ocr\nexport TESSDATA_PREFIX=/usr/local/share/tessdata" >> ~/.bashrc
 source ~/.bashrc
 cd ~
 
