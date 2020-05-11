@@ -115,3 +115,9 @@ def test_letsgodigital():
     tasks = [('greyscale',), ('threshold', 40), ('erode', 3)]
     text, _ = ocr.ocr(path, tasks=tasks, algorithm='tesseract', language='letsgodigital')
     assert text == '22.3'
+
+
+def test_config():
+    path = os.path.join(os.path.dirname(__file__), 'images', 'tesseract_numbers.jpg')
+    assert ocr.tesseract(path, whitelist=None, config='-c tessedit_char_whitelist=0123456789') == '619121'
+    assert '1' not in ocr.tesseract(path, config='-c tessedit_char_blacklist=1')
