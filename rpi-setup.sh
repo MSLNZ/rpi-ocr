@@ -2,6 +2,7 @@
 
 # This script takes approximately 1 hour to complete and
 # can use up to an additional 1 GB of hard drive space.
+# Run using: source rpi-ocr/rpi-setup.sh
 
 # install the rpi-ocr package in a virtual environment named 'ocrenv' which is
 # located in /home/pi. If you change the name of the virtual environment
@@ -39,7 +40,7 @@ if ! [ -x "$(command -v tesseract)" ]; then
   wget https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/master/eng.traineddata
   wget https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/master/osd.traineddata
   sudo mv *.traineddata $TESSDATA_PREFIX
-  sudo cp -r ~/tesseract/tessdata $TESSDATA_PREFIX
+  sudo cp -r ~/tesseract/tessdata $TESSDATA_PREFIX/..
   sudo cp ~/rpi-ocr/resources/tessdata/*.traineddata $TESSDATA_PREFIX
 else
   echo "Tesseract-OCR is already installed"
