@@ -11,12 +11,6 @@ ENV_NAME="ocrenv"
 # prerequisites for cryptography
 sudo apt install -y build-essential libssl-dev libffi-dev python3-dev
 
-# prerequisites for tesseract and the training tools
-sudo apt install -y g++ autoconf automake libtool pkg-config libpng-dev libjpeg-dev libtiff5-dev zlib1g-dev libleptonica-dev libicu-dev libpango1.0-dev libcairo2-dev
-
-# prerequisites for ssocr
-sudo apt install -y make build-essential libimlib2 libimlib2-dev
-
 # prerequisites for opencv-python
 sudo apt install -y libavutil56 libcairo-gobject2 libgtk-3-0 libqtgui4 libpango-1.0-0 libqtcore4 libavcodec58 libcairo2 libswscale5 libtiff5 libqt4-test libatk1.0-0 libavformat58 libgdk-pixbuf2.0-0 libilmbase23 libjasper1 libopenexr23 libpangocairo-1.0-0 libwebp6 libatlas-base-dev
 
@@ -27,6 +21,8 @@ cd ~
 
 # build tesseract with training tools (only if tesseract is not already installed)
 if ! [ -x "$(command -v tesseract)" ]; then
+  # prerequisites for tesseract and the training tools
+  sudo apt install -y g++ autoconf automake libtool pkg-config libpng-dev libjpeg-dev libtiff5-dev zlib1g-dev libleptonica-dev libicu-dev libpango1.0-dev libcairo2-dev
   git clone https://github.com/tesseract-ocr/tesseract.git
   cd tesseract/
   ./autogen.sh
@@ -53,6 +49,8 @@ fi
 
 # build ssocr (only if ssocr is not already installed)
 if ! [ -x "$(command -v ssocr)" ]; then
+  # prerequisites for ssocr
+  sudo apt install -y make build-essential libimlib2 libimlib2-dev
   git clone https://github.com/auerswal/ssocr.git
   cd ssocr/
   sudo make install
