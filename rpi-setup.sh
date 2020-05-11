@@ -34,7 +34,6 @@ if ! [ -x "$(command -v tesseract)" ]; then
   sudo make training-install
   export TESSDATA_PREFIX=/usr/local/share/tessdata
   echo -e "\n# Used by tesseract-ocr\nexport TESSDATA_PREFIX="$TESSDATA_PREFIX >> ~/.bashrc
-  source ~/.bashrc
   cd ..
   # add trained models for tesseract to the tessdata directory
   wget https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/master/eng.traineddata
