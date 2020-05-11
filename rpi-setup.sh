@@ -88,7 +88,6 @@ echo Testing ssocr installation... you should see 431432
 ssocr -T ~/rpi-ocr/tests/images/six_digits.png
 
 # run the rpi-ocr tests
-pip install pytest pytest-cov
 pytest
 
 # cleanup

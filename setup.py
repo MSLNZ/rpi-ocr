@@ -85,7 +85,7 @@ install_requires = [
 
 on_rpi = platform.machine().startswith('arm')
 if on_rpi:
-    install_requires.extend(['picamera', 'pytesseract', 'msl-package-manager'])
+    install_requires.extend(['picamera', 'pytesseract', 'msl-package-manager', 'pytest', 'pytest-cov'])
 else:
     # the rpi-setup.sh script installs PySide2 in the virtual environment
     install_requires.append('PySide2')
