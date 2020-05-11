@@ -39,17 +39,16 @@ if ! [ -x "$(command -v tesseract)" ]; then
   export TESSDATA_PREFIX=/usr/local/share/tessdata
   echo -e "\n# Used by tesseract-ocr\nexport TESSDATA_PREFIX="$TESSDATA_PREFIX >> ~/.bashrc
   cd ..
+  # add trained models for tesseract to the tessdata directory
+  wget https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/master/eng.traineddata
+  wget https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/master/osd.traineddata
+  sudo mv *.traineddata $TESSDATA_PREFIX
+  sudo cp -r ~/tesseract/tessdata $TESSDATA_PREFIX
+  sudo cp ~/rpi-ocr/resources/tessdata/*.traineddata $TESSDATA_PREFIX
 else
   echo "Tesseract-OCR is already installed"
   tesseract --version
 fi
-
-# add trained models for tesseract to the tessdata directory
-wget https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/master/eng.traineddata
-wget https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/master/osd.traineddata
-sudo mv *.traineddata $TESSDATA_PREFIX
-sudo cp -r ~/tesseract/tessdata $TESSDATA_PREFIX
-sudo cp ~/rpi-ocr/resources/tessdata/*.traineddata $TESSDATA_PREFIX
 
 # build ssocr (only if ssocr is not already installed)
 if ! [ -x "$(command -v ssocr)" ]; then
