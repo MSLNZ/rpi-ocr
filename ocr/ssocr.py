@@ -122,7 +122,7 @@ def version(include_copyright=False):
 
 def ssocr(image, *,
           threshold=50.0,
-          absolute_threshold=False,
+          absolute_threshold=True,
           iter_threshold=False,
           needed_pixels=1,
           ignored_pixels=0,
@@ -148,11 +148,15 @@ def ssocr(image, *,
         The image to apply the ssocr algorithm to. See :func:`.to_bytes` for
         valid image data types.
     threshold : :class:`float`, optional
-        The threshold (in percent) to distinguish black from white.
+        The threshold (in percent) to distinguish black from white. The
+        threshold is adjusted to the luminance values in the image, unless
+        `absolute_threshold` is :data:`True` (in which case, no
+        thresholding is applied to the image).
     absolute_threshold : :class:`bool`, optional
-        If enabled then don't adjust threshold to image.
+        If enabled then don't apply thresholding to the image.
     iter_threshold : :class:`bool`, optional
-        Whether to use iterative thresholding method.
+        Use an iterative method (one-dimensional k-means clustering) to
+        determine the threshold value. The starting value is `threshold`.
     needed_pixels : :class:`int`, optional
         Number of pixels needed to recognize a segment.
     ignored_pixels : :class:`int`, optional
@@ -174,9 +178,12 @@ def ssocr(image, *,
     as_hex : :class:`bool`, optional
         Whether to change the output text to hexadecimal.
     omit_decimal_point : :class:`bool`, optional
-        Whether to omit decimal points from the output text.
+        Whether to omit decimal points from the output. Decimal points are
+        still recognized and counted against the number of digits. This
+        can be used together with automatically detecting the number of
+        digits to ignore isolated groups of pixels in an image.
     charset : :class:`str` or :class:`Charset`, optional
-        The character set to use.
+        The set of characters that ssocr can recognize.
 
     Returns
     -------

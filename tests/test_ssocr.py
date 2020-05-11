@@ -35,7 +35,7 @@ def test_environ_path():
 
     # check that the error message is correct when the ssocr executable is not available
     with pytest.raises(FileNotFoundError, match=r'ocr.set_ssocr_path()'):
-        ssocr(six_digits_path)
+        ssocr(six_digits_path, absolute_threshold=False)
 
     # make sure that the ssocr executable is available for the remainder of the tests in this module
     if environ_path:
@@ -58,20 +58,22 @@ def test_six_digits():
     temp_paths = [tempfile.gettempdir() + '/six_digits.' + ext
                   for ext in ['bmp', 'jpg', 'jpeg', 'png', 'tif', 'tiff']]
 
+    kwargs = {'absolute_threshold': False, 'iter_threshold': True}
+
     for p in temp_paths:
         ocr.save(six_digits_path, p)
 
-        assert ocr.ssocr(p, iter_threshold=True) == expected
-        assert ocr.ssocr(ocr.utils.to_bytes(p), iter_threshold=True) == expected
+        assert ocr.ssocr(p, **kwargs) == expected
+        assert ocr.ssocr(ocr.utils.to_bytes(p), **kwargs) == expected
         with open(p, 'rb') as fp:
-            assert ocr.ssocr(fp.read(), iter_threshold=True) == expected
-        assert ocr.ssocr(ocr.utils.to_base64(p), iter_threshold=True) == expected
-        assert ocr.ssocr(ocr.utils.to_cv2(p), iter_threshold=True) == expected
-        assert ocr.ssocr(ocr.utils.to_pil(p), iter_threshold=True) == expected
+            assert ocr.ssocr(fp.read(), **kwargs) == expected
+        assert ocr.ssocr(ocr.utils.to_base64(p), **kwargs) == expected
+        assert ocr.ssocr(ocr.utils.to_cv2(p), **kwargs) == expected
+        assert ocr.ssocr(ocr.utils.to_pil(p), **kwargs) == expected
 
         for fcn in [ocr.utils.to_cv2, ocr.utils.to_pil]:
             zoomed = ocr.utils.zoom(fcn(p), 0, 0, 100, 73)
-            assert ocr.ssocr(zoomed, iter_threshold=True) == expected[:2]
+            assert ocr.ssocr(zoomed, **kwargs) == expected[:2]
 
         os.remove(p)
         assert not os.path.isfile(p)
@@ -83,13 +85,14 @@ def test_six_digits():
 
 def test_inside_box():
     expected = '086861'
+    threshold = 21.  # as a percentage
     cv2 = ocr.utils.to_cv2(inside_box_path)
     pil = ocr.utils.to_pil(inside_box_path)
     for obj in [cv2, pil]:
         zoomed = ocr.utils.zoom(obj, 230, 195, 220, 60)
-        assert ocr.ssocr(zoomed, threshold=21) == expected  # 21%
+        assert ocr.ssocr(zoomed, threshold=threshold, absolute_threshold=False) == expected
 
-        thresholded = ocr.utils.threshold(zoomed, 255 * 0.21)  # 21% rescaled
+        thresholded = ocr.utils.threshold(zoomed, 255 * threshold/100.)
         assert ocr.ssocr(thresholded) == expected
 
 
@@ -186,7 +189,7 @@ def test_enums():
 
 
 def test_debug_enabled():
-    out = ocr.ssocr(six_digits_path, iter_threshold=True, debug=True)
+    out = ocr.ssocr(six_digits_path, iter_threshold=True, absolute_threshold=False, debug=True)
     assert out.startswith('======')
     assert 'image width: 280\nimage height: 73' in out
     assert 'Display as seen by ssocr:' in out
@@ -194,7 +197,7 @@ def test_debug_enabled():
 
 
 def test_hexadecimal_enabled():
-    out = ocr.ssocr(six_digits_path, iter_threshold=True, as_hex=True)
+    out = ocr.ssocr(six_digits_path, iter_threshold=True, absolute_threshold=False, as_hex=True)
     assert out == '2e:6d:24:2e:6d:5d'
 
 
@@ -204,5 +207,5 @@ def test_absolute_threshold_enabled():
 
 
 def test_omit_decimal_point():
-    out = ocr.ssocr(six_digits_path, iter_threshold=True, omit_decimal_point=True)
+    out = ocr.ssocr(six_digits_path, iter_threshold=True, absolute_threshold=False, omit_decimal_point=True)
     assert out == '431432'
