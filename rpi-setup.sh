@@ -95,3 +95,4 @@ cd ~
 rm -rf tesseract/
 rm -rf ssocr/
 rm -rf pyside2-deb-tmp/
+deactivate
