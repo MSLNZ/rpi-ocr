@@ -82,10 +82,11 @@ cd rpi-ocr
 pip install .
 
 # check tesseract and ssocr installation
-echo Testing tesseract installation... you should see 619121
+echo "\nTesting tesseract installation... you should see 619121"
 tesseract ~/rpi-ocr/tests/images/tesseract_numbers.jpg stdout
-echo Testing ssocr installation... you should see 431432
+echo "Testing ssocr installation... you should see 431432"
 ssocr -T ~/rpi-ocr/tests/images/six_digits.png
+echo
 
 # run the rpi-ocr tests
 pytest
