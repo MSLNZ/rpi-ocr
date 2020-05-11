@@ -161,7 +161,7 @@ setup(
     author_email='info@measurement.govt.nz',
     url='https://github.com/MSLNZ/rpi-ocr',
     description='Optical Character Recognition with a Raspberry Pi',
-    long_description=open('README.rst').read().strip(),
+    long_description=read('README.rst'),
     license='MIT',
     classifiers=[
         'Development Status :: 3 - Alpha',
