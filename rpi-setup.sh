@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# This script takes approximately 1 hour to complete and
+# can use up to an additional 1 GB of hard drive space.
+
 # install the rpi-ocr package in a virtual environment named 'ocrenv' which is
 # located in /home/pi. If you change the name of the virtual environment
 # then you must also change the value of RPI_EXE_PATH in ocr/__init__.py
@@ -20,20 +23,26 @@ sudo apt install -y libavutil56 libcairo-gobject2 libgtk-3-0 libqtgui4 libpango-
 # install Qt5
 sudo apt install -y qt5-default libqt5qml5 libpyside2-py3-5.11 libqt53dcore5 libqt53dinput5 libqt53dlogic5 libqt53drender5 libqt5charts5 libqt5location5 libqt5positioningquick5 libqt5positioning5 libqt5quick5 libqt5multimedia5 libqt5multimediawidgets5 libqt5quickwidgets5 libqt5script5 libqt5scripttools5 libqt5sensors5 libqt5texttospeech5 libqt5webchannel5 libqt5websockets5 libqt5x11extras5 libqt5xmlpatterns5
 
-# build tesseract with training tools
 cd ~
-git clone https://github.com/tesseract-ocr/tesseract.git
-cd tesseract/
-./autogen.sh
-./configure
-make
-sudo make install
-sudo ldconfig
-make training
-sudo make training-install
-export TESSDATA_PREFIX=/usr/local/share/tessdata
-echo -e "\n# Used by tesseract-ocr\nexport TESSDATA_PREFIX="$TESSDATA_PREFIX >> ~/.bashrc
-cd ~
+
+# build tesseract with training tools (only if tesseract is not already installed)
+if ! [ -x "$(command -v tesseract)" ]; then
+  git clone https://github.com/tesseract-ocr/tesseract.git
+  cd tesseract/
+  ./autogen.sh
+  ./configure
+  make
+  sudo make install
+  sudo ldconfig
+  make training
+  sudo make training-install
+  export TESSDATA_PREFIX=/usr/local/share/tessdata
+  echo -e "\n# Used by tesseract-ocr\nexport TESSDATA_PREFIX="$TESSDATA_PREFIX >> ~/.bashrc
+  cd ..
+else
+  echo "Tesseract-OCR is already installed"
+  tesseract --version
+fi
 
 # add trained models for tesseract to the tessdata directory
 wget https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/master/eng.traineddata
@@ -42,13 +51,18 @@ sudo mv *.traineddata $TESSDATA_PREFIX
 sudo cp -r ~/tesseract/tessdata $TESSDATA_PREFIX
 sudo cp ~/rpi-ocr/resources/tessdata/*.traineddata $TESSDATA_PREFIX
 
-# build ssocr
-git clone https://github.com/auerswal/ssocr.git
-cd ssocr/
-sudo make install
-cd ~
+# build ssocr (only if ssocr is not already installed)
+if ! [ -x "$(command -v ssocr)" ]; then
+  git clone https://github.com/auerswal/ssocr.git
+  cd ssocr/
+  sudo make install
+  cd ..
+else
+  echo "ssocr is already installed"
+  ssocr --version
+fi
 
-# create virtual environment
+# create the virtual environment
 sudo apt install -y python3-venv
 python3 -m venv $ENV_NAME
 source $ENV_NAME/bin/activate
