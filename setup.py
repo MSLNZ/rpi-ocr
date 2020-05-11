@@ -186,6 +186,7 @@ setup(
             'ocr = ocr:start_service_on_rpi',
         ],
     },
+    include_package_data=False,
 )
 
 if 'dev' in version and not version.endswith('editable'):
