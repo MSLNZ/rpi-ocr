@@ -31,8 +31,8 @@ sudo make install
 sudo ldconfig
 make training
 sudo make training-install
-echo -e "\n# Used by tesseract-ocr\nexport TESSDATA_PREFIX=/usr/local/share/tessdata" >> ~/.bashrc
-source ~/.bashrc
+export TESSDATA_PREFIX=/usr/local/share/tessdata
+echo -e "\n# Used by tesseract-ocr\nexport TESSDATA_PREFIX="$TESSDATA_PREFIX >> ~/.bashrc
 cd ~
 
 # add trained models for tesseract to the tessdata directory
