@@ -1,5 +1,8 @@
+import re
+import os
 import sys
 import platform
+import subprocess
 from distutils.cmd import Command
 from setuptools import setup
 
@@ -25,7 +28,7 @@ class ApiDocs(Command):
             '--module-first',  # put module documentation before submodule documentation
             '--separate',  # put documentation for each module on its own page
             '-o', './docs/_autosummary',  # where to save the output files
-            'msl',  # the path to the Python package to document
+            'ocr',  # the path to the Python package to document
         ]
 
         import sphinx
@@ -75,6 +78,58 @@ class BuildDocs(Command):
         sys.exit(0)
 
 
+def read(filename):
+    with open(filename) as fp:
+        return fp.read()
+
+
+def fetch_init(key):
+    # open the __init__.py file to determine the value instead of importing the package to get the value
+    init_text = read('ocr/__init__.py')
+    return re.search(r'{}\s*=\s*(.*)'.format(key), init_text).group(1).strip('\'\"')
+
+
+def get_version():
+    init_version = fetch_init('__version__')
+    if 'dev' not in init_version:
+        return init_version
+
+    if 'develop' in sys.argv or ('egg_info' in sys.argv and '--egg-base' not in sys.argv):
+        # then installing in editable (develop) mode
+        #   python setup.py develop
+        #   pip install -e .
+        suffix = 'editable'
+    else:
+        file_dir = os.path.dirname(os.path.abspath(__file__))
+        try:
+            # write all error messages from git to devnull
+            with open(os.devnull, 'w') as devnull:
+                out = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=file_dir, stderr=devnull)
+        except:
+            try:
+                git_dir = os.path.join(file_dir, '.git')
+                with open(os.path.join(git_dir, 'HEAD'), mode='rt') as fp1:
+                    line = fp1.readline().strip()
+                    if line.startswith('ref:'):
+                        _, ref_path = line.split()
+                        with open(os.path.join(git_dir, ref_path), mode='rt') as fp2:
+                            sha1 = fp2.readline().strip()
+                    else:  # detached HEAD
+                        sha1 = line
+            except:
+                return init_version
+        else:
+            sha1 = out.strip().decode('ascii')
+
+        suffix = sha1[:7]
+
+    if init_version.endswith(suffix):
+        return init_version
+
+    # following PEP-440, the local version identifier starts with '+'
+    return init_version + '+' + suffix
+
+
 install_requires = [
     'msl-network>=0.5',
     'msl-qt @ git+https://github.com/MSLNZ/msl-qt.git',
@@ -97,24 +152,30 @@ testing = {'test', 'tests', 'pytest'}.intersection(sys.argv)
 pytest_runner = ['pytest-runner'] if testing else []
 tests_require = ['pytest', 'pytest-cov', 'matplotlib', 'pytesseract']
 
+version = get_version()
+
 setup(
     name='ocr',
-    version='0.1.0.dev0',
-    author='Measurement Standards Laboratory of New Zealand',
+    version=version,
+    author=fetch_init('__author__'),
     author_email='info@measurement.govt.nz',
     url='https://github.com/MSLNZ/rpi-ocr',
     description='Optical Character Recognition with a Raspberry Pi',
     long_description=open('README.rst').read().strip(),
     license='MIT',
     classifiers=[
-        'Development Status :: 4 - Beta',
-        'Environment :: Console',
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Science/Research',
         'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Topic :: Software Development',
+        'Topic :: Scientific/Engineering',
     ],
     setup_requires=sphinx + pytest_runner,
     tests_require=tests_require,
@@ -126,3 +187,24 @@ setup(
         ],
     },
 )
+
+if 'dev' in version and not version.endswith('editable'):
+    # ensure that the value of __version__ is correct if installing the package from an unreleased code base
+    init_path = ''
+    if sys.argv[0] == 'setup.py' and 'install' in sys.argv and not {'--help', '-h'}.intersection(sys.argv):
+        # python setup.py install
+        try:
+            cmd = [sys.executable, '-c', 'import ocr; print(ocr.__file__)']
+            output = subprocess.check_output(cmd, cwd=os.path.dirname(sys.executable))
+            init_path = output.strip().decode()
+        except:
+            pass
+    elif 'egg_info' in sys.argv:
+        # pip install
+        init_path = os.path.dirname(sys.argv[0]) + '/ocr/__init__.py'
+
+    if init_path and os.path.isfile(init_path):
+        with open(init_path, mode='r+') as fp:
+            source = fp.read()
+            fp.seek(0)
+            fp.write(re.sub(r'__version__\s*=.*', "__version__ = '{}'".format(version), source))
