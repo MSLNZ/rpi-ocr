@@ -68,26 +68,28 @@ def tesseract(image, *, language='eng', psm=7, oem=3, whitelist='0123456789+-.',
         The name of the language to use.
     psm : :class:`int`, optional
         Page segmentation mode:
-          * 0  Orientation and script detection (OSD) only.
-          * 1  Automatic page segmentation with OSD.
-          * 2  Automatic page segmentation, but no OSD, or OCR. (not implemented)
-          * 3  Fully automatic page segmentation, but no OSD. (Tesseract's default option)
-          * 4  Assume a single column of text of variable sizes.
-          * 5  Assume a single uniform block of vertically aligned text.
-          * 6  Assume a single uniform block of text.
-          * 7  Treat the image as a single text line.
-          * 8  Treat the image as a single word.
-          * 9  Treat the image as a single word in a circle.
-          * 10 Treat the image as a single character.
-          * 11 Sparse text. Find as much text as possible in no particular order.
-          * 12 Sparse text with OSD.
-          * 13 Raw line. Treat the image as a single text line, bypassing hacks that are Tesseract-specific.
+
+        * 0 -- Orientation and script detection (OSD) only.
+        * 1 -- Automatic page segmentation with OSD.
+        * 2 -- Automatic page segmentation, but no OSD, or OCR. (not implemented)
+        * 3 -- Fully automatic page segmentation, but no OSD.
+        * 4 -- Assume a single column of text of variable sizes.
+        * 5 -- Assume a single uniform block of vertically aligned text.
+        * 6 -- Assume a single uniform block of text.
+        * 7 -- Treat the image as a single text line.
+        * 8 -- Treat the image as a single word.
+        * 9 -- Treat the image as a single word in a circle.
+        * 10 --Treat the image as a single character.
+        * 11 -- Sparse text. Find as much text as possible in no particular order.
+        * 12 -- Sparse text with OSD.
+        * 13 -- Raw line. Treat the image as a single text line, bypassing hacks that are Tesseract-specific.
     oem : :class:`int`, optional
-        OCR Engine mode:
-          * 0 Legacy engine only.
-          * 1 Neural nets LSTM engine only.
-          * 2 Legacy + LSTM engines.
-          * 3 Based on what is available. (Tesseract's default)
+        OCR engine mode:
+
+        * 0 -- Legacy engine only.
+        * 1 -- Neural nets LSTM engine only.
+        * 2 -- Legacy + LSTM engines.
+        * 3 -- Based on what is available.
     whitelist : :class:`str`, optional
         The character set that the result must be in (equivalent to ``-c tessedit_char_whitelist``).
         Set to :data:`None` or an empty string to not use a whitelist.
@@ -95,7 +97,6 @@ def tesseract(image, *, language='eng', psm=7, oem=3, whitelist='0123456789+-.',
         The number of seconds to wait for the result before raising a :exc:`RuntimeError`.
     nice : :class:`int`, optional
         Modifies the processor priority for the Tesseract run. Not supported on Windows.
-        Nice adjusts the niceness of unix-like processes.
     config : :class:`str`, optional
         Any additional configuration parameters.
 

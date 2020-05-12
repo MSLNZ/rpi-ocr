@@ -169,9 +169,9 @@ def ssocr(image, *,
         Minimum width/height ratio to recognize a minus sign.
     debug : :class:`bool`, optional
         Whether to include the debug messages in the output text.
-    foreground : :class:`str` or :class:`Color`, optional
+    foreground : :class:`str` or :class:`Colour`, optional
         Set foreground color (black or white).
-    background : :class:`str` or :class:`Color`, optional
+    background : :class:`str` or :class:`Colour`, optional
         Set background color (black or white).
     luminance : :class:`str` or :class:`Luminance`, optional
         Compute luminance using this formula.
@@ -188,7 +188,7 @@ def ssocr(image, *,
     Returns
     -------
     :class:`str`
-        The text.
+        The OCR text.
     """
     command = [
         ssocr_exe,

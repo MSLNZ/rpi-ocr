@@ -181,6 +181,7 @@ setup(
     tests_require=tests_require,
     install_requires=install_requires,
     packages=['ocr'],
+    cmdclass={'docs': BuildDocs, 'apidocs': ApiDocs},
     entry_points={
         'console_scripts': [
             'ocr = ocr:start_service_on_rpi',

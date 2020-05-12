@@ -32,7 +32,7 @@ ON_RPI = platform.machine().startswith('arm')
 
 
 def start_camera(*, host='raspberrypi', rpi_username='pi', rpi_password=None, timeout=10, **kwargs):
-    """Connect to the :class:`OCRService` on the Raspberry Pi.
+    """Connect to the :class:`.OCRService` on the Raspberry Pi.
 
     Parameters
     ----------
@@ -49,7 +49,7 @@ def start_camera(*, host='raspberrypi', rpi_username='pi', rpi_password=None, ti
 
     Returns
     -------
-    :class:`OCRClient`
+    :class:`.OCRClient`
         A connection to the Raspberry Pi.
     """
     console_script_path = '/home/{}/{}'.format(rpi_username, RPI_EXE_PATH)
@@ -61,7 +61,7 @@ def start_camera(*, host='raspberrypi', rpi_username='pi', rpi_password=None, ti
 
 
 def start_service_on_rpi():
-    """Starts the Network :class:`~msl.network.manager.Manager` and the :class:`OCRService`.
+    """Starts the Network :class:`~msl.network.manager.Manager` and the :class:`.OCRService`.
 
     This function should only be called from the ``ocr`` console script (see setup.py).
     """
@@ -110,7 +110,7 @@ def configure(client, **kwargs):
     client : :class:`~ocr.client.OCRClient`
         The client that is connected to the Raspberry Pi.
     kwargs
-        All key-value pairs are passed to the :class:`Gui`.
+        Describe...
 
     Returns
     -------
@@ -132,7 +132,7 @@ def ocr(image, *, tasks=None, algorithm='tesseract', **kwargs):
 
     Parameters
     ----------
-    image : :class:`str`, :class:`~.utils.OpenCVImage` or :class:`PIL.Image.Image`
+    image : :class:`str`, :class:`~ocr.utils.OpenCVImage` or :class:`PIL.Image.Image`
         The image to perform OCR on. If a :class:`str` then a file path or a
         base64 representation of the image.
     tasks : :class:`list` of :class:`tuple` or :class:`dict`, optional

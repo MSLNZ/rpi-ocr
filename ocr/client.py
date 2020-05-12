@@ -9,6 +9,15 @@ from .utils import (
 class OCRClient(LinkedClient):
 
     def __init__(self, service_name, **kwargs):
+        """Create a link with :class:`~ocr.service.OCRService`.
+
+        Parameters
+        ----------
+        service_name : :class:`str`
+            The name of the service class.
+        kwargs
+            Keyword arguments are passed to :func:`~msl.network.client.connect`.
+        """
         super(OCRClient, self).__init__(service_name, **kwargs)
 
     def configure(self, **kwargs):
@@ -71,7 +80,7 @@ class OCRClient(LinkedClient):
 
         Parameters
         ----------
-        image : :class:`str`, :class:`numpy.ndarray` or :class:`Image.Image`, optional
+        image : :class:`str`, :class:`numpy.ndarray` or :class:`PIL.Image.Image`, optional
             The image to perform OCR on. If :data:`None` then capture an image using
             the camera of the Raspberry Pi.
         original : :class:`bool`, optional

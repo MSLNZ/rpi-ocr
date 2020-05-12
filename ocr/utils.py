@@ -47,8 +47,8 @@ logger = logging.getLogger('ocr')
 class OpenCVImage(np.ndarray):
     """A :class:`numpy.ndarray` that has an `ext` attribute.
 
-    The `ext` attribute represents the file extension that defines the output
-    format. It can be used by the :func:`cv2.imencode` function.
+    The `ext` attribute represents the file extension of
+    the original image.
     """
 
     def __new__(cls, array, ext=DEFAULT_FILE_EXTENSION):
@@ -62,7 +62,7 @@ class OpenCVImage(np.ndarray):
         self.ext = getattr(obj, 'ext', DEFAULT_FILE_EXTENSION)
 
 
-def save(image, path, **kwargs):
+def save(image, path):
     """Save an image to a file.
 
     Parameters
@@ -73,15 +73,12 @@ def save(image, path, **kwargs):
     path : :class:`str`
         A file path to save the image to. The image format is chosen based
         on the filename extension.
-    kwargs
-        If `image` is an :class:`OpenCVImage` then see :func:`cv2.imwrite` for more details.
-        Otherwise see :class:`PIL.Image.Image.save` for more details.
     """
     if isinstance(image, PillowImage):
-        image.save(path, **kwargs)
+        image.save(path)
     else:
         img = cv2.cvtColor(to_cv2(image), cv2.COLOR_RGB2BGR)
-        cv2.imwrite(path, img, **kwargs)
+        cv2.imwrite(path, img)
     logger.debug('image saved to {!r}'.format(path))
 
 
@@ -345,7 +342,7 @@ def erode(image, radius, iterations=1):
         The image object.
     radius : :class:`int`
         The number of pixels to include in each direction. For example, if
-        `radius`=1 then use 1 pixel in each direction from the central pixel,
+        radius=1 then use 1 pixel in each direction from the central pixel,
         i.e., 9 pixels in total.
     iterations : :class:`int`, optional
         The number of times to apply erosion.
@@ -383,7 +380,7 @@ def dilate(image, radius, iterations=1):
         The image object.
     radius : :class:`int`
         The number of pixels to include in each direction. For example, if
-        `radius`=1 then use 1 pixel in each direction from the central pixel,
+        radius=1 then use 1 pixel in each direction from the central pixel,
         i.e., 9 pixels in total.
     iterations : :class:`int`, optional
         The number of times to apply dilation.
@@ -421,7 +418,7 @@ def gaussian_blur(image, radius):
         The image object.
     radius : :class:`int`
         The number of pixels to include in each direction. For example, if
-        `radius`=1 then use 1 pixel in each direction from the central pixel,
+        radius=1 then use 1 pixel in each direction from the central pixel,
         i.e., 9 pixels in total.
 
     Returns

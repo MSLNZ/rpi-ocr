@@ -21,6 +21,7 @@ else:
 class OCRService(Service):
 
     def __init__(self):
+        """Interface with a Raspberry Pi from a remote computer."""
         super().__init__(max_clients=1)
         self._camera = PiCamera()
         self._initialize_array()
@@ -45,7 +46,7 @@ class OCRService(Service):
 
         Parameters
         ----------
-        image : :class:`str`, :class:`numpy.ndarray` or :class:`Image.Image`, optional
+        image : :class:`str`, :class:`numpy.ndarray` or :class:`PIL.Image.Image`, optional
             The image to perform OCR on. If :data:`None` then capture an image using
             the camera of the Raspberry Pi.
         original : :class:`bool`, optional
