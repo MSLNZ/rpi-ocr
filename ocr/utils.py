@@ -16,6 +16,7 @@ from PIL import ImageFilter
 from msl.qt.utils import to_qcolor
 
 __all__ = (
+    'crop',
     'dilate',
     'erode',
     'gaussian_blur',
@@ -26,7 +27,6 @@ __all__ = (
     'to_bytes',
     'to_cv2',
     'to_pil',
-    'crop',
 )
 
 DEFAULT_IMAGE_FORMAT = 'jpg'
