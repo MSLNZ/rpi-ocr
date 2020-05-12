@@ -22,7 +22,7 @@ The following should be followed if one wanted to recompile ``ssocr`` to update
 1. Download ``setup-x86_64.exe`` from `here <https://cygwin.com/install.html>`_.
 
 2. If you have admin rights then double-click on the executable to run the setup.
-   If you do not have admin rights then open up a Command Prompt, navigate to the directory
+   If you do not have admin rights then open up a Command Prompt, go to the directory
    where ``setup-x86_64.exe`` is located and then run ``setup-x86_64.exe --no-admin``
 
 3. Accept the default settings and pick a ``Download Site`` that is close to you.
