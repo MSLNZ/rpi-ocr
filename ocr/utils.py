@@ -13,6 +13,7 @@ import numpy as np
 from PIL import Image
 from PIL.Image import Image as PillowImage
 from PIL import ImageFilter
+from msl.qt.utils import to_qcolor
 
 __all__ = (
     'dilate',
@@ -62,7 +63,8 @@ class OpenCVImage(np.ndarray):
         self.ext = getattr(obj, 'ext', DEFAULT_FILE_EXTENSION)
 
 
-def save(image, path):
+def save(image, path, *, text='', font_face=cv2.FONT_HERSHEY_SIMPLEX,
+         font_scale=2, thickness=3, foreground='black', background='white'):
     """Save an image to a file.
 
     Parameters
@@ -73,13 +75,58 @@ def save(image, path):
     path : :class:`str`
         A file path to save the image to. The image format is chosen based
         on the filename extension.
+    text : :class:`str`, optional
+        The text to draw at the top of the image.
+    font_face : :class:`int`, optional
+        The font to use. See
+        `here <https://docs.opencv.org/4.3.0/d6/d6e/group__imgproc__draw.html#ga0f9314ea6e35f99bb23f29567fc16e11>`_
+        for the enum options.
+    font_scale : :class:`int`, optional
+        The font scale factor that is multiplied by the font-specific base size.
+    thickness : :class:`int`, optional
+        Thickness of lines used to render the text.
+    foreground
+        The colour to draw the text. See :func:`~msl.qt.utils.to_qcolor` for
+        the data types that are supported.
+    background
+        The colour the text is drawn on. See :func:`~msl.qt.utils.to_qcolor` for
+        the data types that are supported.
+
+    Returns
+    -------
+    :class:`OpenCVImage`
+        The image with the text added.
     """
-    if isinstance(image, PillowImage):
-        image.save(path)
-    else:
-        img = cv2.cvtColor(to_cv2(image), cv2.COLOR_RGB2BGR)
-        cv2.imwrite(path, img)
+    img = to_cv2(image)
+    if text:
+        box, baseline = cv2.getTextSize(text, font_face, font_scale, thickness)
+        box_width, box_height = box
+        box_height += box_height//2  # add some padding
+
+        b = to_qcolor(background)
+        bg = (b.red(), b.green(), b.blue())
+        f = to_qcolor(foreground)
+        fg = (f.red(), f.green(), f.blue())
+
+        height, width = img.shape[:2]
+        new_width = max(width, box_width)
+        new = np.full((height + box_height, new_width, 3), bg, dtype=np.uint8)
+
+        ext = img.ext
+        if img.ndim == 2:
+            img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+
+        delta = (new_width - width)//2
+        new[box_height:, delta:width+delta, :] = img
+
+        bottom_left = ((new.shape[1] - box_width)//2, box_height//2 + baseline)
+
+        cv2.putText(new, text, bottom_left, font_face, font_scale, fg, thickness=thickness)
+        img = OpenCVImage(new, ext=ext)
+
+    cv2.imwrite(path, cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
     logger.debug('image saved to {!r}'.format(path))
+    return img
 
 
 def get_executable_path(path, executable):

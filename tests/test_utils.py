@@ -75,6 +75,35 @@ def test_save():
     assert not os.path.isfile(save_to_path)
 
 
+def test_save_with_text():
+    temp_path = tempfile.gettempdir() + '/rpi-ocr-temp-image.png'
+    path = os.path.join(os.path.dirname(__file__), 'images', 'letsgodigital.png')
+    original = utils.to_cv2(path)
+
+    # don't specify a value for the `text` kwarg
+    assert utils.save(original, temp_path) is original
+
+    # the size of the text gets bigger which makes the width of the returned image to be bigger
+    for scale in range(1, 11):
+        out = utils.save(original, temp_path, text='22.3', font_scale=scale)
+        assert isinstance(out, utils.OpenCVImage)
+        assert out.ext == '.png'
+        x = (out.shape[1] - original.shape[1]) // 2
+        y = out.shape[0] - original.shape[0]
+        zoomed = utils.zoom(out, x, y, original.shape[1], original.shape[0])
+        assert np.array_equal(original, zoomed)
+
+    # convert to greyscale
+    grey = utils.greyscale(original)
+    out = utils.save(grey, temp_path, text='22.3')
+    x = (out.shape[1] - original.shape[1]) // 2
+    y = out.shape[0] - original.shape[0]
+    zoomed = utils.zoom(out, x, y, original.shape[1], original.shape[0])
+    assert np.array_equal(opencv.cvtColor(grey, opencv.COLOR_GRAY2RGB), zoomed)
+
+    os.remove(temp_path)
+
+
 def test_to_bytes():
     items = [(PNG_PATH, 'png'), (JPG_PATH, 'jpg'), (BMP_PATH, 'bmp')]
     for path, key in items:
