@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # This script takes approximately 1 hour to complete and
-# can use up to an additional 1 GB of hard drive space.
-# Run using: source rpi-ocr/rpi-setup.sh
+# can use up to an additional 1 GB of disk space.
+# Usage: source rpi-setup.sh
 
 # install the rpi-ocr package in a virtual environment named 'ocrenv' which is
 # located in /home/pi. If you change the name of the virtual environment
