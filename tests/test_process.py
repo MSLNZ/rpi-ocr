@@ -47,7 +47,7 @@ def test_order_preserved():
     path = os.path.join(os.path.dirname(__file__), 'images', 'inside_box.png')
 
     # call each function manually
-    manual = ocr.utils.zoom(ocr.utils.to_cv2(path), 100, 200, 300, 400)
+    manual = ocr.utils.crop(ocr.utils.to_cv2(path), 100, 200, 300, 400)
     manual = ocr.utils.threshold(manual, 50)
     manual = ocr.utils.rotate(manual, 45)
     manual = ocr.utils.dilate(manual, 3, 2)
@@ -56,7 +56,7 @@ def test_order_preserved():
     manual = ocr.utils.erode(manual, 5, 2)
 
     tasks = [
-        ('zoom', (100, 200, 300, 400)),
+        ('crop', (100, 200, 300, 400)),
         ('threshold', 50),
         ('rotate', 45),
         ('dilate', (3, 2)),
@@ -72,7 +72,7 @@ def test_order_preserved():
         assert np.array_equal(manual, processed)
     else:
         tasks = {
-            'zoom': {'x': 100, 'y': 200, 'w': 300, 'h': 400},
+            'crop': {'x': 100, 'y': 200, 'w': 300, 'h': 400},
             'threshold': 50,
             'rotate': {'angle': 45},
             'dilate': {'radius': 3, 'iterations': 2},

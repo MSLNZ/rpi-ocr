@@ -90,16 +90,16 @@ def test_save_with_text():
         assert out.ext == '.png'
         x = (out.shape[1] - original.shape[1]) // 2
         y = out.shape[0] - original.shape[0]
-        zoomed = utils.zoom(out, x, y, original.shape[1], original.shape[0])
-        assert np.array_equal(original, zoomed)
+        cropped = utils.crop(out, x, y, original.shape[1], original.shape[0])
+        assert np.array_equal(original, cropped)
 
     # convert to greyscale
     grey = utils.greyscale(original)
     out = utils.save(grey, temp_path, text='22.3')
     x = (out.shape[1] - original.shape[1]) // 2
     y = out.shape[0] - original.shape[0]
-    zoomed = utils.zoom(out, x, y, original.shape[1], original.shape[0])
-    assert np.array_equal(opencv.cvtColor(grey, opencv.COLOR_GRAY2RGB), zoomed)
+    cropped = utils.crop(out, x, y, original.shape[1], original.shape[0])
+    assert np.array_equal(opencv.cvtColor(grey, opencv.COLOR_GRAY2RGB), cropped)
 
     os.remove(temp_path)
 
@@ -461,26 +461,26 @@ def test_zoom():
 
     width, height = list(map(float, pil.size))
 
-    cv2_z = utils.zoom(cv2, 200, 100, 180, 200)
+    cv2_z = utils.crop(cv2, 200, 100, 180, 200)
     assert isinstance(cv2_z, utils.OpenCVImage)
     assert cv2_z.ext == cv2.ext
     assert cv2_z.shape == (200, 180, 3)
 
-    cv2_z2 = utils.zoom(cv2, 200./width, 100./height, 180./width, 200./height)
+    cv2_z2 = utils.crop(cv2, 200. / width, 100. / height, 180. / width, 200. / height)
     assert np.array_equal(cv2_z, cv2_z2)
 
-    pil_z = utils.zoom(pil, 200, 100, 180, 200)
+    pil_z = utils.crop(pil, 200, 100, 180, 200)
     assert isinstance(pil_z, utils.PillowImage)
     assert pil_z.format == pil.format
     assert pil_z.size == (180, 200)
 
-    pil_z2 = utils.zoom(pil, 200./width, 100./height, 180./width, 200./height)
+    pil_z2 = utils.crop(pil, 200. / width, 100. / height, 180. / width, 200. / height)
     assert np.array_equal(pil_z, pil_z2)
 
     assert np.array_equal(cv2_z, pil_z)
 
     with pytest.raises(TypeError, match='Pillow or OpenCV'):
-        utils.zoom(np.arange(10), 200, 100, 180, 200)
+        utils.crop(np.arange(10), 200, 100, 180, 200)
 
 
 def test_greyscale():

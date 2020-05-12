@@ -72,8 +72,8 @@ def test_six_digits():
         assert ocr.ssocr(ocr.utils.to_pil(p), **kwargs) == expected
 
         for fcn in [ocr.utils.to_cv2, ocr.utils.to_pil]:
-            zoomed = ocr.utils.zoom(fcn(p), 0, 0, 100, 73)
-            assert ocr.ssocr(zoomed, **kwargs) == expected[:2]
+            cropped = ocr.utils.crop(fcn(p), 0, 0, 100, 73)
+            assert ocr.ssocr(cropped, **kwargs) == expected[:2]
 
         os.remove(p)
         assert not os.path.isfile(p)
@@ -89,10 +89,10 @@ def test_inside_box():
     cv2 = ocr.utils.to_cv2(inside_box_path)
     pil = ocr.utils.to_pil(inside_box_path)
     for obj in [cv2, pil]:
-        zoomed = ocr.utils.zoom(obj, 230, 195, 220, 60)
-        assert ocr.ssocr(zoomed, threshold=threshold, absolute_threshold=False) == expected
+        cropped = ocr.utils.crop(obj, 230, 195, 220, 60)
+        assert ocr.ssocr(cropped, threshold=threshold, absolute_threshold=False) == expected
 
-        thresholded = ocr.utils.threshold(zoomed, 255 * threshold/100.)
+        thresholded = ocr.utils.threshold(cropped, 255 * threshold/100.)
         assert ocr.ssocr(thresholded) == expected
 
 

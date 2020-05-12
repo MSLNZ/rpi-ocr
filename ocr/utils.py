@@ -26,7 +26,7 @@ __all__ = (
     'to_bytes',
     'to_cv2',
     'to_pil',
-    'zoom',
+    'crop',
 )
 
 DEFAULT_IMAGE_FORMAT = 'jpg'
@@ -556,29 +556,29 @@ def rotate(image, angle):
     raise TypeError('Expect a Pillow or OpenCV image')
 
 
-def zoom(image, x, y, w, h):
-    """Zoom to a specific region in an image.
+def crop(image, x, y, w, h):
+    """Crop an image.
 
     Parameters
     ----------
     image : :class:`OpenCVImage` or :class:`PIL.Image.Image`
         The image object.
     x : :class:`int` or :class:`float`
-        The x value of the top-left corner of the ROI.
+        The x value of the top-left corner.
         If a :class:`float` then a number between 0 and 1.
     y : :class:`int` or :class:`float`
-        The y value of the top-left corner of the ROI.
+        The y value of the top-left corner.
         If a :class:`float` then a number between 0 and 1.
     w : :class:`int` or :class:`float`
-        The width of the ROI. If a :class:`float` then a
-        number between 0 and 1.
+        The width of the cropped region. If a :class:`float`
+        then a number between 0 and 1.
     h : :class:`int` or :class:`float`
-        The height of the ROI. If a :class:`float` then a
-        number between 0 and 1.
+        The height of the cropped region. If a :class:`float`
+        then a number between 0 and 1.
 
     Returns
     -------
-    The region of interest.
+    The cropped image.
     """
     if isinstance(image, OpenCVImage):
         height, width = image.shape[:2]

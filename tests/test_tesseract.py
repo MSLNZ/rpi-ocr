@@ -61,8 +61,8 @@ def test_numbers():
             assert ocr.tesseract(fp.read()) == expected
 
         for fcn in [ocr.utils.to_cv2, ocr.utils.to_pil]:
-            zoomed = ocr.utils.zoom(fcn(p), 200, 100, 180, 200)
-            assert ocr.tesseract(zoomed) == expected[:2]
+            cropped = ocr.utils.crop(fcn(p), 200, 100, 180, 200)
+            assert ocr.tesseract(cropped) == expected[:2]
 
         os.remove(p)
         assert not os.path.isfile(p)
