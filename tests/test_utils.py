@@ -85,13 +85,14 @@ def test_save_with_text():
 
     # the size of the text gets bigger which makes the width of the returned image to be bigger
     for scale in range(1, 11):
-        out = utils.save(original, temp_path, text='22.3', font_scale=scale)
-        assert isinstance(out, utils.OpenCVImage)
-        assert out.ext == '.png'
-        x = (out.shape[1] - original.shape[1]) // 2
-        y = out.shape[0] - original.shape[0]
-        cropped = utils.crop(out, x, y, original.shape[1], original.shape[0])
-        assert np.array_equal(original, cropped)
+        for text in ['hello', 'hello\nworld', 'hello\nworld\nXXXXX\nXXXXXXXX\nXXXXXXXXXXXXXXXXXXXXX']:
+            out = utils.save(original, temp_path, text=text, font_scale=scale)
+            assert isinstance(out, utils.OpenCVImage)
+            assert out.ext == '.png'
+            x = (out.shape[1] - original.shape[1]) // 2
+            y = out.shape[0] - original.shape[0]
+            cropped = utils.crop(out, x, y, original.shape[1], original.shape[0])
+            assert np.array_equal(original, cropped)
 
     # convert to greyscale
     grey = utils.greyscale(original)

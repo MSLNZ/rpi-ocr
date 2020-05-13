@@ -76,12 +76,12 @@ def save(image, path, *, text='', font_face=cv2.FONT_HERSHEY_SIMPLEX,
         A file path to save the image to. The image format is chosen based
         on the filename extension.
     text : :class:`str`, optional
-        The text to draw at the top of the image.
+        The text to draw at the top of the image (can contain the newline character).
     font_face : :class:`int`, optional
         The font to use. See
         `here <https://docs.opencv.org/4.3.0/d6/d6e/group__imgproc__draw.html#ga0f9314ea6e35f99bb23f29567fc16e11>`_
         for the enum options.
-    font_scale : :class:`int`, optional
+    font_scale : :class:`float`, optional
         The font scale factor that is multiplied by the font-specific base size.
     thickness : :class:`int`, optional
         Thickness of lines used to render the text.
@@ -99,30 +99,35 @@ def save(image, path, *, text='', font_face=cv2.FONT_HERSHEY_SIMPLEX,
     """
     img = to_cv2(image)
     if text:
-        box, baseline = cv2.getTextSize(text, font_face, font_scale, thickness)
-        box_width, box_height = box
-        box_height += box_height//2  # add some padding
+        text_positions = []
+        text_width, text_height = 0, 0
+        for line in text.splitlines():
+            (size_x, size_y), baseline = cv2.getTextSize(line, font_face, font_scale, thickness)
+            text_width = max(text_width, size_x)
+            text_height += int(size_y * 1.5)  # add some vertical padding
+            text_positions.append((line, size_x, text_height - baseline//2))
 
         b = to_qcolor(background)
         bg = (b.red(), b.green(), b.blue())
         f = to_qcolor(foreground)
         fg = (f.red(), f.green(), f.blue())
 
-        height, width = img.shape[:2]
-        new_width = max(width, box_width)
-        new = np.full((height + box_height, new_width, 3), bg, dtype=np.uint8)
-
         ext = img.ext
+        image_height, image_width = img.shape[:2]
         if img.ndim == 2:
             img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
 
-        delta = (new_width - width)//2
-        new[box_height:, delta:width+delta, :] = img
+        new_width = max(image_width, text_width)
+        new_height = image_height + text_height
+        new_image = np.full((new_height, new_width, 3), bg, dtype=np.uint8)
+        offset = (new_width - image_width)//2
+        new_image[text_height:, offset:image_width+offset, :] = img
 
-        bottom_left = ((new.shape[1] - box_width)//2, box_height//2 + baseline)
+        for text, w, h in text_positions:
+            bottom_left = ((new_image.shape[1] - w)//2, h)
+            cv2.putText(new_image, text, bottom_left, font_face, font_scale, fg, thickness=thickness)
 
-        cv2.putText(new, text, bottom_left, font_face, font_scale, fg, thickness=thickness)
-        img = OpenCVImage(new, ext=ext)
+        img = OpenCVImage(new_image, ext=ext)
 
     cv2.imwrite(path, cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
     logger.debug('image saved to {!r}'.format(path))
