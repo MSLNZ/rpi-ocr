@@ -33,6 +33,33 @@ additional 1 GB of disk space.
 
    source rpi-ocr/rpi-setup.sh
 
+If you want to acquire images with the Raspberry Pi you will need to purchase a camera and
+enable it in the configuration settings. There are various camera options available, such as,
+
+* `High Quality Camera <https://www.raspberrypi.org/products/raspberry-pi-high-quality-camera/>`_
+* `Camera Module V2 <https://www.raspberrypi.org/products/camera-module-v2/>`_
+* `Pi NoIR Camera V2 <https://www.raspberrypi.org/products/pi-noir-camera-v2/>`_
+
+Make sure that the camera is enabled in the configuration settings:
+
+1. Run the following command
+
+   .. code-block:: console
+
+       sudo raspi-config
+
+2. Select ``5 Interfacing Options``.
+
+3. Select the ``P1 Camera`` peripheral.
+
+4. Select ``Yes`` to enable the camera interface.
+
+5. Select ``Ok``.
+
+6. Select ``Finish`` to leave the configuration menu.
+
+7. Select ``Yes`` to reboot.
+
 Windows, Linux or macOS
 -----------------------
 To install **RPi-OCR** on a computer that is not a Raspberry Pi run
