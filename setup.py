@@ -1,7 +1,6 @@
 import re
 import os
 import sys
-import platform
 import subprocess
 from distutils.cmd import Command
 from setuptools import setup
@@ -134,16 +133,21 @@ install_requires = [
     'msl-network>=0.5',
     'msl-qt @ git+https://github.com/MSLNZ/msl-qt.git',
     'pillow',
-    'opencv-python!=4.1.1.26',  # there's an issue with opencv-python 4.1.1.26 on the RPi
     'pyqtgraph>=0.11.0rc0',
-]
 
-on_rpi = platform.machine().startswith('arm')
-if on_rpi:
-    install_requires.extend(['picamera', 'pytesseract', 'msl-package-manager', 'pytest', 'pytest-cov'])
-else:
+    # there is an issue with opencv-python 4.1.1.26 on the RPi
+    'opencv-python!=4.1.1.26',
+
     # the rpi-setup.sh script installs PySide2 in the virtual environment
-    install_requires.append('PySide2')
+    'PySide2 ; "arm" not in platform_machine',
+
+    # the following are install only on the Raspberry Pi
+    'picamera ; "arm" in platform_machine',
+    'pytesseract ; "arm" in platform_machine',
+    'msl-package-manager ; "arm" in platform_machine',
+    'pytest ; "arm" in platform_machine',
+    'pytest-cov ; "arm" in platform_machine',
+]
 
 needs_sphinx = {'doc', 'docs', 'apidoc', 'apidocs', 'build_sphinx'}.intersection(sys.argv)
 sphinx = ['sphinx', 'sphinx_rtd_theme'] + install_requires if needs_sphinx else []
@@ -184,7 +188,7 @@ setup(
     cmdclass={'docs': BuildDocs, 'apidocs': ApiDocs},
     entry_points={
         'console_scripts': [
-            'ocr = ocr:start_service_on_rpi',
+            'ocr = ocr.camera:start_camera_service',
         ],
     },
     include_package_data=False,
