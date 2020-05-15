@@ -10,14 +10,16 @@ To set up the Raspberry Pi run the following commands. Instructions for using SS
 to remotely access the terminal of the Raspberry Pi can be found `here <ssh_instructions_>`_.
 
 The following commands are optional *(but recommended)*. They will update the
-installed packages on the Raspberry Pi
+installed packages on the Raspberry Pi.
+
+Open a terminal and run
 
 .. code-block:: console
 
    sudo apt update
    sudo apt upgrade
 
-Make sure that you have git_ installed on the Raspberry Pi and then clone the repository
+Make sure that you have git_ installed and then clone the repository
 
 .. code-block:: console
 
@@ -33,16 +35,19 @@ additional 1 GB of disk space.
 
    source rpi-ocr/rpi-setup.sh
 
-If you want to acquire images with the Raspberry Pi you will need to purchase a camera and
-enable it in the configuration settings. There are various camera options available, such as,
+If you want to acquire images with the Raspberry Pi then you must have a desktop version
+of Raspbian_ installed (not the Lite version), you will need to attach a camera and
+enable the camera in the configuration settings.
+
+There are various camera options available, such as,
 
 * `High Quality Camera <https://www.raspberrypi.org/products/raspberry-pi-high-quality-camera/>`_
 * `Camera Module V2 <https://www.raspberrypi.org/products/camera-module-v2/>`_
 * `Pi NoIR Camera V2 <https://www.raspberrypi.org/products/pi-noir-camera-v2/>`_
 
-Make sure that the camera is enabled in the configuration settings:
+and make sure that the camera is enabled in the configuration settings
 
-1. Run the following command
+1. Open a terminal and run the following command
 
    .. code-block:: console
 
@@ -111,3 +116,4 @@ running Windows, Linux or macOS then follow the instructions below.
 .. _ssocr: https://www.unix-ag.uni-kl.de/~auerswal/ssocr/
 .. _Cygwin: https://www.cygwin.com/
 .. _ssocr-win64: https://github.com/MSLNZ/rpi-ocr/tree/master/resources/ssocr-win64
+.. _Raspbian: https://www.raspberrypi.org/downloads/raspbian/
