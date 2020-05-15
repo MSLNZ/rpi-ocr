@@ -215,6 +215,7 @@ intersphinx_mapping = {
     'paramiko': ('http://docs.paramiko.org/en/stable/', None),
     'msl.qt': ('https://msl-qt.readthedocs.io/en/latest/', None),
     'numpy': ('https://docs.scipy.org/doc/numpy/', None),
+    'picamera': ('https://picamera.readthedocs.io/en/release-1.13/', None),
 }
 
 # warn about all broken links
