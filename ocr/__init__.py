@@ -9,10 +9,7 @@ from collections import (
     namedtuple,
 )
 
-from msl.network import (
-    manager,
-    ssh,
-)
+from msl.network import ssh
 
 __author__ = 'Measurement Standards Laboratory of New Zealand'
 __copyright__ = '\xa9 2020, ' + __author__
@@ -31,52 +28,48 @@ RPI_EXE_PATH = 'ocrenv/bin/ocr'
 ON_RPI = platform.machine().startswith('arm')
 
 
-def start_camera(*, host='raspberrypi', rpi_username='pi', rpi_password=None, timeout=10, **kwargs):
-    """Connect to the :class:`.OCRService` on the Raspberry Pi.
+def camera(**kwargs):
+    """Create a connection to a camera.
 
-    Parameters
-    ----------
-    host : :class:`str`
-        The hostname or IP address of the Raspberry Pi.
-    rpi_username : :class:`str`
-        The username for the Raspberry Pi.
-    rpi_password : :class:`str`
-        The password for `rpi_username`.
-    timeout : :class:`float`
-        The maximum number of seconds to wait for the connection.
-    kwargs
-        Keyword arguments that are passed to :func:`~msl.network.ssh.start_manager`
+    If you call this function from a script running on a Raspberry Pi then
+    a :class:`~ocr.connection.Camera` object is returned and all keyword
+    arguments are passed to :class:`~picamera.PiCamera`.
+
+    Otherwise a :class:`~ocr.connection.RemoteCamera` object is returned
+    and the keyword arguments are as follows,
+
+    * host :class:`str` : The hostname or IP address of the Raspberry Pi [default='raspberrypi'].
+    * rpi_username :class:`str` : The username for the Raspberry Pi [default='pi'].
+    * rpi_password :class:`str` : The password for `rpi_username`. [default is to prompt user]
+    * All additional keyword arguments are passed to the :class:`~picamera.PiCamera` class
+      or to the :func:`~msl.network.ssh.start_manager` function.
 
     Returns
     -------
-    :class:`.OCRClient`
-        A connection to the Raspberry Pi.
+    :class:`~ocr.connection.Camera` or :class:`~ocr.connection.RemoteCamera`
+        The connection to the camera.
     """
+    if ON_RPI:
+        from .connection import Camera
+        utils.logger.debug('connecting to a local camera ...')
+        return Camera(**kwargs)
+
+    utils.logger.debug('connecting to a camera on a Raspberry Pi ...')
+
+    host = kwargs.pop('host', 'raspberrypi')
+    rpi_username = kwargs.pop('rpi_username', 'pi')
+    rpi_password = kwargs.pop('rpi_password', None)
+
     console_script_path = '/home/{}/{}'.format(rpi_username, RPI_EXE_PATH)
     ssh.start_manager(host, console_script_path, ssh_username=rpi_username,
-                      ssh_password=rpi_password, timeout=timeout, as_sudo=True, **kwargs)
+                      ssh_password=rpi_password, as_sudo=True, **kwargs)
 
-    kwargs['host'] = host
-    return OCRClient('OCRService', **kwargs)
-
-
-def start_service_on_rpi():
-    """Starts the Network :class:`~msl.network.manager.Manager` and the :class:`.OCRService`.
-
-    This function should only be called from the ``ocr`` console script (see setup.py).
-    """
-    kwargs = ssh.parse_console_script_kwargs()
-    if kwargs.get('auth_login', False) and ('username' not in kwargs or 'password' not in kwargs):
-        raise ValueError(
-            'The Manager is using a login for authentication but the OCRService '
-            'does not know the username and password to use to connect to the Manager'
-        )
-
-    manager.run_services(OCRService(), **kwargs)
+    from .connection import RemoteCamera
+    return RemoteCamera(host=host, **kwargs)
 
 
-def kill_manager(*, host='raspberrypi', rpi_username='pi', rpi_password=None, timeout=10, **kwargs):
-    """Kill the Network :class:`~msl.network.manager.Manager` on the Raspberry Pi.
+def kill_camera_service(*, host='raspberrypi', rpi_username='pi', rpi_password=None, **kwargs):
+    """Kill the :class:`~ocr.connection.Camera` service on the Raspberry Pi.
 
     Parameters
     ----------
@@ -86,29 +79,28 @@ def kill_manager(*, host='raspberrypi', rpi_username='pi', rpi_password=None, ti
         The username for the Raspberry Pi.
     rpi_password : :class:`str`, optional
         The password for `rpi_username`.
-    timeout : :class:`float`, optional
-        The maximum number of seconds to wait for the connection.
     kwargs
-        Keyword arguments that are passed to :meth:`~paramiko.client.SSHClient.connect`.
+        All additional keyword arguments are passed to :func:`~msl.network.ssh.connect`.
     """
-    ssh_client = ssh.connect(host, username=rpi_username, password=rpi_password, timeout=timeout, **kwargs)
+    ssh_client = ssh.connect(host, username=rpi_username, password=rpi_password, **kwargs)
     lines = ssh.exec_command(ssh_client, 'ps aux | grep ocr')
     pids = [line.split()[1] for line in lines if RPI_EXE_PATH in line]
     for pid in pids:
         try:
+            utils.logger.debug('killing pid={} on the Raspberry Pi'.format(pid))
             ssh.exec_command(ssh_client, 'sudo kill -9 ' + pid)
-        except:
-            pass
+        except Exception as e:
+            utils.logger.error(e)
     ssh_client.close()
 
 
-def configure(client, **kwargs):
+def configure(connection, **kwargs):
     """Create a Qt application to interact with the image and the OCR algorithm.
 
     Parameters
     ----------
-    client : :class:`~ocr.client.OCRClient`
-        The client that is connected to the Raspberry Pi.
+    connection : :class:`~ocr.connection.Camera` or :class:`~ocr.connection.RemoteCamera`
+        The connection to the camera. See :func:`camera`.
     kwargs
         Describe...
 
@@ -121,7 +113,7 @@ def configure(client, **kwargs):
     from .gui import Gui
     sys.excepthook = excepthook
     app = application()
-    gui = Gui(client, **kwargs)
+    gui = Gui(connection, **kwargs)
     gui.show()
     app.exec()
     return gui.ocr_params
@@ -220,10 +212,7 @@ def process(image, tasks=None):
     return image
 
 
-from .client import OCRClient
-from .service import OCRService
-from . import utils
-from .utils import save
+from .utils import *
 from .ssocr import (
     ssocr,
     set_ssocr_path,

@@ -29,7 +29,7 @@ __all__ = (
     'to_pil',
 )
 
-DEFAULT_IMAGE_FORMAT = 'jpg'
+DEFAULT_IMAGE_FORMAT = 'jpeg'
 DEFAULT_FILE_EXTENSION = '.' + DEFAULT_IMAGE_FORMAT
 SIGNATURE_MAP = {
     'bmp': b'BM',
