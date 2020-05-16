@@ -134,6 +134,7 @@ install_requires = [
     'msl-qt @ git+https://github.com/MSLNZ/msl-qt.git',
     'pillow',
     'pyqtgraph>=0.11.0rc0',
+    'pytesseract',
 
     # there is an issue with opencv-python 4.1.1.26 on the RPi
     'opencv-python!=4.1.1.26',
@@ -143,7 +144,6 @@ install_requires = [
 
     # the following are install only on the Raspberry Pi
     'picamera ; "arm" in platform_machine',
-    'pytesseract ; "arm" in platform_machine',
     'msl-package-manager ; "arm" in platform_machine',
     'pytest ; "arm" in platform_machine',
     'pytest-cov ; "arm" in platform_machine',
