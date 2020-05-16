@@ -1,6 +1,7 @@
 """
 A Connection to a camera.
 """
+from time import perf_counter
 from io import BytesIO
 
 from msl.network import (
@@ -12,13 +13,13 @@ from msl.network import (
     LinkedClient,
 )
 
-import numpy as np
-
 from . import ocr
 from .utils import (
     DEFAULT_IMAGE_FORMAT,
-    OpenCVImage,
     to_base64,
+    to_bytes,
+    to_cv2,
+    to_pil,
     logger,
 )
 
@@ -27,6 +28,13 @@ try:
 except ImportError:
     class PiCamera(object):
         pass
+
+converters = {
+    'base64': to_base64,
+    'bytes': to_bytes,
+    'cv2': to_cv2,
+    'pil': to_pil,
+}
 
 
 class Camera(Service, PiCamera):
@@ -52,7 +60,7 @@ class Camera(Service, PiCamera):
     def get(self, attribute):
         """Get a value from the :class:`~picamera.PiCamera`.
 
-        This method is for the :class:`RemoteCamera` class to call.
+        This method is intended for the :class:`RemoteCamera` class to call.
         You should not call this method directly, but access the attribute directly.
 
         Parameters
@@ -69,7 +77,7 @@ class Camera(Service, PiCamera):
     def set(self, attribute, value):
         """Set a value of the :class:`~picamera.PiCamera`.
 
-        This method is for the :class:`RemoteCamera` class to call.
+        This method is intended for the :class:`RemoteCamera` class to call.
         You should not call this method directly, but access the attribute directly.
 
         Parameters
@@ -81,28 +89,42 @@ class Camera(Service, PiCamera):
         """
         setattr(self, attribute, value)
 
-    def capture_base64_image(self):
-        """Capture an image and convert it to base64.
+    def capture_ocr(self, as_type='cv2'):
+        """Capture an image and convert it to the specified type.
+
+        Parameters
+        ----------
+        as_type : :class:`str`, optional
+            The object type to return the image in. One of
+
+            * ``bytes`` :math:`\\rightarrow` :class:`bytes`
+            * ``base64`` :math:`\\rightarrow` a Base64 representation of the image as a :class:`str`
+            * ``cv2`` :math:`\\rightarrow` an :class:`~ocr.utils.OpenCVImage` object
+            * ``pil`` :math:`\\rightarrow` a :class:`PIL.Image.Image` object
 
         Returns
         -------
-        :class:`str`
-            A :mod:`base64` representation of the captured image.
+        The image in the specified data type.
         """
         buffer = BytesIO()
         self.capture(buffer, format=DEFAULT_IMAGE_FORMAT)
-        return to_base64(buffer.getvalue())
+        buffer.seek(0)
+        try:
+            return converters[as_type](buffer)
+        except KeyError:
+            allowed = ', '.join(converters)
+            raise ValueError('invalid as_type={!r}, must be one of: {}'.format(as_type, allowed)) from None
 
     def apply_ocr(self, *, image=None, original=False, tasks=None, algorithm='tesseract', **kwargs):
         """Apply OCR to an image.
 
-        This method is for the :class:`RemoteCamera` class to call.
+        This method is intended for the :class:`RemoteCamera` class to call.
         You should not call this method directly, but call :func:`~ocr.ocr` instead.
 
         Parameters
         ----------
         image
-            The image to perform OCR on. If :data`None` then capture and image
+            The image to perform OCR on. If :data`None` then capture an image
             with the camera.
         original : :class:`bool`, optional
             Whether to return the original image or the processed image.
@@ -123,10 +145,7 @@ class Camera(Service, PiCamera):
             (depending on the value of `original`).
         """
         if image is None:
-            width, height = self.resolution
-            image = OpenCVImage(np.empty((height, width, 3), dtype=np.uint8))
-            self.capture(image, format=DEFAULT_IMAGE_FORMAT)
-
+            image = self.capture_ocr()
         text, processed_image = ocr(image, tasks=tasks, algorithm=algorithm, **kwargs)
         if original:
             return text, to_base64(image)
@@ -191,15 +210,26 @@ class RemoteCamera(LinkedClient):
 
     close = disconnect
 
-    def capture_base64_image(self):
-        """Capture an image and convert it to base64.
+    def capture_ocr(self, as_type='cv2'):
+        """Capture an image and convert it to the specified type.
+
+        Parameters
+        ----------
+        as_type : :class:`str`, optional
+            The object type to return the image in. See :meth:`.Camera.capture_ocr`
+            for more details.
 
         Returns
         -------
-        :class:`str`
-            A :mod:`base64` representation of the captured image.
+        The image in the specified data type.
         """
-        return self.link.capture_base64_image()
+        # must request base64 then convert afterwards
+        t0 = perf_counter()
+        image = self.link.capture_ocr(as_type='base64')
+        logger.debug('requesting capture_ocr took {:.3f} seconds'.format(perf_counter()-t0))
+        if as_type == 'base64':
+            return image
+        return converters[as_type](image)
 
     def apply_ocr(self, *, image=None, original=False, tasks=None, algorithm='tesseract', **kwargs):
         """Apply OCR to an image.
@@ -207,7 +237,7 @@ class RemoteCamera(LinkedClient):
         Parameters
         ----------
         image
-            The image to perform OCR on. If :data`None` then capture and image
+            The image to perform OCR on. If :data`None` then capture an image
             with the camera.
         original : :class:`bool`, optional
             Whether to return the original image or the processed image.
@@ -229,7 +259,10 @@ class RemoteCamera(LinkedClient):
         """
         if image is not None:
             image = to_base64(image)
-        return self.link.apply_ocr(image=image, original=original, tasks=tasks, algorithm=algorithm, **kwargs)
+        t0 = perf_counter()
+        out = self.link.apply_ocr(image=image, original=original, tasks=tasks, algorithm=algorithm, **kwargs)
+        logger.debug('requesting apply_ocr took {:.3f} seconds'.format(perf_counter()-t0))
+        return out
 
     def service_error_handler(self):
         """Shut down the :class:`.Camera` service if it raises an exception."""
