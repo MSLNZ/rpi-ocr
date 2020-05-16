@@ -1,6 +1,7 @@
 import os
 import base64
 import tempfile
+from io import BytesIO
 
 import pytest
 import numpy as np
@@ -76,31 +77,29 @@ def test_save():
 
 
 def test_save_with_text():
-    temp_path = tempfile.gettempdir() + '/rpi-ocr-temp-image.png'
-    path = os.path.join(os.path.dirname(__file__), 'images', 'letsgodigital.png')
-    original = utils.to_cv2(path)
+    temp_path = tempfile.gettempdir() + '/rpi-ocr-temp-image.jpg'
 
-    # don't specify a value for the `text` kwarg
-    assert utils.save(original, temp_path) is original
+    for path in [PNG_PATH, JPG_PATH, BMP_PATH]:
+        original = utils.to_cv2(path)
+        _, ext = os.path.splitext(path)
 
-    # the size of the text gets bigger which makes the width of the returned image to be bigger
-    for scale in range(1, 11):
-        for text in ['hello', 'hello\nworld', 'hello\nworld\nXXXXX\nXXXXXXXX\nXXXXXXXXXXXXXXXXXXXXX']:
-            out = utils.save(original, temp_path, text=text, font_scale=scale)
-            assert isinstance(out, utils.OpenCVImage)
-            assert out.ext == '.png'
-            x = (out.shape[1] - original.shape[1]) // 2
-            y = out.shape[0] - original.shape[0]
-            cropped = utils.crop(out, x, y, original.shape[1], original.shape[0])
-            assert np.array_equal(original, cropped)
+        # don't specify a value for the `text` kwarg
+        assert utils.save(original, temp_path) is original
 
-    # convert to greyscale
-    grey = utils.greyscale(original)
-    out = utils.save(grey, temp_path, text='22.3')
-    x = (out.shape[1] - original.shape[1]) // 2
-    y = out.shape[0] - original.shape[0]
-    cropped = utils.crop(out, x, y, original.shape[1], original.shape[0])
-    assert np.array_equal(opencv.cvtColor(grey, opencv.COLOR_GRAY2RGB), cropped)
+        # the size of the text gets bigger which makes the width of the returned image to be bigger
+        for scale in range(1, 11):
+            for text in ['hello', 'hello\nworld', 'hello\nworld\nXXXXX\nXXXXXXXX\nXXXXXXXXXXXXXXXXXXXXX']:
+                out = utils.save(original, temp_path, text=text, font_scale=scale)
+                assert isinstance(out, utils.OpenCVImage)
+                assert out.ext == ext
+                x = (out.width - original.width) // 2
+                y = out.height - original.height
+                cropped = utils.crop(out, x, y, original.width, original.height)
+                if path == JPG_PATH:  # greyscale image
+                    crop_to_gray = opencv.cvtColor(cropped, opencv.COLOR_RGB2GRAY)
+                    assert np.array_equal(original, crop_to_gray), path
+                else:
+                    assert np.array_equal(original, cropped), path
 
     os.remove(temp_path)
 
@@ -145,12 +144,21 @@ def test_to_bytes():
     b = b'get_out_whatever_is_sent_in'
     assert utils.to_bytes(b) is b
 
+    # BytesIO -> bytes
+    assert utils.to_bytes(BytesIO(b)) == b
+
+    # BytesIO buffer -> bytes
+    assert utils.to_bytes(BytesIO(b).getbuffer()) == b
+
+    # bytearray -> bytes
+    assert utils.to_bytes(bytearray(b)) == b
+
     # invalid str
     for obj in ['does/not/exist.jpg', 'X'*10000 + '.png']:
-        with pytest.raises(ValueError, match=r'^Invalid path or base64 string'):
+        with pytest.raises(ValueError, match=r'^Invalid path or Base64 string'):
             utils.to_bytes(obj)
 
-    for obj in [1, 2.0, None, True, bytearray(), [], Image.ImageTransformHandler()]:
+    for obj in [1, 2.0, None, True, [], Image.ImageTransformHandler()]:
         with pytest.raises(TypeError, match=r'^Cannot convert'):
             utils.to_bytes(obj)
 
@@ -189,68 +197,85 @@ def test_to_base64():
         assert isinstance(base64_cv2, str)
         assert base64_cv2.startswith(signature)
 
+    # bytes -> base64
+    b = b'get_out_whatever_is_sent_in'
+    b64 = base64.b64encode(b).decode('ascii')
+    assert isinstance(b64, str)
+    assert utils.to_base64(b) == b64
+
+    # BytesIO -> base64
+    assert utils.to_base64(BytesIO(b)) == b64
+
+    # BytesIO buffer -> base64
+    assert utils.to_base64(BytesIO(b).getbuffer()) == b64
+
+    # bytearray -> base64
+    assert utils.to_base64(bytearray(b)) == b64
+
     # invalid str
     for obj in ['does/not/exist.jpg', 'X'*10000 + '.png']:
-        with pytest.raises(ValueError, match=r'^Invalid path or base64 string'):
+        with pytest.raises(ValueError, match=r'^Invalid path or Base64 string'):
             utils.to_base64(obj)
 
-    for obj in [1, 2.0, None, True, bytearray(), [], Image.ImageTransformHandler()]:
+    for obj in [1, 2.0, None, True, [], Image.ImageTransformHandler()]:
         with pytest.raises(TypeError, match=r'^Cannot convert'):
             utils.to_base64(obj)
 
 
 def test_to_pil():
-    items = [(PNG_PATH, 'png'), (JPG_PATH, 'jpg'), (BMP_PATH, 'bmp')]
-    for path, key in items:
+    for path in [PNG_PATH, JPG_PATH, BMP_PATH]:
+        img_expected = Image.open(path)
+        _, ext = os.path.splitext(path)
 
         # cv2 -> PIL
         cv2 = utils.to_cv2(path)
         assert isinstance(cv2, utils.OpenCVImage)
-        assert cv2.ext == '.'+key
+        assert cv2.ext == ext
+        assert cv2.height == img_expected.height
+        assert cv2.width == img_expected.width
         cv2_pil = utils.to_pil(cv2)
         assert isinstance(cv2_pil, utils.PillowImage)
-        assert cv2_pil.format == key.upper()
-        assert cv2_pil.mode == 'RGB'
-        assert cv2_pil.height == cv2.shape[0]
-        assert cv2_pil.width == cv2.shape[1]
-        assert len(cv2_pil.getbands()) == cv2.shape[2]
+        assert cv2_pil.format == img_expected.format
+        assert cv2_pil.mode == img_expected.mode
+        assert cv2_pil.height == img_expected.height
+        assert cv2_pil.width == img_expected.width
+        assert cv2_pil.getbands() == img_expected.getbands()
         assert np.array_equal(cv2_pil, cv2)
+        assert np.array_equal(cv2_pil, img_expected)
 
         # file path (str) -> PIL
         # base64 (str) -> PIL
         # bytes -> PIL
+        # BytesIO -> PIL
+        # BytesIO buffer -> PIL
+        # bytearray -> PIL
         with open(path, 'rb') as fp:
             raw = fp.read()
-        img_expected = Image.open(path).convert(mode='RGB')
-        for obj in [path, base64.b64encode(raw).decode('ascii'), raw]:
-            assert isinstance(obj, (str, bytes))
+        for obj in [path, base64.b64encode(raw).decode('ascii'), raw,
+                    BytesIO(raw), BytesIO(raw).getbuffer(), bytearray(raw)]:
             pil = utils.to_pil(obj)
             assert isinstance(pil, utils.PillowImage)
-            if key == 'jpg':
-                assert pil.format == 'JPEG'
-            else:
-                assert pil.format == key.upper()
-            assert pil.mode == 'RGB'
+            assert img_expected.format == pil.format
             assert img_expected.mode == pil.mode
             assert img_expected.size == pil.size
             assert img_expected.info == pil.info
             assert img_expected.category == pil.category
             assert img_expected.getpalette() == pil.getpalette()
             assert img_expected.tobytes() == pil.tobytes()
-            assert pil.height == cv2.shape[0]  # compare to cv2 result
-            assert pil.width == cv2.shape[1]
-            assert len(pil.getbands()) == cv2.shape[2]
+            assert img_expected.getbands() == pil.getbands()
+            assert img_expected.height == pil.height
+            assert img_expected.width == pil.width
 
-            # PIL -> PIL
-            assert isinstance(img_expected, utils.PillowImage)
-            assert utils.to_pil(img_expected) is img_expected
+        # PIL -> PIL
+        assert isinstance(img_expected, utils.PillowImage)
+        assert utils.to_pil(img_expected) is img_expected
 
     # invalid str
     for obj in ['does/not/exist.jpg', 'X'*10000 + '.png']:
-        with pytest.raises(ValueError, match=r'^Invalid path or base64 string'):
+        with pytest.raises(ValueError, match=r'^Invalid path or Base64 string'):
             utils.to_pil(obj)
 
-    for obj in [1, 2.0, None, True, bytearray(), [], Image.ImageTransformHandler()]:
+    for obj in [1, 2.0, None, True, [], Image.ImageTransformHandler()]:
         with pytest.raises(TypeError, match=r'^Cannot convert'):
             utils.to_pil(obj)
 
@@ -258,7 +283,14 @@ def test_to_pil():
 def test_to_cv2():
     items = [(PNG_PATH, '.png'), (JPG_PATH, '.jpg'), (BMP_PATH, '.bmp')]
     for path, ext in items:
-        expected_img = opencv.imread(path)[:, :, [2, 1, 0]]  # convert BGR to RGB
+        expected_bgr = opencv.imread(path, flags=-1)
+
+        if path == JPG_PATH:
+            expected_ndim = 2  # greyscale image
+            expected_rgb = expected_bgr
+        else:
+            expected_ndim = 3
+            expected_rgb = expected_bgr[:, :, [2, 1, 0]]  # convert BGR to RGB
 
         # PIL -> cv2
         pil = Image.open(path)
@@ -266,7 +298,9 @@ def test_to_cv2():
         assert isinstance(pil, utils.PillowImage)
         assert isinstance(cv2, utils.OpenCVImage)
         assert cv2.ext == '.'+pil.format
-        assert cv2.shape[:2] == pil.size[::-1]
+        assert cv2.height == pil.height
+        assert cv2.width == pil.width
+        assert cv2.ndim == expected_ndim
         assert np.array_equal(pil, cv2)
 
         # PIL (with format attribute = None) -> cv2
@@ -275,164 +309,236 @@ def test_to_cv2():
         assert isinstance(pil, utils.PillowImage)
         assert isinstance(cv2, utils.OpenCVImage)
         assert cv2.ext == utils.DEFAULT_FILE_EXTENSION
+        assert np.array_equal(pil, cv2)
 
         # file path (str) -> cv2
         cv2 = utils.to_cv2(path)
         assert isinstance(cv2, utils.OpenCVImage)
         assert cv2.ext == ext
-        assert np.array_equal(expected_img, cv2)
+        assert np.array_equal(expected_rgb, cv2)
 
         # base64 (str) -> cv2
-        with open(path, 'rb') as fp:
+        with open(path, mode='rb') as fp:
             b64 = base64.b64encode(fp.read()).decode('ascii')
         cv2 = utils.to_cv2(b64)
         assert isinstance(b64, str)
         assert isinstance(cv2, utils.OpenCVImage)
         assert cv2.ext == ext
-        assert np.array_equal(expected_img, cv2)
+        assert np.array_equal(expected_bgr, cv2)
+
+        # cv2 -> cv2
+        assert isinstance(cv2, utils.OpenCVImage)
+        assert utils.to_cv2(cv2) is cv2
 
         # bytes -> cv2
-        with open(path, 'rb') as fp:
+        with open(path, mode='rb') as fp:
             raw = fp.read()
         cv2 = utils.to_cv2(raw)
         assert isinstance(raw, bytes)
         assert isinstance(cv2, utils.OpenCVImage)
         assert cv2.ext == ext
-        assert np.array_equal(expected_img, cv2)
+        assert np.array_equal(expected_bgr, cv2)
 
-        # ndarray -> cv2
-        array = np.arange(100)
-        cv2 = utils.to_cv2(array)
-        assert isinstance(array, np.ndarray)
+        # BytesIO -> cv2
+        with open(path, mode='rb') as fp:
+            bio = BytesIO(fp.read())
+        cv2 = utils.to_cv2(bio)
         assert isinstance(cv2, utils.OpenCVImage)
-        assert cv2.ext == utils.DEFAULT_FILE_EXTENSION
-        assert np.array_equal(array, cv2)
+        assert cv2.ext == ext
+        assert np.array_equal(expected_bgr, cv2)
 
-        # cv2 -> cv2
-        assert utils.to_cv2(cv2) is cv2
+        # BytesIO buffer -> cv2
+        with open(path, mode='rb') as fp:
+            bio = BytesIO(fp.read())
+        cv2 = utils.to_cv2(bio.getbuffer())
+        assert isinstance(cv2, utils.OpenCVImage)
+        assert cv2.ext == ext
+        assert np.array_equal(expected_bgr, cv2)
+
+        # bytearray -> cv2
+        with open(path, mode='rb') as fp:
+            ba = bytearray(fp.read())
+        cv2 = utils.to_cv2(ba)
+        assert isinstance(cv2, utils.OpenCVImage)
+        assert cv2.ext == ext
+        assert np.array_equal(expected_bgr, cv2)
+
+    # ndarray -> cv2
+    array = np.arange(100)
+    cv2 = utils.to_cv2(array)
+    assert isinstance(array, np.ndarray)
+    assert isinstance(cv2, utils.OpenCVImage)
+    assert cv2.ext == utils.DEFAULT_FILE_EXTENSION
+    assert np.array_equal(array, cv2)
 
     # invalid str
     for obj in ['does/not/exist.jpg', 'X'*10000 + '.png']:
-        with pytest.raises(ValueError, match=r'^Invalid path or base64 string'):
+        with pytest.raises(ValueError, match=r'^Invalid path or Base64 string'):
             utils.to_cv2(obj)
 
-    for obj in [1, 2.0, None, True, bytearray(), [], Image.ImageTransformHandler()]:
+    # BufferedReader
+    with pytest.raises(TypeError, match=r'^Cannot convert'):
+        with open(JPG_PATH, mode='rb') as fp:
+            utils.to_cv2(fp)
+
+    for obj in [1, 2.0, None, True, Image.ImageTransformHandler()]:
         with pytest.raises(TypeError, match=r'^Cannot convert'):
             utils.to_cv2(obj)
 
 
 def test_threshold():
-    cv2 = utils.to_cv2(PNG_PATH)
-    cv2_th = utils.threshold(cv2, 100)
-    assert isinstance(cv2_th, utils.OpenCVImage)
-    assert cv2_th.ext == cv2.ext
+    for path in [PNG_PATH, JPG_PATH, BMP_PATH]:
+        cv2 = utils.to_cv2(path)
+        cv2_th = utils.threshold(cv2, 100)
+        assert isinstance(cv2_th, utils.OpenCVImage)
+        assert cv2_th.ext == cv2.ext
 
-    pil = utils.to_pil(PNG_PATH)
-    pil_th = utils.threshold(pil, 100)
-    assert isinstance(pil_th, utils.PillowImage)
-    assert pil_th.format == pil.format
+        pil = utils.to_pil(path)
+        pil_th = utils.threshold(pil, 100)
+        assert isinstance(pil_th, utils.PillowImage)
+        assert pil_th.format == pil.format
 
-    assert np.array_equal(cv2, pil)
-    assert np.array_equal(cv2_th, pil_th)
+        assert np.array_equal(cv2, pil)
+        assert np.array_equal(cv2_th, pil_th)
+
+        if path == JPG_PATH:
+            assert cv2_th.ndim == 2
+            assert pil_th.mode == 'L'
+        else:
+            assert cv2_th.ndim == 3
+            assert pil_th.mode == 'RGB'
 
     with pytest.raises(TypeError, match='Pillow or OpenCV'):
         utils.threshold(np.arange(10), 100)
 
 
 def test_erode():
-    cv2 = utils.to_cv2(PNG_PATH)
-    pil = utils.to_pil(PNG_PATH)
-    assert np.array_equal(cv2, pil)
+    for path in [PNG_PATH, JPG_PATH, BMP_PATH]:
+        cv2 = utils.to_cv2(path)
+        pil = utils.to_pil(path)
+        assert np.array_equal(cv2, pil)
 
-    assert utils.erode(cv2, None) is cv2
-    assert utils.erode(cv2, 0) is cv2
-    assert utils.erode(cv2, 1, 0) is cv2
-    assert utils.erode(pil, None) is pil
-    assert utils.erode(pil, 0) is pil
-    assert utils.erode(pil, 1, 0) is pil
+        assert utils.erode(cv2, None) is cv2
+        assert utils.erode(cv2, 0) is cv2
+        assert utils.erode(cv2, 1, 0) is cv2
+        assert utils.erode(pil, None) is pil
+        assert utils.erode(pil, 0) is pil
+        assert utils.erode(pil, 1, 0) is pil
 
-    cv2_er = utils.erode(cv2, 2, 3)
-    assert isinstance(cv2_er, utils.OpenCVImage)
-    assert cv2_er.ext == cv2.ext
+        cv2_er = utils.erode(cv2, 2, 3)
+        assert isinstance(cv2_er, utils.OpenCVImage)
+        assert cv2_er.ext == cv2.ext
 
-    pil_er = utils.erode(pil, 2, 3)
-    assert isinstance(pil_er, utils.PillowImage)
-    assert pil_er.format == pil.format
+        pil_er = utils.erode(pil, 2, 3)
+        assert isinstance(pil_er, utils.PillowImage)
+        assert pil_er.format == pil.format
 
-    assert np.array_equal(cv2_er, pil_er)
+        assert np.array_equal(cv2_er, pil_er)
+
+        if path == JPG_PATH:
+            assert cv2_er.ndim == 2
+            assert pil_er.mode == 'L'
+        else:
+            assert cv2_er.ndim == 3
+            assert pil_er.mode == 'RGB'
 
     with pytest.raises(TypeError, match='Pillow or OpenCV'):
         utils.erode(np.arange(10), 1, 1)
 
 
 def test_dilate():
-    cv2 = utils.to_cv2(PNG_PATH)
-    pil = utils.to_pil(PNG_PATH)
-    assert np.array_equal(cv2, pil)
+    for path in [PNG_PATH, JPG_PATH, BMP_PATH]:
+        cv2 = utils.to_cv2(path)
+        pil = utils.to_pil(path)
+        assert np.array_equal(cv2, pil)
 
-    assert utils.dilate(cv2, None) is cv2
-    assert utils.dilate(cv2, 0) is cv2
-    assert utils.dilate(cv2, 1, 0) is cv2
-    assert utils.dilate(pil, None) is pil
-    assert utils.dilate(pil, 0) is pil
-    assert utils.dilate(pil, 1, 0) is pil
+        assert utils.dilate(cv2, None) is cv2
+        assert utils.dilate(cv2, 0) is cv2
+        assert utils.dilate(cv2, 1, 0) is cv2
+        assert utils.dilate(pil, None) is pil
+        assert utils.dilate(pil, 0) is pil
+        assert utils.dilate(pil, 1, 0) is pil
 
-    cv2_di = utils.dilate(cv2, 2, 3)
-    assert isinstance(cv2_di, utils.OpenCVImage)
-    assert cv2_di.ext == cv2.ext
+        cv2_di = utils.dilate(cv2, 2, 3)
+        assert isinstance(cv2_di, utils.OpenCVImage)
+        assert cv2_di.ext == cv2.ext
 
-    pil_di = utils.dilate(pil, 2, 3)
-    assert isinstance(pil_di, utils.PillowImage)
-    assert pil_di.format == pil.format
+        pil_di = utils.dilate(pil, 2, 3)
+        assert isinstance(pil_di, utils.PillowImage)
+        assert pil_di.format == pil.format
 
-    assert np.array_equal(cv2_di, pil_di)
+        assert np.array_equal(cv2_di, pil_di)
+
+        if path == JPG_PATH:
+            assert cv2_di.ndim == 2
+            assert pil_di.mode == 'L'
+        else:
+            assert cv2_di.ndim == 3
+            assert pil_di.mode == 'RGB'
 
     with pytest.raises(TypeError, match='Pillow or OpenCV'):
         utils.dilate(np.arange(10), 1, 1)
 
 
 def test_gaussian_blur():
-    cv2 = utils.to_cv2(PNG_PATH)
-    pil = utils.to_pil(PNG_PATH)
-    assert np.array_equal(cv2, pil)
+    for path in [PNG_PATH, JPG_PATH, BMP_PATH]:
+        cv2 = utils.to_cv2(path)
+        pil = utils.to_pil(path)
+        assert np.array_equal(cv2, pil)
 
-    assert utils.gaussian_blur(cv2, None) is cv2
-    assert utils.gaussian_blur(cv2, 0) is cv2
-    assert utils.gaussian_blur(pil, None) is pil
-    assert utils.gaussian_blur(pil, 0) is pil
+        assert utils.gaussian_blur(cv2, None) is cv2
+        assert utils.gaussian_blur(cv2, 0) is cv2
+        assert utils.gaussian_blur(pil, None) is pil
+        assert utils.gaussian_blur(pil, 0) is pil
 
-    cv2_gb = utils.gaussian_blur(cv2, 5)
-    assert isinstance(cv2_gb, utils.OpenCVImage)
-    assert cv2_gb.ext == cv2.ext
+        cv2_gb = utils.gaussian_blur(cv2, 5)
+        assert isinstance(cv2_gb, utils.OpenCVImage)
+        assert cv2_gb.ext == cv2.ext
 
-    pil_gb = utils.gaussian_blur(pil, 5)
-    assert isinstance(pil_gb, utils.PillowImage)
-    assert pil_gb.format == pil.format
+        pil_gb = utils.gaussian_blur(pil, 5)
+        assert isinstance(pil_gb, utils.PillowImage)
+        assert pil_gb.format == pil.format
+
+        if path == JPG_PATH:
+            assert cv2_gb.ndim == 2
+            assert pil_gb.mode == 'L'
+        else:
+            assert cv2_gb.ndim == 3
+            assert pil_gb.mode == 'RGB'
 
     with pytest.raises(TypeError, match='Pillow or OpenCV'):
         utils.gaussian_blur(np.arange(10), 1)
 
 
 def test_rotate():
-    cv2 = utils.to_cv2(PNG_PATH)
-    pil = utils.to_pil(PNG_PATH)
-    assert np.array_equal(cv2, pil)
+    for path in [PNG_PATH, JPG_PATH, BMP_PATH]:
+        cv2 = utils.to_cv2(path)
+        pil = utils.to_pil(path)
+        assert np.array_equal(cv2, pil)
 
-    assert utils.rotate(cv2, None) is cv2
-    assert utils.rotate(cv2, 0) is cv2
-    assert utils.rotate(pil, None) is pil
-    assert utils.rotate(pil, 0) is pil
+        assert utils.rotate(cv2, None) is cv2
+        assert utils.rotate(cv2, 0) is cv2
+        assert utils.rotate(pil, None) is pil
+        assert utils.rotate(pil, 0) is pil
 
-    cv2_rot = utils.rotate(cv2, 90)
-    assert isinstance(cv2_rot, utils.OpenCVImage)
-    assert cv2_rot.ext == cv2.ext
-    assert np.array_equal(utils.rotate(cv2, -63), utils.rotate(cv2, 297))
+        cv2_rot = utils.rotate(cv2, 90)
+        assert isinstance(cv2_rot, utils.OpenCVImage)
+        assert cv2_rot.ext == cv2.ext
+        assert np.array_equal(utils.rotate(cv2, -63), utils.rotate(cv2, 297))
 
-    pil_rot = utils.rotate(pil, 90)
-    assert isinstance(pil_rot, utils.PillowImage)
-    assert pil_rot.format == pil.format
+        pil_rot = utils.rotate(pil, 90)
+        assert isinstance(pil_rot, utils.PillowImage)
+        assert pil_rot.format == pil.format
 
-    assert pil_rot.size[::-1] == cv2_rot.shape[:2]
+        if path == JPG_PATH:
+            assert cv2_rot.ndim == 2
+            assert pil_rot.mode == 'L'
+        else:
+            assert cv2_rot.ndim == 3
+            assert pil_rot.mode == 'RGB'
+
+        assert pil_rot.height == cv2_rot.height
+        assert pil_rot.width == cv2_rot.width
 
     # the rotate function is also used to rotate a corner of a bounding box
     x, y, w, h = 100, 200, 50, 75
@@ -456,35 +562,46 @@ def test_rotate():
 
 
 def test_zoom():
-    cv2 = utils.to_cv2(JPG_PATH)
-    pil = utils.to_pil(JPG_PATH)
-    assert np.array_equal(cv2, pil)
+    x, y, w, h = 98, 7, 123, 32
+    for path in [PNG_PATH, JPG_PATH, BMP_PATH]:
+        cv2 = utils.to_cv2(path)
+        pil = utils.to_pil(path)
+        assert np.array_equal(cv2, pil)
 
-    width, height = list(map(float, pil.size))
+        img_width, img_height = float(pil.width), float(pil.height)
 
-    cv2_z = utils.crop(cv2, 200, 100, 180, 200)
-    assert isinstance(cv2_z, utils.OpenCVImage)
-    assert cv2_z.ext == cv2.ext
-    assert cv2_z.shape == (200, 180, 3)
+        cv2_1 = utils.crop(cv2, x, y, w, h)
+        assert isinstance(cv2_1, utils.OpenCVImage)
+        assert cv2_1.ext == cv2.ext
+        if path == JPG_PATH:
+            assert cv2_1.shape == (h, w)  # greyscale
+        else:
+            assert cv2_1.shape == (h, w, 3), path
 
-    cv2_z2 = utils.crop(cv2, 200. / width, 100. / height, 180. / width, 200. / height)
-    assert np.array_equal(cv2_z, cv2_z2)
+        cv2_2 = utils.crop(cv2, x/img_width, y/img_height, w/img_width, h/img_height)
+        assert np.array_equal(cv2_1, cv2_2)
 
-    pil_z = utils.crop(pil, 200, 100, 180, 200)
-    assert isinstance(pil_z, utils.PillowImage)
-    assert pil_z.format == pil.format
-    assert pil_z.size == (180, 200)
+        pil_1 = utils.crop(pil, x, y, w, h)
+        assert isinstance(pil_1, utils.PillowImage)
+        assert pil_1.format == pil.format
+        assert pil_1.size == (w, h)
+        if path == JPG_PATH:
+            assert pil_1.mode == 'L'
+        else:
+            assert pil_1.mode == 'RGB'
 
-    pil_z2 = utils.crop(pil, 200. / width, 100. / height, 180. / width, 200. / height)
-    assert np.array_equal(pil_z, pil_z2)
+        pil_2 = utils.crop(pil, x/img_width, y/img_height, w/img_width, h/img_height)
+        assert np.array_equal(pil_1, pil_2)
+        assert np.array_equal(pil_1, cv2_1)
 
-    assert np.array_equal(cv2_z, pil_z)
-
-    with pytest.raises(TypeError, match='Pillow or OpenCV'):
-        utils.crop(np.arange(10), 200, 100, 180, 200)
+        with pytest.raises(TypeError, match='Pillow or OpenCV'):
+            utils.crop(np.arange(10), x, y, w, h)
 
 
 def test_greyscale():
+    #
+    # original is in RGB
+    #
     cv2 = utils.to_cv2(BMP_PATH)
     assert cv2.shape == (720, 720, 3)
 
@@ -504,3 +621,12 @@ def test_greyscale():
     assert pil_grey.mode == 'L'
     assert pil_grey.size == (720, 720)
     assert pil_grey.getbands() == ('L',)
+
+    #
+    # original is already in greyscale
+    #
+    cv2 = utils.to_cv2(JPG_PATH)
+    assert utils.greyscale(cv2) is cv2
+
+    pil = utils.to_pil(JPG_PATH)
+    assert utils.greyscale(pil) is pil

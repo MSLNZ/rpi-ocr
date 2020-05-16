@@ -52,9 +52,9 @@ class OpenCVImage(np.ndarray):
     the original image.
     """
 
-    def __new__(cls, array, ext=DEFAULT_FILE_EXTENSION):
+    def __new__(cls, array, ext=None):
         obj = np.asarray(array).view(cls)
-        obj.ext = ext
+        obj.ext = ext or DEFAULT_FILE_EXTENSION
         return obj
 
     def __array_finalize__(self, obj):
@@ -62,15 +62,27 @@ class OpenCVImage(np.ndarray):
             return
         self.ext = getattr(obj, 'ext', DEFAULT_FILE_EXTENSION)
 
+    @property
+    def height(self):
+        """The height of the image."""
+        return self.shape[0]
+
+    @property
+    def width(self):
+        """The width of the image."""
+        return self.shape[1]
+
 
 def save(image, path, *, text='', font_face=cv2.FONT_HERSHEY_SIMPLEX,
          font_scale=2, thickness=3, foreground='black', background='white'):
     """Save an image to a file.
 
+    This function will convert a greyscale image to a colour image.
+
     Parameters
     ----------
     image : :class:`str`, :class:`OpenCVImage` or :class:`PIL.Image.Image`
-        The image to save. Can be a base64 string or a file path (e.g., if
+        The image to save. Can be a Base64 string or a file path (e.g., if
         you only wanted to convert an image to a new image format).
     path : :class:`str`
         A file path to save the image to. The image format is chosen based
@@ -179,8 +191,13 @@ def to_bytes(obj):
 
     Parameters
     ----------
-    obj : :class:`bytes`, :class:`str`, :class:`OpenCVImage` or :class:`PIL.Image.Image`
-        The object to convert.
+    obj
+        The object to convert. Can be any of the following data types
+
+        * :term:`bytes-like object`
+        * :class:`str` (as a file path or a Base64 representation of an image)
+        * :class:`OpenCVImage`
+        * :class:`PIL.Image.Image`
 
     Returns
     -------
@@ -196,10 +213,10 @@ def to_bytes(obj):
         except OSError:
             try:
                 data = base64.b64decode(obj)
-                logger.debug('converted base64 to bytes')
+                logger.debug('converted Base64 to bytes')
                 return data
             except ValueError:
-                raise ValueError('Invalid path or base64 string, {!r}'.format(obj)) from None
+                raise ValueError('Invalid path or Base64 string, {!r}'.format(obj)) from None
 
     if isinstance(obj, OpenCVImage):
         bgr_image = cv2.cvtColor(obj, code=cv2.COLOR_RGB2BGR)
@@ -215,28 +232,40 @@ def to_bytes(obj):
         logger.debug('converted {!r} to bytes'.format(obj.__class__.__name__))
         return b.getvalue()
 
+    if isinstance(obj, BytesIO):
+        logger.debug('returned value of BytesIO object')
+        return obj.getvalue()
+
+    if isinstance(obj, memoryview):
+        logger.debug('returned bytes from memoryview')
+        return obj.tobytes()
+
+    if isinstance(obj, bytearray):
+        logger.debug('returned bytes from bytearray')
+        return bytes(obj)
+
     if isinstance(obj, bytes):
-        logger.debug('returning original bytes object')
+        logger.debug('returned original bytes object')
         return obj
 
     raise TypeError('Cannot convert {} to bytes'.format(type(obj)))
 
 
 def to_base64(obj):
-    """Convert an object to a :mod:`base64` representation of the image.
+    """Convert an object to the Base64 representation of the image.
 
     Parameters
     ----------
-    obj : :class:`bytes`, :class:`str`, :class:`OpenCVImage` or :class:`PIL.Image.Image`
-        The object to convert to base64.
+    obj
+        The object to convert. See :func:`to_bytes` for more details.
 
     Returns
     -------
     :class:`str`
-        A :mod:`base64` representation of the image.
+        The Base64 representation of the image.
     """
     b64 = base64.b64encode(to_bytes(obj)).decode('ascii')
-    logger.debug('converted bytes to base64')
+    logger.debug('converted bytes to Base64')
     return b64
 
 
@@ -245,8 +274,8 @@ def to_pil(obj):
 
     Parameters
     ----------
-    obj : :class:`bytes`, :class:`str`, :class:`OpenCVImage` or :class:`PIL.Image.Image`
-        The object to convert to a Pillow image.
+    obj
+        The object to convert. See :func:`to_bytes` for more details.
 
     Returns
     -------
@@ -255,33 +284,35 @@ def to_pil(obj):
     """
     if isinstance(obj, OpenCVImage):
         im = Image.fromarray(obj)
-        im.format = obj.ext[1:].upper()
+        fmt = obj.ext[1:].upper()
+        if fmt == 'JPG':
+            fmt = 'JPEG'
+        im.format = fmt
         logger.debug('converted {!r} to Pillow image'.format(obj.__class__.__name__))
         return im
 
-    if isinstance(obj, (str, bytes)):
-        if isinstance(obj, bytes):
-            image = Image.open(BytesIO(obj))
-            logger.debug('converted bytes to Pillow image')
-        else:
+    if isinstance(obj, BytesIO):
+        image = Image.open(obj)
+        logger.debug('converted BytesIO to Pillow image')
+        return image
+
+    if isinstance(obj, (bytes, memoryview, bytearray)):
+        image = Image.open(BytesIO(obj))
+        logger.debug('converted {!r} to Pillow image'.format(obj.__class__.__name__))
+        return image
+
+    if isinstance(obj, str):
+        try:
+            image = Image.open(obj)
+            logger.debug('opened {!r} as a Pillow image'.format(obj))
+        except OSError:
             try:
-                image = Image.open(obj)
-                logger.debug('opened {!r} as a Pillow image'.format(obj))
-            except OSError:
-                try:
-                    buf = base64.b64decode(obj)
-                except ValueError:
-                    raise ValueError('Invalid path or base64 string, {!r}'.format(obj)) from None
-                else:
-                    image = Image.open(BytesIO(buf))
-                    logger.debug('converted base64 to Pillow image')
-
-        if image.mode != 'RGB':
-            converted = image.convert(mode='RGB')
-            converted.format = image.format
-            logger.debug('converted Pillow image mode from {!r} to {!r}'.format(image.mode, converted.mode))
-            return converted
-
+                buf = base64.b64decode(obj)
+            except ValueError:
+                raise ValueError('Invalid path or Base64 string, {!r}'.format(obj)) from None
+            else:
+                image = Image.open(BytesIO(buf))
+                logger.debug('converted Base64 to Pillow image')
         return image
 
     if isinstance(obj, PillowImage):
@@ -296,64 +327,65 @@ def to_cv2(obj):
 
     Parameters
     ----------
-    obj : :class:`bytes`, :class:`str`, :class:`numpy.ndarray` or :class:`PIL.Image.Image`
-        The object to convert to an OpenCV image.
+    obj
+        The object to convert. See :func:`to_bytes` for more details.
 
     Returns
     -------
     :class:`OpenCVImage`
         An OpenCV image.
     """
-    def get_ext_from_bytes(buffer):
-        for key, value in SIGNATURE_MAP.items():
-            if buffer.startswith(value):
-                return '.' + key
-        return DEFAULT_FILE_EXTENSION
-
-    if isinstance(obj, PillowImage):
-        if obj.format is None:
-            img = OpenCVImage(np.asarray(obj))
-        else:
-            img = OpenCVImage(np.asarray(obj), ext='.'+obj.format)
-        logger.debug('converted {!r} to an OpenCVImage'.format(obj.__class__.__name__))
-        return img
-
-    if isinstance(obj, str):
-        image = cv2.imread(obj)
-        if image is None:
-            try:
-                buf = base64.b64decode(obj)
-            except ValueError:
-                raise ValueError('Invalid path or base64 string, {!r}'.format(obj)) from None
-            arr = np.frombuffer(buf, dtype=np.uint8)
-            image = cv2.imdecode(arr, flags=cv2.IMREAD_COLOR)
-            ext = get_ext_from_bytes(buf)
-            logger.debug('converted base64 to an OpenCVImage')
-        else:
-            ext = splitext(obj)[1]
-            logger.debug('opened {!r} as an OpenCVImage'.format(obj))
-        array = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        return OpenCVImage(array, ext=ext)
-
-    if isinstance(obj, bytes):
-        arr = np.frombuffer(obj, dtype=np.uint8)
-        image = cv2.imdecode(arr, flags=cv2.IMREAD_COLOR)
-        array = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        ext = get_ext_from_bytes(obj)
-        img = OpenCVImage(array, ext=ext)
-        logger.debug('converted bytes to OpenCVImage')
-        return img
-
+    # the OpenCVImage check must come before the np.ndarray check
     if isinstance(obj, OpenCVImage):
         logger.debug('returning original OpenCVImage')
         return obj
 
-    if isinstance(obj, np.ndarray):
-        img = OpenCVImage(obj)
-        logger.debug("converted {!r} to 'OpenCVImage'".format(obj.__class__.__name__))
+    if isinstance(obj, (PillowImage, np.ndarray)):
+        try:
+            ext = '.' + obj.format
+        except:
+            ext = None
+        img = OpenCVImage(np.asarray(obj), ext=ext)
+        logger.debug('converted {!r} to an OpenCVImage'.format(obj.__class__.__name__))
         return img
 
-    raise TypeError('Cannot convert {} to an OpenCV image'.format(type(obj)))
+    if isinstance(obj, str):
+        image = cv2.imread(obj, flags=cv2.IMREAD_UNCHANGED)
+        if image is not None:
+            _, ext = splitext(obj)
+            if image.ndim > 2:
+                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            logger.debug('opened {!r} as an OpenCVImage'.format(obj))
+            return OpenCVImage(image, ext=ext)
+
+        try:
+            obj = base64.b64decode(obj)
+            logger.debug('decode Base64 for OpenCV conversion')
+        except ValueError:
+            raise ValueError('Invalid path or Base64 string, {!r}'.format(obj)) from None
+
+    if isinstance(obj, BytesIO):
+        buffer = obj.getbuffer()
+    else:
+        buffer = obj
+
+    try:
+        arr = np.frombuffer(buffer, dtype=np.uint8)
+    except TypeError:
+        raise TypeError('Cannot convert {} to an OpenCV image'.format(type(obj))) from None
+
+    if isinstance(buffer, memoryview):
+        buffer = buffer[:10].tobytes()
+
+    ext = None
+    for key, value in SIGNATURE_MAP.items():
+        if buffer.startswith(value):
+            ext = '.' + key
+            break
+
+    image = cv2.imdecode(arr, flags=cv2.IMREAD_UNCHANGED)
+    logger.debug('converted buffer to OpenCVImage')
+    return OpenCVImage(image, ext=ext)
 
 
 def threshold(image, value):
@@ -623,10 +655,14 @@ def greyscale(image):
     """
     logger.debug('convert image to greyscale')
     if isinstance(image, OpenCVImage):
+        if image.ndim == 2:
+            return image
         converted = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
         return OpenCVImage(converted, ext=image.ext)
 
     if isinstance(image, PillowImage):
+        if image.mode == 'L':
+            return image
         converted = image.convert(mode='L')
         converted.format = image.format
         return converted
