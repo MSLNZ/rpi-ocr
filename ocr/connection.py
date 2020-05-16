@@ -29,12 +29,22 @@ except ImportError:
     class PiCamera(object):
         pass
 
-converters = {
+_converters = {
     'base64': to_base64,
     'bytes': to_bytes,
     'cv2': to_cv2,
     'pil': to_pil,
 }
+
+
+def _convert(image, as_type):
+    try:
+        return _converters[as_type](image)
+    except KeyError:
+        pass
+
+    allowed = ', '.join(_converters)
+    raise ValueError('invalid as_type={!r}, must be one of: {}'.format(as_type, allowed))
 
 
 class Camera(Service, PiCamera):
@@ -109,11 +119,7 @@ class Camera(Service, PiCamera):
         buffer = BytesIO()
         self.capture(buffer, format=DEFAULT_IMAGE_FORMAT)
         buffer.seek(0)
-        try:
-            return converters[as_type](buffer)
-        except KeyError:
-            allowed = ', '.join(converters)
-            raise ValueError('invalid as_type={!r}, must be one of: {}'.format(as_type, allowed)) from None
+        return _convert(buffer, as_type)
 
     def apply_ocr(self, *, image=None, original=False, tasks=None, algorithm='tesseract', **kwargs):
         """Apply OCR to an image.
@@ -229,7 +235,7 @@ class RemoteCamera(LinkedClient):
         logger.debug('requesting capture_ocr took {:.3f} seconds'.format(perf_counter()-t0))
         if as_type == 'base64':
             return image
-        return converters[as_type](image)
+        return _convert(image, as_type)
 
     def apply_ocr(self, *, image=None, original=False, tasks=None, algorithm='tesseract', **kwargs):
         """Apply OCR to an image.
