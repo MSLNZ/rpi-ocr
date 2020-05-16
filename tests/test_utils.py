@@ -385,6 +385,8 @@ def test_to_cv2():
         with pytest.raises(TypeError, match=r'^Cannot convert'):
             utils.to_cv2(obj)
 
+    assert str(utils.to_cv2(PNG_PATH)).startswith('<OpenCVImage ext=.png size=280x73 at 0x')
+
 
 def test_threshold():
     for path in [PNG_PATH, JPG_PATH, BMP_PATH]:

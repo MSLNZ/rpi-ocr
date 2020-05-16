@@ -72,6 +72,10 @@ class OpenCVImage(np.ndarray):
         """The width of the image."""
         return self.shape[1]
 
+    def __str__(self):
+        # mimic what PIL returns
+        return '<OpenCVImage ext={} size={}x{} at {:#x}>'.format(self.ext, self.width, self.height, id(self))
+
 
 def save(image, path, *, text='', font_face=cv2.FONT_HERSHEY_SIMPLEX,
          font_scale=2, thickness=3, foreground='black', background='white'):
@@ -223,13 +227,13 @@ def to_bytes(obj):
         ret, buf = cv2.imencode(obj.ext, bgr_image)
         if not ret:
             raise RuntimeError('error calling cv2.imencode')
-        logger.debug('converted {!r} to bytes'.format(obj.__class__.__name__))
+        logger.debug('converted {} to bytes'.format(obj.__class__.__name__))
         return buf.tobytes()
 
     if isinstance(obj, PillowImage):
         b = BytesIO()
         obj.save(b, obj.format)
-        logger.debug('converted {!r} to bytes'.format(obj.__class__.__name__))
+        logger.debug('converted {} to bytes'.format(obj.__class__.__name__))
         return b.getvalue()
 
     if isinstance(obj, BytesIO):
@@ -288,7 +292,7 @@ def to_pil(obj):
         if fmt == 'JPG':
             fmt = 'JPEG'
         im.format = fmt
-        logger.debug('converted {!r} to Pillow image'.format(obj.__class__.__name__))
+        logger.debug('converted {} to Pillow image'.format(obj.__class__.__name__))
         return im
 
     if isinstance(obj, BytesIO):
@@ -298,7 +302,7 @@ def to_pil(obj):
 
     if isinstance(obj, (bytes, memoryview, bytearray)):
         image = Image.open(BytesIO(obj))
-        logger.debug('converted {!r} to Pillow image'.format(obj.__class__.__name__))
+        logger.debug('converted {} to Pillow image'.format(obj.__class__.__name__))
         return image
 
     if isinstance(obj, str):
@@ -316,7 +320,6 @@ def to_pil(obj):
         return image
 
     if isinstance(obj, PillowImage):
-        logger.debug('returning original {!r} object'.format(obj.__class__.__name__))
         return obj
 
     raise TypeError('Cannot convert {} to a Pillow image'.format(type(obj)))
@@ -337,7 +340,6 @@ def to_cv2(obj):
     """
     # the OpenCVImage check must come before the np.ndarray check
     if isinstance(obj, OpenCVImage):
-        logger.debug('returning original OpenCVImage')
         return obj
 
     if isinstance(obj, (PillowImage, np.ndarray)):
@@ -346,7 +348,7 @@ def to_cv2(obj):
         except:
             ext = None
         img = OpenCVImage(np.asarray(obj), ext=ext)
-        logger.debug('converted {!r} to an OpenCVImage'.format(obj.__class__.__name__))
+        logger.debug('converted {} to OpenCVImage'.format(obj.__class__.__name__))
         return img
 
     if isinstance(obj, str):
@@ -360,7 +362,7 @@ def to_cv2(obj):
 
         try:
             obj = base64.b64decode(obj)
-            logger.debug('decode Base64 for OpenCV conversion')
+            logger.debug('decode Base64 for OpenCVImage conversion')
         except ValueError:
             raise ValueError('Invalid path or Base64 string, {!r}'.format(obj)) from None
 
@@ -384,8 +386,9 @@ def to_cv2(obj):
             break
 
     image = cv2.imdecode(arr, flags=cv2.IMREAD_UNCHANGED)
+    img = OpenCVImage(image, ext=ext)
     logger.debug('converted buffer to OpenCVImage')
-    return OpenCVImage(image, ext=ext)
+    return img
 
 
 def threshold(image, value):
