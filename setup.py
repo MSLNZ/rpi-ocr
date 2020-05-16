@@ -188,7 +188,7 @@ setup(
     cmdclass={'docs': BuildDocs, 'apidocs': ApiDocs},
     entry_points={
         'console_scripts': [
-            'ocr = ocr.camera:start_camera_service',
+            'ocr = ocr.connection:start_camera_service',
         ],
     },
     include_package_data=False,
