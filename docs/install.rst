@@ -65,6 +65,15 @@ and make sure that the camera is enabled in the configuration settings
 
 7. Select ``Yes`` to reboot.
 
+If you want to establish a remote desktop session with the Raspberry Pi, you
+must first install the `xrdp <http://xrdp.org/>`_ program
+
+.. code-block:: console
+
+   sudo apt install xrdp
+
+and then reboot the Raspberry Pi.
+
 Windows, Linux or macOS
 -----------------------
 To install **RPi-OCR** on a computer that is not a Raspberry Pi run
