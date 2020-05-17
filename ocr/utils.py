@@ -13,7 +13,7 @@ import numpy as np
 from PIL import Image
 from PIL.Image import Image as PillowImage
 from PIL import ImageFilter
-from msl.qt.utils import to_qcolor
+from msl.qt.convert import to_qcolor
 
 __all__ = (
     'crop',
@@ -386,6 +386,8 @@ def to_cv2(obj):
             break
 
     image = cv2.imdecode(arr, flags=cv2.IMREAD_UNCHANGED)
+    if image.ndim > 2:
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     img = OpenCVImage(image, ext=ext)
     logger.debug('converted buffer to OpenCVImage')
     return img
