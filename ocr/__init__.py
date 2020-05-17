@@ -68,7 +68,7 @@ def camera(**kwargs):
     return RemoteCamera(host=host, **kwargs)
 
 
-def kill_camera_service(*, host='raspberrypi', rpi_username='pi', rpi_password=None, **kwargs):
+def kill_camera_service(*, host='raspberrypi', rpi_username='pi', rpi_password=None, **ignored):
     """Kill the :class:`~ocr.connection.Camera` service on the Raspberry Pi.
 
     Parameters
@@ -79,10 +79,10 @@ def kill_camera_service(*, host='raspberrypi', rpi_username='pi', rpi_password=N
         The username for the Raspberry Pi.
     rpi_password : :class:`str`, optional
         The password for `rpi_username`.
-    kwargs
-        All additional keyword arguments are passed to :func:`~msl.network.ssh.connect`.
+    ignored
+        All additional keyword arguments are silently ignored.
     """
-    ssh_client = ssh.connect(host, username=rpi_username, password=rpi_password, **kwargs)
+    ssh_client = ssh.connect(host, username=rpi_username, password=rpi_password)
     lines = ssh.exec_command(ssh_client, 'ps aux | grep ocr')
     pids = [line.split()[1] for line in lines if RPI_EXE_PATH in line]
     for pid in pids:
