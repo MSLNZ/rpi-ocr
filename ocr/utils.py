@@ -20,6 +20,7 @@ __all__ = (
     'dilate',
     'erode',
     'gaussian_blur',
+    'greyscale',
     'rotate',
     'save',
     'threshold',
