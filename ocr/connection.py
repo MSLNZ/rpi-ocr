@@ -22,6 +22,9 @@ from .utils import (
     to_pil,
     logger,
 )
+from .tesseract import languages
+from .tesseract import version as tesseract_version
+from .ssocr import version as ssocr_version
 
 try:
     from picamera import PiCamera
@@ -67,6 +70,10 @@ class Camera(Service, PiCamera):
         Service.__init__(self, ignore_attributes=ignore)
         PiCamera.__init__(self, **kwargs)
 
+        self._tesseract_languages = languages()
+        self._tesseract_version = tesseract_version()
+        self._ssocr_version = ssocr_version(include_copyright=False)
+
     def get(self, attribute):
         """Get a value from the :class:`~picamera.PiCamera`.
 
@@ -98,6 +105,28 @@ class Camera(Service, PiCamera):
             The value to set the `attribute` to.
         """
         setattr(self, attribute, value)
+
+    def ssocr_version(self):
+        """Get the version information of ssocr.
+
+        Returns
+        -------
+        :class:`str`
+            The version of ssocr.
+        """
+        return self._ssocr_version
+
+    def tesseract_languages_version(self):
+        """Get the languages and version information of Tesseract-OCR.
+
+        Returns
+        -------
+        :class:`list` of :class:`str`
+            The languages that are available to Tesseract-OCR.
+        :class:`str`
+            The version of Tesseract-OCR.
+        """
+        return self._tesseract_languages, self._tesseract_version
 
     def capture_ocr(self, as_type='cv2'):
         """Capture an image and convert it to the specified type.
@@ -215,6 +244,28 @@ class RemoteCamera(LinkedClient):
             pass
 
     close = disconnect
+
+    def ssocr_version(self):
+        """Get the version information of ssocr.
+
+        Returns
+        -------
+        :class:`str`
+            The version of ssocr.
+        """
+        return self.link.ssocr_version()
+
+    def tesseract_languages_version(self):
+        """Get the languages and version information of Tesseract-OCR.
+
+        Returns
+        -------
+        :class:`list` of :class:`str`
+            The languages that are available to Tesseract-OCR.
+        :class:`str`
+            The version of Tesseract-OCR.
+        """
+        return self.link.tesseract_languages_version()
 
     def capture_ocr(self, as_type='cv2'):
         """Capture an image and convert it to the specified type.
