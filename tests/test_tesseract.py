@@ -73,7 +73,7 @@ def test_numbers():
 
 
 def test_version():
-    assert isinstance(version(), LooseVersion)
+    assert isinstance(version(), str)
 
 
 def test_set_tesseract_path():
