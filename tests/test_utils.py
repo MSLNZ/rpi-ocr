@@ -283,14 +283,14 @@ def test_to_pil():
 def test_to_cv2():
     items = [(PNG_PATH, '.png'), (JPG_PATH, '.jpg'), (BMP_PATH, '.bmp')]
     for path, ext in items:
-        expected_bgr = opencv.imread(path, flags=-1)
+        image = opencv.imread(path, flags=-1)
 
         if path == JPG_PATH:
             expected_ndim = 2  # greyscale image
-            expected_rgb = expected_bgr
+            expected = image
         else:
             expected_ndim = 3
-            expected_rgb = expected_bgr[:, :, [2, 1, 0]]  # convert BGR to RGB
+            expected = image[:, :, [2, 1, 0]]  # convert BGR to RGB
 
         # PIL -> cv2
         pil = Image.open(path)
@@ -315,7 +315,7 @@ def test_to_cv2():
         cv2 = utils.to_cv2(path)
         assert isinstance(cv2, utils.OpenCVImage)
         assert cv2.ext == ext
-        assert np.array_equal(expected_rgb, cv2)
+        assert np.array_equal(expected, cv2)
 
         # base64 (str) -> cv2
         with open(path, mode='rb') as fp:
@@ -324,7 +324,7 @@ def test_to_cv2():
         assert isinstance(b64, str)
         assert isinstance(cv2, utils.OpenCVImage)
         assert cv2.ext == ext
-        assert np.array_equal(expected_bgr, cv2)
+        assert np.array_equal(expected, cv2)
 
         # cv2 -> cv2
         assert isinstance(cv2, utils.OpenCVImage)
@@ -337,7 +337,7 @@ def test_to_cv2():
         assert isinstance(raw, bytes)
         assert isinstance(cv2, utils.OpenCVImage)
         assert cv2.ext == ext
-        assert np.array_equal(expected_bgr, cv2)
+        assert np.array_equal(expected, cv2)
 
         # BytesIO -> cv2
         with open(path, mode='rb') as fp:
@@ -345,7 +345,7 @@ def test_to_cv2():
         cv2 = utils.to_cv2(bio)
         assert isinstance(cv2, utils.OpenCVImage)
         assert cv2.ext == ext
-        assert np.array_equal(expected_bgr, cv2)
+        assert np.array_equal(expected, cv2)
 
         # BytesIO buffer -> cv2
         with open(path, mode='rb') as fp:
@@ -353,7 +353,7 @@ def test_to_cv2():
         cv2 = utils.to_cv2(bio.getbuffer())
         assert isinstance(cv2, utils.OpenCVImage)
         assert cv2.ext == ext
-        assert np.array_equal(expected_bgr, cv2)
+        assert np.array_equal(expected, cv2)
 
         # bytearray -> cv2
         with open(path, mode='rb') as fp:
@@ -361,7 +361,7 @@ def test_to_cv2():
         cv2 = utils.to_cv2(ba)
         assert isinstance(cv2, utils.OpenCVImage)
         assert cv2.ext == ext
-        assert np.array_equal(expected_bgr, cv2)
+        assert np.array_equal(expected, cv2)
 
     # ndarray -> cv2
     array = np.arange(100)
