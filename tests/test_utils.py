@@ -410,6 +410,28 @@ def test_threshold():
             assert cv2_th.ndim == 3
             assert pil_th.mode == 'RGB'
 
+        # threshold value is 0
+        cv2_0 = utils.threshold(cv2, 0)
+        pil_0 = utils.threshold(pil, 0)
+        cv2_unique = np.unique(cv2_0)
+        if path == PNG_PATH:
+            assert np.array_equal(cv2_unique, [255])
+            assert cv2_unique.height == 1
+        else:  # image has a pixels with a value of 0, so 0 is still in it
+            assert np.array_equal(cv2_unique, [0, 255])
+            assert cv2_unique.height == 2
+        assert cv2_unique.width == 0
+        assert np.array_equal(cv2_0, pil_0)
+
+        # threshold value is 255
+        cv2_255 = utils.threshold(cv2, 255)
+        pil_255 = utils.threshold(pil, 255)
+        cv2_unique = np.unique(cv2_255)
+        assert np.array_equal(cv2_unique, [0])
+        assert cv2_unique.height == 1
+        assert cv2_unique.width == 0
+        assert np.array_equal(cv2_255, pil_255)
+
     with pytest.raises(TypeError, match='Pillow or OpenCV'):
         utils.threshold(np.arange(10), 100)
 

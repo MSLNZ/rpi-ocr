@@ -71,7 +71,10 @@ class OpenCVImage(np.ndarray):
     @property
     def width(self):
         """The width of the image."""
-        return self.shape[1]
+        try:
+            return self.shape[1]
+        except IndexError:
+            return 0
 
     def __str__(self):
         # mimic what PIL returns
@@ -410,9 +413,7 @@ def threshold(image, value):
     """
     logger.debug('threshold value={}'.format(value))
     if isinstance(image, OpenCVImage):
-        ret, out = cv2.threshold(image, value, 255, cv2.THRESH_BINARY)
-        if not ret:
-            raise RuntimeError('error in cv2.threshold')
+        _, out = cv2.threshold(image, value, 255, cv2.THRESH_BINARY)
         return OpenCVImage(out, ext=image.ext)
 
     if isinstance(image, PillowImage):
