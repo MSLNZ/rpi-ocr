@@ -6,13 +6,15 @@ import sys
 import base64
 import logging
 from io import BytesIO
-from os.path import splitext
 
 import cv2
 import numpy as np
-from PIL import Image
+from PIL import (
+    Image,
+    ImageFilter,
+    ImageOps,
+)
 from PIL.Image import Image as PillowImage
-from PIL import ImageFilter
 from msl.qt.convert import to_qcolor
 
 __all__ = (
@@ -21,6 +23,7 @@ __all__ = (
     'erode',
     'gaussian_blur',
     'greyscale',
+    'invert',
     'rotate',
     'save',
     'threshold',
@@ -66,7 +69,10 @@ class OpenCVImage(np.ndarray):
     @property
     def height(self):
         """The height of the image."""
-        return self.shape[0]
+        try:
+            return self.shape[0]
+        except IndexError:
+            return 0
 
     @property
     def width(self):
@@ -358,7 +364,7 @@ def to_cv2(obj):
     if isinstance(obj, str):
         image = cv2.imread(obj, flags=cv2.IMREAD_UNCHANGED)
         if image is not None:
-            _, ext = splitext(obj)
+            _, ext = os.path.splitext(obj)
             if image.ndim > 2:
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             logger.debug('opened {!r} as an OpenCVImage'.format(obj))
@@ -670,8 +676,32 @@ def greyscale(image):
     if isinstance(image, PillowImage):
         if image.mode == 'L':
             return image
-        converted = image.convert(mode='L')
+        converted = ImageOps.grayscale(image)
         converted.format = image.format
         return converted
+
+    raise TypeError('Expect a Pillow or OpenCV image')
+
+
+def invert(image):
+    """Invert an image.
+
+    Parameters
+    ----------
+    image : :class:`OpenCVImage` or :class:`PIL.Image.Image`
+        The image object.
+
+    Returns
+    -------
+    The image inverted.
+    """
+    logger.debug('invert image')
+    if isinstance(image, OpenCVImage):
+        return OpenCVImage(~image, ext=image.ext)
+
+    if isinstance(image, PillowImage):
+        inverted = ImageOps.invert(image)
+        inverted.format = image.format
+        return inverted
 
     raise TypeError('Expect a Pillow or OpenCV image')

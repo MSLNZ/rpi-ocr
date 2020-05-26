@@ -654,3 +654,24 @@ def test_greyscale():
 
     pil = utils.to_pil(JPG_PATH)
     assert utils.greyscale(pil) is pil
+
+
+def test_invert():
+    for path in [BMP_PATH, PNG_PATH, JPG_PATH]:
+        _, ext = os.path.splitext(path)
+        cv2 = utils.to_cv2(path)
+        pil = utils.to_pil(path)
+        assert np.array_equal(cv2, pil)
+
+        mn, mx = np.min(cv2), np.max(cv2)
+
+        cv2_inv = utils.invert(cv2)
+        assert isinstance(cv2_inv, utils.OpenCVImage)
+        assert cv2_inv.ext == ext
+        assert 255-mn == np.max(cv2_inv)
+        assert 255-mx == np.min(cv2_inv)
+
+        pil_inv = utils.invert(pil)
+        assert isinstance(pil_inv, utils.PillowImage)
+        assert pil_inv.format == pil.format
+        assert np.array_equal(cv2_inv, pil_inv)
