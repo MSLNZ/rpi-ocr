@@ -19,12 +19,14 @@ from msl.qt.convert import to_qcolor
 
 __all__ = (
     'adaptive_threshold',
+    'closing',
     'crop',
     'dilate',
     'erode',
     'gaussian_blur',
     'greyscale',
     'invert',
+    'opening',
     'rotate',
     'save',
     'threshold',
