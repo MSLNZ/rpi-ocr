@@ -680,18 +680,24 @@ def test_invert():
 def test_adaptive_threahold():
     for path in [BMP_PATH, PNG_PATH, JPG_PATH]:
         _, ext = os.path.splitext(path)
-        cv2 = utils.greyscale(utils.to_cv2(path))
-        pil = utils.greyscale(utils.to_pil(path))
+        for convert in [True, False]:
+            cv2 = utils.to_cv2(path)
+            pil = utils.to_pil(path)
 
-        cv2_at = utils.adaptive_threshold(cv2)
-        assert isinstance(cv2_at, utils.OpenCVImage)
-        assert cv2_at.ext == ext
+            # adaptive_threshold will automatically convert to greyscale
+            if convert:
+                cv2 = utils.greyscale(cv2)
+                pil = utils.greyscale(pil)
 
-        cv2_unique = np.unique(cv2_at)
-        assert np.array_equal(cv2_unique, [0, 255])
-        assert cv2_unique.height == 2
-        assert cv2_unique.width == 0
+            cv2_at = utils.adaptive_threshold(cv2)
+            assert isinstance(cv2_at, utils.OpenCVImage)
+            assert cv2_at.ext == ext
 
-        pil_at = utils.adaptive_threshold(pil)
-        assert isinstance(pil_at, utils.PillowImage)
-        assert pil_at.format == pil.format
+            cv2_unique = np.unique(cv2_at)
+            assert np.array_equal(cv2_unique, [0, 255])
+            assert cv2_unique.height == 2
+            assert cv2_unique.width == 0
+
+            pil_at = utils.adaptive_threshold(pil)
+            assert isinstance(pil_at, utils.PillowImage)
+            assert pil_at.format == pil.format

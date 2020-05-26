@@ -714,7 +714,8 @@ def adaptive_threshold(image, *, use_mean=True, radius=2, c=0):
     Parameters
     ----------
     image : :class:`OpenCVImage` or :class:`PIL.Image.Image`
-        The image object. The image **must** be in greyscale.
+        The image object. The image must be in greyscale, if it is not then
+        it will first be converted to be.
     use_mean : :class:`bool`, optional
         Decides which adaptive thresholding algorithm to use. If :data:`True`
         then uses ``cv2.ADAPTIVE_THRESH_MEAN_C`` else uses
@@ -731,6 +732,8 @@ def adaptive_threshold(image, *, use_mean=True, radius=2, c=0):
     """
     logger.debug('adaptive threshold image')
     if isinstance(image, OpenCVImage):
+        if image.ndim > 2:
+            image = greyscale(image)
         method = cv2.ADAPTIVE_THRESH_MEAN_C if use_mean else cv2.ADAPTIVE_THRESH_GAUSSIAN_C
         size = 2 * radius + 1
         img = cv2.adaptiveThreshold(image, 255, method, cv2.THRESH_BINARY, size, c)
