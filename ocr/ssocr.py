@@ -2,6 +2,7 @@
 The `ssocr <https://www.unix-ag.uni-kl.de/~auerswal/ssocr/>`_ algorithm.
 """
 import os
+import sys
 import subprocess
 from enum import Enum
 
@@ -11,7 +12,15 @@ from .utils import (
     get_executable_path,
 )
 
-ssocr_exe = 'ssocr'
+# the name of the executable to run in subprocess
+ssocr_exe = 'ssocr.exe' if sys.platform == 'win32' else 'ssocr'
+
+# whether the executable is available in PATH
+is_available = False
+for path in os.environ['PATH'].split(os.pathsep):
+    if os.path.isfile(os.path.join(path, ssocr_exe)):
+        is_available = True
+        break
 
 
 class SSOCREnum(Enum):
@@ -65,10 +74,11 @@ def set_ssocr_path(path):
         The full path to the ``ssocr`` executable or a top-level
         directory that contains the executable.
     """
-    global ssocr_exe
-    exe = get_executable_path(path, 'ssocr')
-    logger.debug('set ssocr executable to {!r}'.format(exe))
-    ssocr_exe = exe
+    global ssocr_exe, is_available
+    path = get_executable_path(path, 'ssocr')
+    logger.debug('set ssocr executable to {!r}'.format(path))
+    ssocr_exe = path
+    is_available = True
 
 
 def version(include_copyright=False):
@@ -120,7 +130,7 @@ def version(include_copyright=False):
 #   -c, --charset=KEYWORD    select recognized characters use -c help for list of KEYWORDS
 
 
-def ssocr(image, *,
+def apply(image, *,
           threshold=50.0,
           absolute_threshold=True,
           iter_threshold=False,
@@ -131,7 +141,6 @@ def ssocr(image, *,
           minus_ratio=2,
           debug=False,
           foreground=Colour.BLACK,
-          background=Colour.WHITE,
           luminance=Luminance.REC709,
           as_hex=False,
           omit_decimal_point=False,
@@ -170,9 +179,8 @@ def ssocr(image, *,
     debug : :class:`bool`, optional
         Whether to include the debug messages in the output text.
     foreground : :class:`str` or :class:`Colour`, optional
-        Set foreground color (black or white).
-    background : :class:`str` or :class:`Colour`, optional
-        Set background color (black or white).
+        Set foreground color (ie., the color of the text) to be either black
+        or white. Once set the background color will be set to be the opposite.
     luminance : :class:`str` or :class:`Luminance`, optional
         Compute luminance using this formula.
     as_hex : :class:`bool`, optional
@@ -199,7 +207,6 @@ def ssocr(image, *,
         '-r{}'.format(one_ratio),
         '-m{}'.format(minus_ratio),
         '-f{}'.format(Colour.get_value(foreground)),
-        '-b{}'.format(Colour.get_value(background)),
         '-l{}'.format(Luminance.get_value(luminance)),
         '-c{}'.format(Charset.get_value(charset)),
     ]
@@ -232,7 +239,6 @@ def ssocr(image, *,
 
 def _run(command, stdin=None, debug=False):
     # runs the ssocr command
-    logger.debug('ssocr command: {}'.format(' '.join(command)))
     try:
         p = subprocess.run(command, input=stdin, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except FileNotFoundError:
@@ -240,6 +246,8 @@ def _run(command, stdin=None, debug=False):
             'You must set the location to the ssocr executable.\n'
             'Call ocr.set_ssocr_path() or add the directory of the ssocr executable to PATH'
         ) from None
+
+    logger.info('ssocr command: {}'.format(' '.join(command)))
 
     if debug:
         return p.stderr.decode() + p.stdout.rstrip().decode()

@@ -1,6 +1,8 @@
 """
 The `Tesseract <https://github.com/tesseract-ocr/tesseract>`_ algorithm.
 """
+import os
+import sys
 import subprocess
 
 import pytesseract
@@ -10,6 +12,16 @@ from .utils import (
     get_executable_path,
     logger,
 )
+
+# the name of the executable
+tesseract_exe = 'tesseract.exe' if sys.platform == 'win32' else 'tesseract'
+
+# whether the executable is available in PATH
+is_available = False
+for path in os.environ['PATH'].split(os.pathsep):
+    if os.path.isfile(os.path.join(path, tesseract_exe)):
+        is_available = True
+        break
 
 
 def set_tesseract_path(path):
@@ -21,9 +33,11 @@ def set_tesseract_path(path):
         The full path to the ``tesseract`` executable or a top-level
         directory that contains the executable.
     """
-    exe = get_executable_path(path, 'tesseract')
-    logger.debug('set tesseract executable to {!r}'.format(exe))
-    pytesseract.pytesseract.tesseract_cmd = exe
+    global is_available
+    cmd = get_executable_path(path, 'tesseract')
+    logger.debug('set tesseract executable to {!r}'.format(cmd))
+    pytesseract.pytesseract.tesseract_cmd = cmd
+    is_available = True
 
 
 def version():
@@ -54,7 +68,7 @@ def languages():
     return langs
 
 
-def tesseract(image, *, language='eng', psm=7, oem=3, whitelist='0123456789+-.', timeout=0, nice=0, config=''):
+def apply(image, *, language='eng', psm=7, oem=3, whitelist='0123456789+-.', timeout=0, nice=0, config=''):
     """Apply the `Tesseract <https://github.com/tesseract-ocr/tesseract>`_ algorithm.
 
     Parameters
@@ -108,5 +122,5 @@ def tesseract(image, *, language='eng', psm=7, oem=3, whitelist='0123456789+-.',
         cfg += ' -c tessedit_char_whitelist=' + whitelist
     if config:
         cfg += ' ' + config
-    logger.debug('tesseract params: language={!r} config={!r} nice={} timeout={}'.format(language, cfg, nice, timeout))
+    logger.info('tesseract params: language={!r} config={!r} nice={} timeout={}'.format(language, cfg, nice, timeout))
     return pytesseract.image_to_string(to_cv2(image), lang=language, config=cfg, nice=nice, timeout=timeout)
