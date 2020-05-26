@@ -708,7 +708,7 @@ def invert(image):
     raise TypeError('Expect a Pillow or OpenCV image')
 
 
-def adaptive_threshold(image, *, use_mean=True, radius=2, c=0):
+def adaptive_threshold(image, radius, *, use_mean=True, c=0):
     """Apply adaptive thresholding to an image.
 
     Parameters
@@ -716,13 +716,13 @@ def adaptive_threshold(image, *, use_mean=True, radius=2, c=0):
     image : :class:`OpenCVImage` or :class:`PIL.Image.Image`
         The image object. The image must be in greyscale, if it is not then
         it will first be converted to be.
+    radius : :class:`int`
+        Radius of the pixel neighborhood that is used to calculate a threshold
+        value, e.g., radius=2 uses a 5x5 area.
     use_mean : :class:`bool`, optional
         Decides which adaptive thresholding algorithm to use. If :data:`True`
         then uses ``cv2.ADAPTIVE_THRESH_MEAN_C`` else uses
         ``cv2.ADAPTIVE_THRESH_GAUSSIAN_C``.
-    radius : :class:`int`, optional
-        Radius of the pixel neighborhood that is used to calculate a threshold
-        value, e.g., radius=2 uses a 5x5 area.
     c : :class:`int`, optional
         A constant which is subtracted from the mean or weighted mean calculated.
 
@@ -730,7 +730,10 @@ def adaptive_threshold(image, *, use_mean=True, radius=2, c=0):
     -------
     The image with adaptive threshold applied.
     """
-    logger.debug('adaptive threshold image')
+    if radius < 1:
+        return image
+
+    logger.debug('adaptive threshold radius={} use_mean={} c={}'.format(radius, use_mean, c))
     if isinstance(image, OpenCVImage):
         if image.ndim > 2:
             image = greyscale(image)
@@ -740,6 +743,77 @@ def adaptive_threshold(image, *, use_mean=True, radius=2, c=0):
         return OpenCVImage(img, ext=image.ext)
 
     if isinstance(image, PillowImage):
-        return to_pil(adaptive_threshold(to_cv2(image)))
+        return to_pil(adaptive_threshold(to_cv2(image), use_mean=use_mean, radius=radius, c=c))
+
+    raise TypeError('Expect a Pillow or OpenCV image')
+
+
+def opening(image, radius, *, iterations=1):
+    """Apply opening to an image.
+
+    Parameters
+    ----------
+    image : :class:`OpenCVImage` or :class:`PIL.Image.Image`
+        The image object.
+    radius : :class:`int`
+        The number of pixels to include in each direction. For example, if
+        radius=1 then use 1 pixel in each direction from the central pixel,
+        i.e., 3x3 area.
+    iterations : :class:`int`, optional
+        The number of times erosion and dilation are applied.
+
+    Returns
+    -------
+    The image with opening applied.
+    """
+    if radius < 1:
+        return image
+
+    logger.debug('opening radius={} iterations={}'.format(radius, iterations))
+    if isinstance(image, OpenCVImage):
+        size = 2 * radius + 1
+        kernel = np.ones((size, size), np.uint8)
+        img = cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel, iterations=iterations)
+        return OpenCVImage(img, ext=image.ext)
+
+    if isinstance(image, PillowImage):
+        image = erode(image, radius, iterations=iterations)
+        return dilate(image, radius, iterations=iterations)
+
+    raise TypeError('Expect a Pillow or OpenCV image')
+
+
+def closing(image, radius, *, iterations=1):
+    """Apply closing to an image.
+
+    Parameters
+    ----------
+    image : :class:`OpenCVImage` or :class:`PIL.Image.Image`
+        The image object.
+    radius : :class:`int`
+        The number of pixels to include in each direction. For example, if
+        radius=1 then use 1 pixel in each direction from the central pixel,
+        i.e., 3x3 area.
+    iterations : :class:`int`, optional
+        The number of times dilation and erosion are applied.
+
+    Returns
+    -------
+    The image with closing applied.
+    """
+    if radius < 1:
+        return image
+
+    logger.debug('closing radius={} iterations={}'.format(radius, iterations))
+
+    if isinstance(image, OpenCVImage):
+        size = 2 * radius + 1
+        kernel = np.ones((size, size), np.uint8)
+        img = cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel, iterations=iterations)
+        return OpenCVImage(img, ext=image.ext)
+
+    if isinstance(image, PillowImage):
+        image = dilate(image, radius, iterations=iterations)
+        return erode(image, radius, iterations=iterations)
 
     raise TypeError('Expect a Pillow or OpenCV image')

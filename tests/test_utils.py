@@ -689,7 +689,7 @@ def test_adaptive_threahold():
                 cv2 = utils.greyscale(cv2)
                 pil = utils.greyscale(pil)
 
-            cv2_at = utils.adaptive_threshold(cv2)
+            cv2_at = utils.adaptive_threshold(cv2, 1)
             assert isinstance(cv2_at, utils.OpenCVImage)
             assert cv2_at.ext == ext
 
@@ -698,6 +698,48 @@ def test_adaptive_threahold():
             assert cv2_unique.height == 2
             assert cv2_unique.width == 0
 
-            pil_at = utils.adaptive_threshold(pil)
+            pil_at = utils.adaptive_threshold(pil, 1)
             assert isinstance(pil_at, utils.PillowImage)
             assert pil_at.format == pil.format
+
+
+def test_opening():
+    for path in [BMP_PATH, PNG_PATH, JPG_PATH]:
+        _, ext = os.path.splitext(path)
+        cv2 = utils.to_cv2(path)
+        pil = utils.to_pil(path)
+        for i in range(1, 4):
+            cv2_o = utils.opening(cv2, i)
+            assert isinstance(cv2_o, utils.OpenCVImage)
+            assert cv2_o.ext == ext
+            cv2_ed = utils.dilate(utils.erode(cv2, i), i)
+            assert np.array_equal(cv2_o, cv2_ed)
+
+            pil_o = utils.opening(pil, i)
+            assert isinstance(pil_o, utils.PillowImage)
+            assert pil_o.format == pil.format
+            pil_ed = utils.dilate(utils.erode(pil, i), i)
+            assert pil_o == pil_ed
+
+        assert utils.opening(cv2, 0) is cv2
+
+
+def test_closing():
+    for path in [BMP_PATH, PNG_PATH, JPG_PATH]:
+        _, ext = os.path.splitext(path)
+        cv2 = utils.to_cv2(path)
+        pil = utils.to_pil(path)
+        for i in range(1, 4):
+            cv2_c = utils.closing(cv2, i)
+            assert isinstance(cv2_c, utils.OpenCVImage)
+            assert cv2_c.ext == ext
+            cv2_de = utils.erode(utils.dilate(cv2, i), i)
+            assert np.array_equal(cv2_c, cv2_de)
+
+            pil_c = utils.closing(pil, i)
+            assert isinstance(pil_c, utils.PillowImage)
+            assert pil_c.format == pil.format
+            pil_de = utils.erode(utils.dilate(pil, i), i)
+            assert pil_c == pil_de
+
+        assert utils.closing(cv2, 0) is cv2
