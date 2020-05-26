@@ -675,3 +675,23 @@ def test_invert():
         assert isinstance(pil_inv, utils.PillowImage)
         assert pil_inv.format == pil.format
         assert np.array_equal(cv2_inv, pil_inv)
+
+
+def test_adaptive_threahold():
+    for path in [BMP_PATH, PNG_PATH, JPG_PATH]:
+        _, ext = os.path.splitext(path)
+        cv2 = utils.greyscale(utils.to_cv2(path))
+        pil = utils.greyscale(utils.to_pil(path))
+
+        cv2_at = utils.adaptive_threshold(cv2)
+        assert isinstance(cv2_at, utils.OpenCVImage)
+        assert cv2_at.ext == ext
+
+        cv2_unique = np.unique(cv2_at)
+        assert np.array_equal(cv2_unique, [0, 255])
+        assert cv2_unique.height == 2
+        assert cv2_unique.width == 0
+
+        pil_at = utils.adaptive_threshold(pil)
+        assert isinstance(pil_at, utils.PillowImage)
+        assert pil_at.format == pil.format

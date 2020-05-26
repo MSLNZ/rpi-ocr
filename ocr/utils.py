@@ -18,6 +18,7 @@ from PIL.Image import Image as PillowImage
 from msl.qt.convert import to_qcolor
 
 __all__ = (
+    'adaptive_threshold',
     'crop',
     'dilate',
     'erode',
@@ -703,5 +704,39 @@ def invert(image):
         inverted = ImageOps.invert(image)
         inverted.format = image.format
         return inverted
+
+    raise TypeError('Expect a Pillow or OpenCV image')
+
+
+def adaptive_threshold(image, *, use_mean=True, radius=2, c=0):
+    """Apply adaptive thresholding to an image.
+
+    Parameters
+    ----------
+    image : :class:`OpenCVImage` or :class:`PIL.Image.Image`
+        The image object. The image **must** be in greyscale.
+    use_mean : :class:`bool`, optional
+        Decides which adaptive thresholding algorithm to use. If :data:`True`
+        then uses ``cv2.ADAPTIVE_THRESH_MEAN_C`` else uses
+        ``cv2.ADAPTIVE_THRESH_GAUSSIAN_C``.
+    radius : :class:`int`, optional
+        Radius of the pixel neighborhood that is used to calculate a threshold
+        value, e.g., radius=2 uses a 5x5 area.
+    c : :class:`int`, optional
+        A constant which is subtracted from the mean or weighted mean calculated.
+
+    Returns
+    -------
+    The image with adaptive threshold applied.
+    """
+    logger.debug('adaptive threshold image')
+    if isinstance(image, OpenCVImage):
+        method = cv2.ADAPTIVE_THRESH_MEAN_C if use_mean else cv2.ADAPTIVE_THRESH_GAUSSIAN_C
+        size = 2 * radius + 1
+        img = cv2.adaptiveThreshold(image, 255, method, cv2.THRESH_BINARY, size, c)
+        return OpenCVImage(img, ext=image.ext)
+
+    if isinstance(image, PillowImage):
+        return to_pil(adaptive_threshold(to_cv2(image)))
 
     raise TypeError('Expect a Pillow or OpenCV image')
