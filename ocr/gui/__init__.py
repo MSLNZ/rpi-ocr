@@ -61,24 +61,6 @@ class CaptureThread(Thread):
         super(CaptureThread, self).__init__(CaptureWorker)
 
 
-# class CaptureHandler(QtCore.QObject):
-#
-#     sig_capture = Signal(str, str)  # base64 image, title
-#     sig_settings = Signal(dict)  # camera settings
-#
-#     def __init__(self):
-#         super(CaptureHandler, self).__init__()
-#         self.capture_index = 0
-#
-#     def new_capture(self, capture=None, settings=None):
-#         self.capture_index += 1
-#         utils.logger.info('new capture - sig_capture.emit')
-#         self.sig_capture.emit(capture, 'Capture {}'.format(self.capture_index))
-#         utils.logger.info('new capture - sig_settings.emit')
-#         self.sig_settings.emit(settings)
-#         utils.logger.info('new capture - done')
-
-
 class Configure(QtWidgets.QWidget):
 
     sig_new_camera = Signal(object)  # Camera or RemoteCamera object
@@ -103,8 +85,6 @@ class Configure(QtWidgets.QWidget):
         self.ocr_service = None  # reserved for ocr.service.RemoteOCR
         self.capture_index = 0
         self.is_capture_paused = False
-        #self.capture_handler = CaptureHandler()
-        #self.capture_handler.sig_capture.connect(self.set_image)
         self.capture_thread = CaptureThread()
         self.capture_thread.finished.connect(self.captured)
         self.rois = {}  # key: pg.RectROI, value: ROIPreview widget
@@ -263,6 +243,10 @@ class Configure(QtWidgets.QWidget):
             elif key == Qt.Key_Escape or key == Qt.Key_Delete:
                 self.view_box.removeItem(self.zoom_roi)
                 self.zoom_roi = None
+        elif key == (QtCore.Qt.Key_Control and QtCore.Qt.Key_Z) and self.zoom_history:
+            self.pause_capture()
+            self.camera.update_settings({'zoom': self.zoom_history.pop()})
+            self.start_capture()
         super(Configure, self).keyPressEvent(event)
 
     def zoom_in(self):
@@ -308,6 +292,7 @@ class Configure(QtWidgets.QWidget):
             preview.update_image(roi)
 
     def add_roi(self):
+        """Slot for the region-of-interest button."""
         if self.image_item.image is None:
             return
 
@@ -367,7 +352,6 @@ class Configure(QtWidgets.QWidget):
                 try:
                     settings = self.config.get('camera')
                     self.camera = prompt_for_camera_kwargs(settings)
-                    #self.camera.notification_handler = self.capture_handler.new_capture
                     if not self.camera:
                         return
                     self.camera_settings = CameraSettings(self)
@@ -380,19 +364,6 @@ class Configure(QtWidgets.QWidget):
                 self.camera_settings.show()
                 self.zoom_button.setEnabled(True)
             self.start_capture()
-
-    # def start_capture(self):
-    #     """Start capturing images."""
-    #     self.camera.start_capture()
-    #     self.camera_button.setIcon(icons.pause)
-    #     self.camera_button.setToolTip('Pause')
-    #
-    # def pause_capture(self):
-    #     """Pause capturing images."""
-    #     if self.camera:
-    #         self.camera.stop_capture()
-    #         self.camera_button.setIcon(icons.play)
-    #         self.camera_button.setToolTip('Resume')
 
     def start_capture(self):
         """Start capturing images."""
