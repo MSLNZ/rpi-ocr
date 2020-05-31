@@ -1,10 +1,16 @@
+"""
+This was the original implementation of the GUI.
+
+It doesn't allow for multiple ROIsto be selected.
+It is in an unfinished and unknown state.
+"""
 import os
 import math
 import time
 
 import numpy as np
 from msl.qt import (
-    io,
+    utils,
     QtCore,
     QtGui,
     QtWidgets,
@@ -13,20 +19,13 @@ from msl.qt import (
     Worker
 )
 
-from . import (
-    ocr,
+from ocr import (
+    apply,
     process,
     utils,
     ON_RPI,
 )
 
-# pyqtgraph calls PySide2.__version__ when it is imported.
-# The PySide2 that gets installed on the Raspberry Pi does not have
-# a __version__ attribute so define it from QtCore.__version__
-if ON_RPI:
-    import PySide2
-    if not hasattr(PySide2, '__version__'):
-        PySide2.__version__ = QtCore.__version__
 
 import pyqtgraph as pg
 
@@ -291,7 +290,7 @@ class Gui(QtWidgets.QWidget):
 
     def dragEnterEvent(self, event):
         """Override the QWidget.dragEnterEvent method."""
-        path = io.get_drag_enter_paths(event)[0]
+        path = utils.drag_drop_paths(event)[0]
         ext = os.path.splitext(path)[1].lower()
         if ext in ('.jpeg', '.jpg', '.bmp', '.png'):
             self.path = path
