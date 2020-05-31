@@ -151,10 +151,11 @@ class Configure(QtWidgets.QWidget):
 
         self.zoom_button = Button(
             icon=convert.to_qicon(icons.zoom, size=icon_size),
-            left_click=self.zoom_in,
-            tooltip='Camera zoom'
+            left_click=self.create_zoom,
+            tooltip='Camera zoom (pressing the Escape key will abort)'
         )
         self.zoom_button.add_menu_item(text='Clear', icon=icons.clear, triggered=self.clear_zoom)
+        self.zoom_button.add_menu_item(text='Undo', icon=icons.undo, triggered=self.undo_zoom, shortcut='CTRL+Z')
         self.zoom_button.setEnabled(False)
 
         spacer = QtWidgets.QSpacerItem(1, 1, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
@@ -240,37 +241,52 @@ class Configure(QtWidgets.QWidget):
                 self.view_box.removeItem(self.zoom_roi)
                 self.zoom_roi = None
                 self.start_capture()
-            elif key == Qt.Key_Escape or key == Qt.Key_Delete:
+            elif key == Qt.Key_Escape:
                 self.view_box.removeItem(self.zoom_roi)
                 self.zoom_roi = None
-        elif key == (QtCore.Qt.Key_Control and QtCore.Qt.Key_Z) and self.zoom_history:
-            self.pause_capture()
-            self.camera.update_settings({'zoom': self.zoom_history.pop()})
-            self.start_capture()
         super(Configure, self).keyPressEvent(event)
 
-    def zoom_in(self):
+    def create_zoom(self):
         """Slot for the Zoom button click."""
+        if self.zoom_roi is not None:
+            return
+
         if self.rois:
             if not prompt.yes_no('Zooming will remove all ROIs. Do you want to continue?'):
                 return
+
         for preview in list(self.rois.values()):
             preview.close()
 
         height, width = self.image_item.image.shape[:2]
-        pos, size = (width//4, height//4), (width//2, height//2)
+        size = min(width//2, height//2)  # want w=h and the aspect ratio locked
+        pos, size = (width//2 - size//2, height//2 - size//2), (size, size)
         self.zoom_roi = pg.RectROI(pos, size, pen=self.zoom_pen, invertible=True,
                                    rotatable=False, maxBounds=self.image_item.boundingRect())
+        self.zoom_roi.aspectLocked = True
         self.view_box.addItem(self.zoom_roi)
 
     def clear_zoom(self):
         """Slot for the Zoom button menu action."""
         if not self.zoom_history:
             return
-        self.auto_range_button.click()
         self.pause_capture()
         self.zoom_history.clear()
-        self.camera.update_settings({'zoom': [0, 0, 1, 1]})
+        self.camera.update_settings({'zoom': [0.0, 0.0, 1.0, 1.0]})
+        self.auto_range_button.click()
+        self.start_capture()
+
+    def undo_zoom(self):
+        """Slot for the Zoom button menu action."""
+        try:
+            self.zoom_history.pop()
+            zoom = self.zoom_history[-1]
+        except IndexError:
+            zoom = [0.0, 0.0, 1.0, 1.0]
+            if self.camera_settings.settings['zoom'] == zoom:
+                return
+        self.pause_capture()
+        self.camera.update_settings({'zoom': zoom})
         self.start_capture()
 
     def on_new_service(self, service):
