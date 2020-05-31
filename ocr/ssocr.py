@@ -59,6 +59,14 @@ class Charset(SSOCREnum):
     FULL = 'full'        #: 0123456789.-abcdefhlnprtu
 
 
+charset_map = (
+    ('digits', '0123456789'),
+    ('decimal', '0123456789.-'),
+    ('hex', '0123456789.-abcdef'),
+    ('full', '0123456789.-abcdefhlnprtu')
+)
+
+
 class Colour(SSOCREnum):
     """Options for the foreground/background colour."""
     BLACK = 'black'
