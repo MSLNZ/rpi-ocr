@@ -37,8 +37,13 @@ if ! [ -x "$(command -v tesseract)" ]; then
   echo -e "\n# Used by tesseract-ocr\nexport TESSDATA_PREFIX="$TESSDATA_PREFIX >> ~/.bashrc
   cd ..
   # add trained models for tesseract to the tessdata directory
-  wget https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/master/eng.traineddata
-  wget https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/master/osd.traineddata
+  wget https://raw.githubusercontent.com/tesseract-ocr/tessdata_best/master/eng.traineddata
+  wget https://raw.githubusercontent.com/tesseract-ocr/tessdata_best/master/osd.traineddata
+  wget https://raw.githubusercontent.com/Shreeshrii/tessdata_ssd/master/7seg.traineddata
+  wget https://raw.githubusercontent.com/Shreeshrii/tessdata_ssd/master/ssd.traineddata
+  wget https://raw.githubusercontent.com/Shreeshrii/tessdata_ssd/master/ssd_alphanum_plus.traineddata
+  wget https://raw.githubusercontent.com/Shreeshrii/tessdata_ssd/master/ssd_int.traineddata
+  wget https://raw.githubusercontent.com/Shreeshrii/tessdata_ssd/master/ssd_plus.traineddata
   sudo mv *.traineddata $TESSDATA_PREFIX
   sudo cp -r ~/tesseract/tessdata $TESSDATA_PREFIX/..
   sudo cp ~/rpi-ocr/resources/tessdata/*.traineddata $TESSDATA_PREFIX

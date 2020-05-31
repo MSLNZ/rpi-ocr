@@ -8,6 +8,11 @@ To use one of these languages, you specify the name of the language as the value
 .. code-block:: python
 
    from ocr import tesseract
-   text, image = tesseract('my-digits.png', language='letsgodigital')
+   text, image = tesseract('my-digits.png', language='7seg')
 
-* `letsgodigital <https://github.com/arturaugusto/display_ocr>`_ - seven-segment font
+* `7seg <https://github.com/Shreeshrii/tessdata_ssd>`_
+* `letsgodigital <https://github.com/arturaugusto/display_ocr>`_
+* `ssd <https://github.com/Shreeshrii/tessdata_ssd>`_
+* `ssd_alphanum_plus <https://github.com/Shreeshrii/tessdata_ssd>`_
+* `ssd_int <https://github.com/Shreeshrii/tessdata_ssd>`_
+* `ssd_plus <https://github.com/Shreeshrii/tessdata_ssd>`_
