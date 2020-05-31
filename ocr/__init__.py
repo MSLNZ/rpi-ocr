@@ -166,7 +166,7 @@ def apply(obj, *, tasks=None, algorithm='tesseract', **kwargs):
     if isinstance(obj, RemoteCamera):
         if (algorithm == 'tesseract' and tesseract.is_available) or \
                 (algorithm == 'ssocr' and ssocr.is_available):
-            obj = obj.capture(img_type='base64')
+            obj = obj.capture()
         else:
             text, image = obj.capture_apply(tasks=tasks, algorithm=algorithm, **kwargs)
             return text, to_cv2(image)
