@@ -48,8 +48,13 @@ class Camera(Service):
             raise RuntimeError('The PiCamera class is not available. '
                                'Create an instance of a RemoteCamera instead.')
 
-        self._quality = kwargs.pop('quality', 10)
+        self._quality = kwargs.pop('quality', 85)
+        resolution = kwargs.pop('resolution', None)
         self._camera = PiCamera(**kwargs)
+        if resolution is not None:
+            if resolution == 'MAX':
+                resolution = self._camera.MAX_RESOLUTION
+            self._camera.resolution = resolution
 
         self._tesseract_languages = tesseract.languages()
         self._tesseract_version = tesseract.version()
@@ -64,19 +69,6 @@ class Camera(Service):
 
         from . import apply
         self._apply = apply
-
-    def set_then_get(self, name, value):
-        """Set a value of the camera and then return all settings.
-
-        Parameters
-        ----------
-        name : :class:`str`
-            The name of the attribute.
-        value
-            The value.
-        """
-        setattr(self._camera, name, value)
-        return self.get_settings()
 
     def ssocr_version(self):
         """Get the version information of ssocr.
@@ -129,7 +121,7 @@ class Camera(Service):
 
         See Also
         --------
-        :meth:`.restore_settings`
+        :meth:`.update_settings`
         """
         camera = self._camera
         return {
@@ -162,8 +154,13 @@ class Camera(Service):
             'quality': self._quality,
         }
 
-    def restore_settings(self, **settings):
-        """Restore the settings of the camera.
+    def update_settings(self, settings):
+        """Update the settings of the camera.
+
+        Parameters
+        ----------
+        settings : :class:`dict`
+            The camera settings.
 
         See Also
         --------
@@ -177,26 +174,6 @@ class Camera(Service):
                     setattr(self._camera, key, value)
                 except:  # some attributes are read only
                     pass
-
-    def get_quality(self):
-        """Get the default quality value of the JPEG encoder used for a :meth:`.capture`.
-
-        Returns
-        -------
-        :class:`int`
-             The quality of the JPEG encoder, ranging from 1 to 100.
-        """
-        return self._quality
-
-    def set_quality(self, quality):
-        """Set the default quality value of the JPEG encoder used for a :meth:`.capture`.
-
-        Parameters
-        ----------
-        quality : :class:`int`, optional
-             The quality of the JPEG encoder, ranging from 1 to 100.
-        """
-        self._quality = quality
 
     def capture(self, img_type='cv2'):
         """Capture an image and convert it to the specified data type.
@@ -215,14 +192,28 @@ class Camera(Service):
         -------
         The image in the specified data type.
         """
-        buffer = BytesIO()
-        self._camera.capture(buffer, format=DEFAULT_IMAGE_FORMAT, quality=self._quality)
-        buffer.seek(0)
-        try:
-            return self._converters[img_type](buffer)
-        except KeyError:
-            allowed = ', '.join(self._converters)
-            raise ValueError('invalid img_type={!r}, must be one of: {}'.format(img_type, allowed)) from None
+        with BytesIO() as buffer:
+            self._camera.capture(buffer, format=DEFAULT_IMAGE_FORMAT, quality=self._quality)
+            buffer.seek(0)
+            try:
+                return self._converters[img_type](buffer)
+            except KeyError:
+                allowed = ', '.join(self._converters)
+                raise ValueError('invalid img_type={!r}, must be one of: {}'.format(img_type, allowed)) from None
+
+    def capture_with_settings(self):
+        """Capture an image and get the camera settings.
+
+        Returns
+        -------
+        :class:`str`
+            The :mod:`base64` representation of the captured image.
+        :class:`dict`
+            The current settings of the camera.
+        """
+        capture = self.capture(img_type='base64')
+        settings = self.get_settings()
+        return capture, settings
 
     def capture_apply(self, *, tasks=None, algorithm='tesseract', **kwargs):
         """Capture an image and then apply OCR.
@@ -330,8 +321,6 @@ class RemoteCamera(LinkedClient):
                 return reply
             except Exception as e:
                 logger.error(e)
-                #self.disconnect()
-                #raise
         return service_request
 
 
