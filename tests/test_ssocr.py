@@ -55,7 +55,7 @@ def test_six_digits():
     kwargs = {'absolute_threshold': False, 'iter_threshold': True}
 
     for p in temp_paths:
-        ocr.save(six_digits_path, p)
+        ocr.save(p, six_digits_path)
 
         assert ssocr.apply(p, **kwargs) == expected
         assert ssocr.apply(ocr.utils.to_bytes(p), **kwargs) == expected

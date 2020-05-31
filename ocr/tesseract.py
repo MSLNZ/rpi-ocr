@@ -68,7 +68,7 @@ def languages():
     return langs
 
 
-def apply(image, *, language='eng', psm=7, oem=3, whitelist='0123456789+-.', timeout=0, nice=0, config=''):
+def apply(image, *, language='eng', psm=8, oem=3, whitelist='0123456789+-.', timeout=0, nice=0, config=''):
     """Apply the `Tesseract <https://github.com/tesseract-ocr/tesseract>`_ algorithm.
 
     Parameters

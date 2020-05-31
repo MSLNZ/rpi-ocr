@@ -21,7 +21,7 @@ def test_english():
     assert tesseract.apply(eng, **params) == expected
 
     for p in temp_paths:
-        ocr.save(eng, p)
+        ocr.save(p, eng)
 
         assert tesseract.apply(p, **params) == expected
         assert tesseract.apply(ocr.utils.to_cv2(p), **params) == expected
@@ -42,22 +42,22 @@ def test_numbers():
     temp_paths = [tempfile.gettempdir() + '/tesseract_numbers.' + ext
                   for ext in ['bmp', 'jpg', 'jpeg', 'png', 'tif', 'tiff']]
 
-    assert tesseract.apply(numbers) == expected
+    assert tesseract.apply(numbers, psm=7) == expected
 
     for p in temp_paths:
-        ocr.save(numbers, p)
+        ocr.save(p, numbers)
 
-        assert tesseract.apply(p) == expected
-        assert tesseract.apply(ocr.utils.to_cv2(p)) == expected
-        assert tesseract.apply(ocr.utils.to_pil(p)) == expected
-        assert tesseract.apply(ocr.utils.to_base64(p)) == expected
-        assert tesseract.apply(ocr.utils.to_bytes(p)) == expected
+        assert tesseract.apply(p, psm=7) == expected
+        assert tesseract.apply(ocr.utils.to_cv2(p), psm=7) == expected
+        assert tesseract.apply(ocr.utils.to_pil(p), psm=7) == expected
+        assert tesseract.apply(ocr.utils.to_base64(p), psm=7) == expected
+        assert tesseract.apply(ocr.utils.to_bytes(p), psm=7) == expected
         with open(p, 'rb') as fp:
-            assert tesseract.apply(fp.read()) == expected
+            assert tesseract.apply(fp.read(), psm=7) == expected
 
         for fcn in [ocr.utils.to_cv2, ocr.utils.to_pil]:
             cropped = ocr.utils.crop(fcn(p), 200, 100, 180, 200)
-            assert tesseract.apply(cropped) == expected[:2]
+            assert tesseract.apply(cropped, psm=7) == expected[:2]
 
         os.remove(p)
         assert not os.path.isfile(p)
@@ -76,7 +76,7 @@ def test_set_tesseract_path():
     numbers_path = os.path.join(os.path.dirname(__file__), 'images', 'tesseract_numbers.jpg')
 
     # make sure tesseract is available
-    assert tesseract.apply(numbers_path) == expected
+    assert tesseract.apply(numbers_path, psm=7) == expected
 
     # make sure the executable is not available on PATH
     tesseract_exe = 'tesseract'
@@ -96,7 +96,7 @@ def test_set_tesseract_path():
 
     # this should work again
     tesseract.set_tesseract_path(environ_path)
-    assert tesseract.apply(numbers_path) == expected
+    assert tesseract.apply(numbers_path, psm=7) == expected
 
 
 def test_languages():
@@ -114,5 +114,5 @@ def test_letsgodigital():
 
 def test_config():
     path = os.path.join(os.path.dirname(__file__), 'images', 'tesseract_numbers.jpg')
-    assert tesseract.apply(path, whitelist=None, config='-c tessedit_char_whitelist=0123456789') == '619121'
-    assert '1' not in tesseract.apply(path, config='-c tessedit_char_blacklist=1')
+    assert tesseract.apply(path, psm=7, whitelist=None, config='-c tessedit_char_whitelist=0123456789') == '619121'
+    assert '1' not in tesseract.apply(path, psm=7, config='-c tessedit_char_blacklist=1')

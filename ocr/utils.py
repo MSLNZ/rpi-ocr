@@ -90,7 +90,7 @@ class OpenCVImage(np.ndarray):
         return '<OpenCVImage ext={} size={}x{} at {:#x}>'.format(self.ext, self.width, self.height, id(self))
 
 
-def save(image, path, *, text='', font_face=cv2.FONT_HERSHEY_SIMPLEX,
+def save(path, image, *, text='', font_face=cv2.FONT_HERSHEY_SIMPLEX,
          font_scale=2, thickness=3, foreground='black', background='white'):
     """Save an image to a file.
 
@@ -98,12 +98,12 @@ def save(image, path, *, text='', font_face=cv2.FONT_HERSHEY_SIMPLEX,
 
     Parameters
     ----------
-    image : :class:`str`, :class:`OpenCVImage` or :class:`PIL.Image.Image`
-        The image to save. Can be a Base64 string or a file path (e.g., if
-        you only wanted to convert an image to a new image format).
     path : :class:`str`
         A file path to save the image to. The image format is chosen based
         on the filename extension.
+    image : :class:`str`, :class:`OpenCVImage` or :class:`PIL.Image.Image`
+        The image to save. Can be a Base64 string or a file path (e.g., if
+        you only wanted to convert an image to a new image format).
     text : :class:`str`, optional
         The text to draw at the top of the image (can contain the newline character).
     font_face : :class:`int`, optional

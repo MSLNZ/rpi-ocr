@@ -45,7 +45,7 @@ def test_save():
     for original_image in [BMP_PATH, PNG_PATH, JPG_PATH]:
         for ext in exts:
             new_image = base_path + ext
-            utils.save(original_image, new_image)
+            utils.save(new_image, original_image)
             raw = utils.to_bytes(new_image)
             assert raw.startswith(utils.SIGNATURE_MAP[ext])
             os.remove(new_image)  # cleanup
@@ -53,22 +53,22 @@ def test_save():
 
     save_to_path = base_path + '.jpg'
 
-    utils.save(JPG_PATH, save_to_path)
+    utils.save(save_to_path, JPG_PATH)
     assert utils.to_bytes(save_to_path).startswith(utils.SIGNATURE_MAP['jpg'])
 
-    utils.save(utils.to_base64(JPG_PATH), save_to_path)
+    utils.save(save_to_path, utils.to_base64(JPG_PATH))
     assert utils.to_bytes(save_to_path).startswith(utils.SIGNATURE_MAP['jpg'])
 
-    utils.save(utils.to_cv2(JPG_PATH), save_to_path)
+    utils.save(save_to_path, utils.to_cv2(JPG_PATH))
     assert utils.to_bytes(save_to_path).startswith(utils.SIGNATURE_MAP['jpg'])
 
-    utils.save(utils.to_pil(JPG_PATH), save_to_path)
+    utils.save(save_to_path, utils.to_pil(JPG_PATH))
     assert utils.to_bytes(save_to_path).startswith(utils.SIGNATURE_MAP['jpg'])
 
-    utils.save(utils.to_pil(utils.to_base64(JPG_PATH)), save_to_path)
+    utils.save(save_to_path, utils.to_pil(utils.to_base64(JPG_PATH)))
     assert utils.to_bytes(save_to_path).startswith(utils.SIGNATURE_MAP['jpg'])
 
-    utils.save(utils.to_base64(utils.to_pil(utils.to_base64(JPG_PATH))), save_to_path)
+    utils.save(save_to_path, utils.to_base64(utils.to_pil(utils.to_base64(JPG_PATH))))
     assert utils.to_bytes(save_to_path).startswith(utils.SIGNATURE_MAP['jpg'])
 
     # cleanup
@@ -84,12 +84,12 @@ def test_save_with_text():
         _, ext = os.path.splitext(path)
 
         # don't specify a value for the `text` kwarg
-        assert utils.save(original, temp_path) is original
+        assert utils.save(temp_path, original) is original
 
         # the size of the text gets bigger which makes the width of the returned image to be bigger
         for scale in range(1, 11):
             for text in ['hello', 'hello\nworld', 'hello\nworld\nXXXXX\nXXXXXXXX\nXXXXXXXXXXXXXXXXXXXXX']:
-                out = utils.save(original, temp_path, text=text, font_scale=scale)
+                out = utils.save(temp_path, original, text=text, font_scale=scale)
                 assert isinstance(out, utils.OpenCVImage)
                 assert out.ext == ext
                 x = (out.width - original.width) // 2
