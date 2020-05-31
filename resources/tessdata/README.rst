@@ -10,9 +10,9 @@ To use one of these languages, you specify the name of the language as the value
    from ocr import tesseract
    text, image = tesseract('my-digits.png', language='7seg')
 
-* `7seg <https://github.com/Shreeshrii/tessdata_ssd>`_
-* `letsgodigital <https://github.com/arturaugusto/display_ocr>`_
-* `ssd <https://github.com/Shreeshrii/tessdata_ssd>`_
-* `ssd_alphanum_plus <https://github.com/Shreeshrii/tessdata_ssd>`_
-* `ssd_int <https://github.com/Shreeshrii/tessdata_ssd>`_
-* `ssd_plus <https://github.com/Shreeshrii/tessdata_ssd>`_
+* `7seg <https://raw.githubusercontent.com/Shreeshrii/tessdata_ssd/master/7seg.traineddata>`_
+* `letsgodigital <https://raw.githubusercontent.com/arturaugusto/display_ocr/master/letsgodigital/letsgodigital.traineddata>`_
+* `ssd <https://raw.githubusercontent.com/Shreeshrii/tessdata_ssd/master/ssd.traineddata>`_
+* `ssd_alphanum_plus <https://raw.githubusercontent.com/Shreeshrii/tessdata_ssd/master/ssd_alphanum_plus.traineddata>`_
+* `ssd_int <https://raw.githubusercontent.com/Shreeshrii/tessdata_ssd/master/ssd_int.traineddata>`_
+* `ssd_plus <https://raw.githubusercontent.com/Shreeshrii/tessdata_ssd/master/ssd_plus.traineddata>`_
