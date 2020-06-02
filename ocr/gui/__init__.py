@@ -18,24 +18,22 @@ from msl.qt import (
     prompt,
 )
 
-from .. import (
-    ON_RPI,
-    to_cv2,
-)
-from . import icons
-from .camera_settings import CameraSettings
-from .roi_preview import ROIPreview
-from .connection import prompt_for_camera_kwargs
-
 # pyqtgraph calls PySide2.__version__ when it is imported.
 # The version of PySide2 that gets installed on the Raspberry Pi
 # does not have this __version__ attribute, but QtCore does.
+from .. import ON_RPI
 if ON_RPI:
     import PySide2
     if not hasattr(PySide2, '__version__'):
         PySide2.__version__ = QtCore.__version__
 
 import pyqtgraph as pg
+
+from .. import to_cv2
+from . import icons
+from .camera_settings import CameraSettings
+from .roi_preview import ROIPreview
+from .connection import prompt_for_camera_kwargs
 
 
 class CaptureWorker(Worker):
