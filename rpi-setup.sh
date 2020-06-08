@@ -44,6 +44,7 @@ if ! [ -x "$(command -v tesseract)" ]; then
   wget https://raw.githubusercontent.com/Shreeshrii/tessdata_ssd/master/ssd_alphanum_plus.traineddata
   wget https://raw.githubusercontent.com/Shreeshrii/tessdata_ssd/master/ssd_int.traineddata
   wget https://raw.githubusercontent.com/Shreeshrii/tessdata_ssd/master/ssd_plus.traineddata
+  wget https://raw.githubusercontent.com/arturaugusto/display_ocr/master/letsgodigital/letsgodigital.traineddata
   sudo mv *.traineddata $TESSDATA_PREFIX
   sudo cp -r ~/tesseract/tessdata $TESSDATA_PREFIX/..
   sudo cp ~/rpi-ocr/resources/tessdata/*.traineddata $TESSDATA_PREFIX
@@ -93,7 +94,9 @@ ssocr -T ~/rpi-ocr/tests/images/six_digits.png
 echo
 
 # run the rpi-ocr tests
+export QT_QPA_PLATFORM="offscreen"
 pytest
+unset QT_QPA_PLATFORM
 
 # cleanup
 cd ~
