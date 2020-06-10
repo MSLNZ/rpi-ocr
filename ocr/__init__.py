@@ -3,6 +3,7 @@ Optical Character Recognition with a Raspberry Pi.
 """
 import re
 import sys
+import json
 import platform
 from collections import (
     OrderedDict,
@@ -242,3 +243,22 @@ def process(image, *, tasks=None, transform_only=False):
             image = obj(image, value)
 
     return image
+
+
+def load(path, **kwargs):
+    """Load a JSON file.
+
+    Parameters
+    ----------
+    path : :class:`str`
+        The path to the JSON file.
+    kwargs
+        All keyword arguments are passed to :func:`json.load`.
+
+    Returns
+    -------
+    :class:`dict`
+        The data in the JSON file.
+    """
+    with open(path, mode='rt') as fp:
+        return json.load(fp, **kwargs)
