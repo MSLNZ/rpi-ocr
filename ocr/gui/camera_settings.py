@@ -84,25 +84,25 @@ class CameraSettings(QtWidgets.QWidget):
 
         self.meter_mode = QtWidgets.QComboBox()
         self.meter_mode.setObjectName('meter_mode')
-        self.meter_mode.addItems(constants['METER_MODES'])
+        self.meter_mode.addItems(list(constants['METER_MODES'].keys()))
         self.meter_mode.setCurrentText(self.settings['meter_mode'])
         self.meter_mode.currentTextChanged.connect(self.update_camera)
 
         self.exposure_mode = QtWidgets.QComboBox()
         self.exposure_mode.setObjectName('exposure_mode')
-        self.exposure_mode.addItems(constants['EXPOSURE_MODES'])
+        self.exposure_mode.addItems(list(constants['EXPOSURE_MODES'].keys()))
         self.exposure_mode.setCurrentText(self.settings['exposure_mode'])
         self.exposure_mode.currentTextChanged.connect(self.update_camera)
 
         self.flash_mode = QtWidgets.QComboBox()
         self.flash_mode.setObjectName('flash_mode')
-        self.flash_mode.addItems(constants['FLASH_MODES'])
+        self.flash_mode.addItems(list(constants['FLASH_MODES'].keys()))
         self.flash_mode.setCurrentText(self.settings['flash_mode'])
         self.flash_mode.currentTextChanged.connect(self.update_camera)
 
         self.awb_mode = QtWidgets.QComboBox()
         self.awb_mode.setObjectName('awb_mode')
-        self.awb_mode.addItems(constants['AWB_MODES'])
+        self.awb_mode.addItems(list(constants['AWB_MODES'].keys()))
         self.awb_mode.setCurrentText(self.settings['awb_mode'])
         self.awb_mode.setToolTip('auto white balance mode')
         self.awb_mode.currentTextChanged.connect(self.update_camera)
@@ -128,7 +128,7 @@ class CameraSettings(QtWidgets.QWidget):
         self.image_effect = QtWidgets.QComboBox()
         self.image_effect.setObjectName('image_effect')
         self.image_effect.setToolTip('Image effect')
-        self.image_effect.addItems(constants['IMAGE_EFFECTS'])
+        self.image_effect.addItems(list(constants['IMAGE_EFFECTS'].keys()))
         self.image_effect.setCurrentText(self.settings['image_effect'])
         self.image_effect.currentTextChanged.connect(self.update_camera)
 
@@ -136,7 +136,7 @@ class CameraSettings(QtWidgets.QWidget):
 
         self.drc_strength = QtWidgets.QComboBox()
         self.drc_strength.setObjectName('drc_strength')
-        self.drc_strength.addItems(constants['DRC_STRENGTHS'])
+        self.drc_strength.addItems(list(constants['DRC_STRENGTHS'].keys()))
         self.drc_strength.setCurrentText(self.settings['drc_strength'])
         self.drc_strength.setToolTip('Dynamic range compression strength')
         self.drc_strength.currentTextChanged.connect(self.update_camera)
