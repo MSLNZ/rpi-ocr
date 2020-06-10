@@ -596,13 +596,23 @@ def rotate(image, angle):
 
         # perform the actual rotation and return the image or corner
         if is_corner:
-            # the corner rotated, has shape (2,)
+            # the corner rotated has shape (2,)
             return np.dot(matrix, [x, y, 1.0])
-        out = cv2.warpAffine(image, matrix, (new_w, new_h))
+
+        if image.ndim == 2:
+            fill_color = 255
+        else:
+            fill_color = (255, 255, 255)
+
+        out = cv2.warpAffine(image, matrix, (new_w, new_h), borderValue=fill_color)
         return OpenCVImage(out, ext=image.ext)
 
     if isinstance(image, PillowImage):
-        out = image.rotate(angle, expand=True)
+        if len(image.getbands()) == 1:
+            fill_color = 255
+        else:
+            fill_color = (255, 255, 255)
+        out = image.rotate(angle, expand=True, fillcolor=fill_color)
         out.format = image.format
         return out
 
