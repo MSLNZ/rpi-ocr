@@ -55,6 +55,8 @@ def test_order_preserved():
     manual = ocr.utils.greyscale(manual)
     manual = ocr.utils.erode(manual, 5, 2)
 
+    rotated_cropped = ocr.utils.rotate(ocr.utils.crop(ocr.utils.to_cv2(path), 100, 200, 300, 400), 45)
+
     tasks = [
         ('crop', (100, 200, 300, 400)),
         ('threshold', 50),
@@ -66,6 +68,8 @@ def test_order_preserved():
     ]
     processed = ocr.process(ocr.utils.to_cv2(path), tasks=tasks)
     assert np.array_equal(manual, processed)
+    processed = ocr.process(ocr.utils.to_cv2(path), tasks=tasks, transform_only=True)
+    assert np.array_equal(rotated_cropped, processed)
 
     if sys.version_info[:2] < (3, 6):
         processed = ocr.process(ocr.utils.to_cv2(path), tasks=OrderedDict(tasks))
@@ -82,3 +86,5 @@ def test_order_preserved():
         }
         processed = ocr.process(ocr.utils.to_cv2(path), tasks=tasks)
         assert np.array_equal(manual, processed)
+        processed = ocr.process(ocr.utils.to_cv2(path), tasks=tasks, transform_only=True)
+        assert np.array_equal(rotated_cropped, processed)

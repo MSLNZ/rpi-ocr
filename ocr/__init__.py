@@ -179,7 +179,7 @@ def apply(obj, *, tasks=None, algorithm='tesseract', **kwargs):
     return text, image
 
 
-def process(image, tasks=None):
+def process(image, *, tasks=None, transform_only=False):
     """Perform image-processing tasks.
 
     Parameters
@@ -199,6 +199,10 @@ def process(image, tasks=None):
         * [('rotate', 180), ('greyscale',)] greyscale does not accept arguments
         * {'rotate': 90, 'dilate': 3} using a dict instead of a list of tuple
 
+    transform_only : :class:`bool`, optional
+        Whether to only apply the tasks that transform the image and which do
+        not edit RGB values. These correspond to the rotate and crop tasks.
+
     Returns
     -------
     :class:`~ocr.utils.OpenCVImage` or :class:`PIL.Image.Image`
@@ -217,11 +221,15 @@ def process(image, tasks=None):
     else:
         items = tasks
 
+    transform_only_tasks = ('crop', 'rotate')
     for item in items:
         if len(item) == 1:
             name, value = item[0], None
         else:
             name, value = item
+
+        if transform_only and name not in transform_only_tasks:
+            continue
 
         obj = getattr(utils, name)
         if isinstance(value, (list, tuple)):
