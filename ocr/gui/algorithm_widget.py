@@ -37,8 +37,8 @@ class Algorithm(QtWidgets.QWidget):
         """Base class for displaying the widgets of an algorithm."""
         super(Algorithm, self).__init__(parent=parent)
 
-        # Defining this caused the GUI to crash randomly and
-        # unexpectedly (sometimes) when the ROIPreview widget closed.
+        # Defining this caused the GUI to (sometimes) crash randomly
+        # and unexpectedly when the ROIPreview widget closed.
         # Created the self.find_roi_preview_widget() method instead.
         # However, defining "self.roi_preview = parent" in
         # ocr.gui.task_widgets.TaskList does not cause the crash.
