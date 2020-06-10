@@ -3,7 +3,7 @@ import os
 import sys
 import subprocess
 from distutils.cmd import Command
-from setuptools import setup
+from setuptools import setup, find_packages
 
 if sys.version_info[:2] < (3, 5):
     sys.exit('Python < 3.5 is not supported because the asyncio package is required')
@@ -187,7 +187,7 @@ setup(
     setup_requires=sphinx + pytest_runner,
     tests_require=tests_require,
     install_requires=install_requires,
-    packages=['ocr'],
+    packages=find_packages(include=('ocr*',)),
     cmdclass={'docs': BuildDocs, 'apidocs': ApiDocs},
     entry_points={
         'console_scripts': [
