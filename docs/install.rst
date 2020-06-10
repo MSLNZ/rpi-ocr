@@ -91,7 +91,7 @@ Alternatively, using the :ref:`msl-package-manager-welcome` run
 Dependencies
 ------------
 Tested with a Raspberry Pi 3 Model B+ and a Raspberry Pi 4 Model B
-running either Raspbian Stretch or Buster.
+running either Raspbian Buster or Raspberry Pi OS.
 
 * Python 3.5+
 * :ref:`msl-network-welcome`
