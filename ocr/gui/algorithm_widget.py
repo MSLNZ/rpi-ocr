@@ -46,7 +46,7 @@ class Algorithm(QtWidgets.QWidget):
 
         self.sig_new_service.connect(grandparent.on_new_service)
 
-        if grandparent.camera is not None:
+        if grandparent.camera is not None and not ON_RPI:
             # create a new connection so that captures and OCR requests can be
             # made simultaneously, otherwise if the same connection is used
             # then the following exception will be raised
@@ -55,7 +55,7 @@ class Algorithm(QtWidgets.QWidget):
         else:
             self.camera = None
 
-        if grandparent.ocr_service is not None:
+        if grandparent.ocr_service is not None and not ON_RPI:
             self.ocr_service = grandparent.ocr_service.spawn(name=grandparent.ocr_service.name)
         else:
             self.ocr_service = None
