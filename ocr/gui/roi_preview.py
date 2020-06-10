@@ -58,7 +58,7 @@ class OCRWorker(Worker):
                 logger.info('applying OCR with {!r} took {:.3f} seconds'.format(algorithm, dt))
             except BaseException as e:
                 message = e.message if hasattr(e, 'message') else str(e)
-                logger.error(message)
+                logger.error('OCRWorkerError: {}'.format(message))
                 text = ''
             self.sig_ocr_text.emit(text)
 
