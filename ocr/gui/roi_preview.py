@@ -73,6 +73,7 @@ class ROIPreview(QtWidgets.QWidget):
 
         self.main_image_item = parent.image_item
         self.roi = roi
+        self.config = parent.config
         self.setWindowTitle('ROI-{}'.format(1+len(parent.rois)))
         self.ocr_params = parent.ocr_params
         self.image_processed = OpenCVImage([])
