@@ -214,7 +214,7 @@ intersphinx_mapping = {
     'msl.package_manage': ('https://msl-package-manager.readthedocs.io/en/stable/', None),
     'paramiko': ('http://docs.paramiko.org/en/stable/', None),
     'msl.qt': ('https://msl-qt.readthedocs.io/en/latest/', None),
-    'numpy': ('https://docs.scipy.org/doc/numpy/', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
     'picamera': ('https://picamera.readthedocs.io/en/release-1.13/', None),
 }
 
