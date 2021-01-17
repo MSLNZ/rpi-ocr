@@ -136,7 +136,7 @@ install_requires = [
     'msl-network>=0.5',
     'msl-qt @ git+https://github.com/MSLNZ/msl-qt.git',
     'pillow',
-    'pyqtgraph>=0.11.0rc0',
+    'pyqtgraph',
     'pytesseract',
 
     # there is an issue with opencv-python 4.1.1.26 on the RPi
@@ -152,12 +152,13 @@ install_requires = [
     'pytest-cov ; "arm" in platform_machine',
 ]
 
+tests_require = ['pytest', 'pytest-cov', 'matplotlib']
+
 needs_sphinx = {'doc', 'docs', 'apidoc', 'apidocs', 'build_sphinx'}.intersection(sys.argv)
 sphinx = ['sphinx', 'sphinx_rtd_theme'] + install_requires if needs_sphinx else []
 
 testing = {'test', 'tests', 'pytest'}.intersection(sys.argv)
 pytest_runner = ['pytest-runner'] if testing else []
-tests_require = ['pytest', 'pytest-cov', 'matplotlib', 'pytesseract']
 
 version = get_version()
 
@@ -187,6 +188,7 @@ setup(
     setup_requires=sphinx + pytest_runner,
     tests_require=tests_require,
     install_requires=install_requires,
+    extras_require={'tests': tests_require},
     packages=find_packages(include=('ocr*',)),
     cmdclass={'docs': BuildDocs, 'apidocs': ApiDocs},
     entry_points={
