@@ -2,8 +2,11 @@ import re
 import os
 import sys
 import subprocess
-from distutils.cmd import Command
-from setuptools import setup, find_packages
+from setuptools import (
+    setup,
+    find_packages,
+    Command,
+)
 
 if sys.version_info[:2] < (3, 5):
     sys.exit('Python < 3.5 is not supported because the asyncio package is required')
