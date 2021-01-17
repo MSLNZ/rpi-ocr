@@ -123,4 +123,5 @@ def apply(image, *, language='eng', psm=8, oem=3, whitelist='0123456789+-.', tim
     if config:
         cfg += ' ' + config
     logger.info('tesseract params: language={!r} config={!r} nice={} timeout={}'.format(language, cfg, nice, timeout))
-    return pytesseract.image_to_string(to_cv2(image), lang=language, config=cfg, nice=nice, timeout=timeout)
+    string = pytesseract.image_to_string(to_cv2(image), lang=language, config=cfg, nice=nice, timeout=timeout)
+    return string.strip()
