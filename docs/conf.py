@@ -111,7 +111,7 @@ todo_include_todos = True
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-on_rtd = os.environ.get('READTHEDOCS') == 'True'
+on_rtd = os.getenv('READTHEDOCS') == 'True'
 if on_rtd:
     html_theme = 'default'
 else:
@@ -212,7 +212,7 @@ intersphinx_mapping = {
     'msl.network': ('https://msl-network.readthedocs.io/en/stable/', None),
     'PIL': ('https://pillow.readthedocs.io/en/stable/', None),
     'msl.package_manage': ('https://msl-package-manager.readthedocs.io/en/stable/', None),
-    'paramiko': ('http://docs.paramiko.org/en/stable/', None),
+    'paramiko': ('https://docs.paramiko.org/en/stable/', None),
     'msl.qt': ('https://msl-qt.readthedocs.io/en/latest/', None),
     'numpy': ('https://numpy.org/doc/stable/', None),
     'picamera': ('https://picamera.readthedocs.io/en/release-1.13/', None),
