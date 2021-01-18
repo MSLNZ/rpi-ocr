@@ -155,7 +155,7 @@ def test_to_bytes():
 
     # invalid str
     for obj in ['does/not/exist.jpg', 'X'*10000 + '.png']:
-        with pytest.raises(ValueError, match=r'^Invalid path or Base64 string'):
+        with pytest.raises(ValueError, match=r'^Invalid path or base64 string'):
             utils.to_bytes(obj)
 
     for obj in [1, 2.0, None, True, [], Image.ImageTransformHandler()]:
@@ -214,7 +214,7 @@ def test_to_base64():
 
     # invalid str
     for obj in ['does/not/exist.jpg', 'X'*10000 + '.png']:
-        with pytest.raises(ValueError, match=r'^Invalid path or Base64 string'):
+        with pytest.raises(ValueError, match=r'^Invalid path or base64 string'):
             utils.to_base64(obj)
 
     for obj in [1, 2.0, None, True, [], Image.ImageTransformHandler()]:
@@ -272,7 +272,7 @@ def test_to_pil():
 
     # invalid str
     for obj in ['does/not/exist.jpg', 'X'*10000 + '.png']:
-        with pytest.raises(ValueError, match=r'^Invalid path or Base64 string'):
+        with pytest.raises(ValueError, match=r'^Invalid path or base64 string'):
             utils.to_pil(obj)
 
     for obj in [1, 2.0, None, True, [], Image.ImageTransformHandler()]:
@@ -373,7 +373,7 @@ def test_to_cv2():
 
     # invalid str
     for obj in ['does/not/exist.jpg', 'X'*10000 + '.png']:
-        with pytest.raises(ValueError, match=r'^Invalid path or Base64 string'):
+        with pytest.raises(ValueError, match=r'^Invalid path or base64 string'):
             utils.to_cv2(obj)
 
     # BufferedReader

@@ -42,7 +42,7 @@ def test_environ_path():
 def test_invalid_image():
     # must raise ValueError instead of FileNotFoundError
     for obj in ['does/not/exist.jpg', 'X'*10000 + '.png']:
-        with pytest.raises(ValueError, match=r'^Invalid path or Base64 string'):
+        with pytest.raises(ValueError, match=r'^Invalid path or base64 string'):
             ssocr.apply(obj)
 
 
@@ -73,7 +73,7 @@ def test_six_digits():
         assert not os.path.isfile(p)
 
     for obj in ['does/not/exist.jpg', 'X'*10000 + '.png']:
-        with pytest.raises(ValueError, match=r'^Invalid path or Base64 string'):
+        with pytest.raises(ValueError, match=r'^Invalid path or base64 string'):
             ssocr.apply(obj)
 
 

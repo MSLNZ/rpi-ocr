@@ -63,7 +63,7 @@ def test_numbers():
         assert not os.path.isfile(p)
 
     for obj in ['does/not/exist.jpg', 'X'*10000 + '.png']:
-        with pytest.raises(ValueError, match=r'^Invalid path or Base64 string'):
+        with pytest.raises(ValueError, match=r'^Invalid path or base64 string'):
             tesseract.apply(obj)
 
 

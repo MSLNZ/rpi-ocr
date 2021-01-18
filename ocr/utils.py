@@ -53,25 +53,26 @@ logger = logging.getLogger('ocr')
 
 
 class OpenCVImage(np.ndarray):
-    """A :class:`numpy.ndarray` that has an `ext` attribute.
-
-    The `ext` attribute represents the file extension of
-    the original image.
-    """
+    """A :class:`numpy.ndarray` that has additional attributes."""
 
     def __new__(cls, array, ext=None):
         obj = np.asarray(array).view(cls)
-        obj.ext = ext or DEFAULT_FILE_EXTENSION
+        obj._ext = ext or DEFAULT_FILE_EXTENSION
         return obj
 
     def __array_finalize__(self, obj):
         if obj is None:
             return
-        self.ext = getattr(obj, 'ext', DEFAULT_FILE_EXTENSION)
+        self._ext = getattr(obj, 'ext', DEFAULT_FILE_EXTENSION)
+
+    @property
+    def ext(self):
+        """:class:`str`: The file extension of the original image."""
+        return self._ext
 
     @property
     def height(self):
-        """The height of the image."""
+        """:class:`int`: The height of the image."""
         try:
             return self.shape[0]
         except IndexError:
@@ -79,7 +80,7 @@ class OpenCVImage(np.ndarray):
 
     @property
     def width(self):
-        """The width of the image."""
+        """:class:`int`: The width of the image."""
         try:
             return self.shape[1]
         except IndexError:
@@ -102,7 +103,7 @@ def save(path, image, *, text='', font_face=cv2.FONT_HERSHEY_SIMPLEX,
         A file path to save the image to. The image format is chosen based
         on the filename extension.
     image : :class:`str`, :class:`OpenCVImage` or :class:`PIL.Image.Image`
-        The image to save. Can be a Base64 string or a file path (e.g., if
+        The image to save. Can be a base64 string or a file path (e.g., if
         you only wanted to convert an image to a new image format).
     text : :class:`str`, optional
         The text to draw at the top of the image (can contain the newline character).
@@ -115,10 +116,10 @@ def save(path, image, *, text='', font_face=cv2.FONT_HERSHEY_SIMPLEX,
     thickness : :class:`int`, optional
         Thickness of lines used to render the text.
     foreground
-        The colour to draw the text. See :func:`~msl.qt.utils.to_qcolor` for
+        The colour to draw the text. See :func:`~msl.qt.convert.to_qcolor` for
         the data types that are supported.
     background
-        The colour the text is drawn on. See :func:`~msl.qt.utils.to_qcolor` for
+        The colour the text is drawn on. See :func:`~msl.qt.convert.to_qcolor` for
         the data types that are supported.
 
     Returns
@@ -212,7 +213,7 @@ def to_bytes(obj):
         The object to convert. Can be any of the following data types
 
         * :term:`bytes-like object`
-        * :class:`str` (as a file path or a Base64 representation of an image)
+        * :class:`str` (as a file path or a base64 representation of an image)
         * :class:`OpenCVImage`
         * :class:`PIL.Image.Image`
 
@@ -230,10 +231,10 @@ def to_bytes(obj):
         except OSError:
             try:
                 data = base64.b64decode(obj)
-                logger.debug('converted Base64 to bytes')
+                logger.debug('converted base64 to bytes')
                 return data
             except ValueError:
-                raise ValueError('Invalid path or Base64 string, {!r}'.format(obj)) from None
+                raise ValueError('Invalid path or base64 string, {!r}'.format(obj)) from None
 
     if isinstance(obj, OpenCVImage):
         bgr_image = cv2.cvtColor(obj, code=cv2.COLOR_RGB2BGR)
@@ -269,7 +270,7 @@ def to_bytes(obj):
 
 
 def to_base64(obj):
-    """Convert an object to the Base64 representation of the image.
+    """Convert an object to the base64 representation of the image.
 
     Parameters
     ----------
@@ -279,10 +280,10 @@ def to_base64(obj):
     Returns
     -------
     :class:`str`
-        The Base64 representation of the image.
+        The base64 representation of the image.
     """
     b64 = base64.b64encode(to_bytes(obj)).decode('ascii')
-    logger.debug('converted bytes to Base64')
+    logger.debug('converted bytes to base64')
     return b64
 
 
@@ -326,10 +327,10 @@ def to_pil(obj):
             try:
                 buf = base64.b64decode(obj)
             except ValueError:
-                raise ValueError('Invalid path or Base64 string, {!r}'.format(obj)) from None
+                raise ValueError('Invalid path or base64 string, {!r}'.format(obj)) from None
             else:
                 image = Image.open(BytesIO(buf))
-                logger.debug('converted Base64 to Pillow image')
+                logger.debug('converted base64 to Pillow image')
         return image
 
     if isinstance(obj, PillowImage):
@@ -375,9 +376,9 @@ def to_cv2(obj):
 
         try:
             obj = base64.b64decode(obj)
-            logger.debug('decode Base64 for OpenCVImage conversion')
+            logger.debug('decode base64 for OpenCVImage conversion')
         except ValueError:
-            raise ValueError('Invalid path or Base64 string, {!r}'.format(obj)) from None
+            raise ValueError('Invalid path or base64 string, {!r}'.format(obj)) from None
 
     if isinstance(obj, BytesIO):
         buffer = obj.getbuffer()
