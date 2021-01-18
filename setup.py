@@ -138,6 +138,7 @@ def get_version():
 install_requires = [
     'msl-network>=0.5',
     'msl-qt @ git+https://github.com/MSLNZ/msl-qt.git',
+    'numpy',
     'pillow',
     'pyqtgraph',
     'pytesseract',
