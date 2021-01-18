@@ -46,7 +46,7 @@ def version():
     Returns
     -------
     :class:`str`
-        The version number (and possibly copyright information).
+        The version number.
     """
     ver = str(pytesseract.get_tesseract_version())
     logger.debug('tesseract version: ' + ver)
