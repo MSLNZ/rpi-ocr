@@ -40,3 +40,6 @@ junit.xml
 coverage.xml
 .pytest_cache/
 condatests.ini
+
+# from the examples/ directory
+examples/six_digits_text.png
