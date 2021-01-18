@@ -4,20 +4,21 @@
 Install RPi-OCR
 ===============
 
-Raspbian
---------
-To set up the Raspberry Pi run the following commands. Instructions for using SSH_
-to remotely access the terminal of the Raspberry Pi can be found `here <ssh_instructions_>`_.
+Raspberry Pi OS
+---------------
+This section describe how to set up a Raspberry Pi.
 
-The following commands are optional *(but recommended)*. They will update the
-installed packages on the Raspberry Pi.
+.. note::
+   Instructions for using SSH_ to remotely access the terminal of the Raspberry Pi
+   can be found `here <ssh_instructions_>`_.
 
-Open a terminal and run
+.. tip::
+   The following command is optional *but recommended*. It will update the
+   installed packages on the Raspberry Pi.
 
-.. code-block:: console
+    .. code-block:: console
 
-   sudo apt update
-   sudo apt upgrade
+       sudo apt update && sudo apt upgrade
 
 Make sure that you have git_ installed and then clone the repository
 
@@ -35,8 +36,7 @@ additional 1 GB of disk space.
 
    source rpi-ocr/rpi-setup.sh
 
-If you want to acquire images with the Raspberry Pi then you must have a desktop version
-of Raspbian_ installed (not the Lite version), you will need to attach a camera and
+If you want to capture images with the Raspberry Pi then you will need to attach a camera and
 enable the camera in the configuration settings.
 
 There are various camera options available, such as,
@@ -53,26 +53,30 @@ and make sure that the camera is enabled in the configuration settings
 
        sudo raspi-config
 
-2. Select ``5 Interfacing Options``.
+2. Select ``Interfacing Options``
 
-3. Select the ``P1 Camera`` peripheral.
+3. Select the ``Camera`` peripheral
 
-4. Select ``Yes`` to enable the camera interface.
+4. Select ``Yes`` to enable the camera interface
 
-5. Select ``Ok``.
+5. Select ``Ok``
 
-6. Select ``Finish`` to leave the configuration menu.
+6. Select ``Finish`` to leave the configuration menu
 
-7. Select ``Yes`` to reboot.
+7. Select ``Yes`` when asked to reboot
 
-If you want to establish a remote desktop session with the Raspberry Pi, you
-must first install the `xrdp <http://xrdp.org/>`_ program
+If you want to establish a remote desktop session with the Raspberry Pi then you
+must install the `xrdp <http://xrdp.org/>`_ program
 
 .. code-block:: console
 
    sudo apt install xrdp
 
-and then reboot the Raspberry Pi.
+and then reboot the Raspberry Pi
+
+.. code-block:: console
+
+   sudo reboot
 
 Windows, Linux or macOS
 -----------------------
@@ -91,7 +95,7 @@ Alternatively, using the :ref:`msl-package-manager-welcome` run
 Dependencies
 ------------
 Tested with a Raspberry Pi 3 Model B+ and a Raspberry Pi 4 Model B
-running either Raspbian Buster or Raspberry Pi OS.
+with `Raspberry Pi OS`_ (buster) as the operating system.
 
 * Python 3.5+
 * :ref:`msl-network-welcome`
@@ -107,8 +111,8 @@ The following programs are automatically installed on the Raspberry Pi by
 running the ``rpi-setup.sh`` script. If you want to perform OCR on a computer
 running Windows, Linux or macOS then follow the instructions below.
 
-* Tesseract-OCR_ -- You can also use the trained models in the tessdata_ directory.
-* ssocr_ -- An executable that runs on Windows (without Cygwin_) can be found at ssocr-win64_
+* Tesseract-OCR_ -- You can also use the trained models in the tessdata_ directory
+* ssocr_ -- An executable that runs on Windows can be found at ssocr-win64_
 
 .. _virtual environment: https://docs.python.org/3/tutorial/venv.html
 .. _SSH: https://www.ssh.com/ssh/
@@ -125,4 +129,4 @@ running Windows, Linux or macOS then follow the instructions below.
 .. _ssocr: https://www.unix-ag.uni-kl.de/~auerswal/ssocr/
 .. _Cygwin: https://www.cygwin.com/
 .. _ssocr-win64: https://github.com/MSLNZ/rpi-ocr/tree/master/resources/ssocr-win64
-.. _Raspbian: https://www.raspberrypi.org/downloads/raspbian/
+.. _Raspberry Pi OS: https://www.raspberrypi.org/software/operating-systems/#raspberry-pi-os-32-bit
