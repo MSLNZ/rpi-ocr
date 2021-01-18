@@ -1,5 +1,5 @@
 """
-A Connection to a camera.
+Interface with a Raspberry Pi camera.
 """
 from time import perf_counter
 from io import BytesIO
@@ -33,14 +33,17 @@ except ImportError:
 class Camera(Service):
 
     def __init__(self, **kwargs):
-        """Connect to a local camera.
+        """Connect to the Raspberry Pi camera.
+
+        This class must only be instantiated on a Raspberry Pi since it
+        depends on the :class:`~picamera.PiCamera` class.
 
         Parameters
         ----------
         kwargs
             Keyword arguments are passed to :class:`~picamera.PiCamera`
             Can include a `quality` key-value pair for the quality of the
-            JPEG encoder used for a :meth`.capture`.
+            JPEG encoder to use for a :meth:`.capture`.
         """
         super(Camera, self).__init__()
 
@@ -93,7 +96,8 @@ class Camera(Service):
         return self._tesseract_languages, self._tesseract_version
 
     def get_constants(self):
-        """Get the ``MAX_RESOLUTION``, ``*_MODES``, ``IMAGE_EFFECTS`` and ``DRC_STRENGTHS``.
+        """Get the ``MAX_RESOLUTION``, ``*_MODES``, ``IMAGE_EFFECTS`` and ``DRC_STRENGTHS``
+        constants that are available from :class:`~picamera.PiCamera`.
 
         Returns
         -------
@@ -184,7 +188,7 @@ class Camera(Service):
             The object type to return the image in. One of
 
             * ``bytes`` :math:`\\rightarrow` :class:`bytes`
-            * ``base64`` :math:`\\rightarrow` a Base64 representation of the image as a :class:`str`
+            * ``base64`` :math:`\\rightarrow` a base64 representation of the image as a :class:`str`
             * ``cv2`` :math:`\\rightarrow` an :class:`~ocr.utils.OpenCVImage` object
             * ``pil`` :math:`\\rightarrow` a :class:`PIL.Image.Image` object
 
@@ -263,13 +267,13 @@ class Camera(Service):
         return text, to_base64(image)
 
     def disconnect(self):
-        """Calls :meth:`.disconnect`."""
+        """Calls :meth:`.shutdown_service`."""
         self.shutdown_service()
 
     close = disconnect
 
     def shutdown_service(self):
-        """Calls :meth:`~picamera.PiCamera.close`."""
+        """Calls :meth:`picamera.PiCamera.close` and then shuts down the :class:`Camera` service."""
         self._camera.close()
 
 
@@ -287,7 +291,7 @@ class RemoteCamera(LinkedClient):
         logger.debug('connected to the {} service running on {}'.format(self.service_name, self.service_os))
 
     def disconnect(self):
-        """Disconnect from and shut down the :class:`.Camera` service."""
+        """Disconnect from and shut down the :class:`Camera` service."""
         if self._client is None:
             return
         self.wait()
@@ -312,6 +316,7 @@ class RemoteCamera(LinkedClient):
         return image
 
     def __getattr__(self, item):
+        """All other requests are passed directly to a method of :class:`Camera`."""
         def service_request(*args, **kwargs):
             try:
                 t0 = perf_counter()
@@ -327,7 +332,7 @@ class RemoteCamera(LinkedClient):
 def start():
     """Starts the :class:`.Camera` service on the Raspberry Pi.
 
-    This function should only be called from the ``camera`` console script (see setup.py).
+    This function should only be called from the ``camera`` console script *(see setup.py)*.
     """
     kwargs = ssh.parse_console_script_kwargs()
     if kwargs.get('auth_login', False) and ('username' not in kwargs or 'password' not in kwargs):

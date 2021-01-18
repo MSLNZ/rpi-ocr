@@ -1,3 +1,6 @@
+"""
+Apply OCR on a Raspberry Pi.
+"""
 from time import perf_counter
 
 from msl.network import (
@@ -19,7 +22,7 @@ from . import ssocr
 class OCR(Service):
 
     def __init__(self):
-        """Connect to a remote computer to apply the OCR algorithm."""
+        """Allow for OCR to be applied from a remote computer."""
         super(OCR, self).__init__()
 
         self._tesseract_languages = tesseract.languages()
@@ -79,7 +82,7 @@ class OCR(Service):
         return text, to_base64(processed)
 
     def shutdown_service(self):
-        """Allows for this service to be shutdown remotely."""
+        """Allows for this :class:`~msl.network.service.Service` to be shut down remotely."""
         pass
 
 
@@ -132,9 +135,9 @@ class RemoteOCR(LinkedClient):
 
 
 def start():
-    """Starts the :class:`~ocr.camera.Camera` and :class:`.OCR` services on the Raspberry Pi.
+    """Starts the :class:`~ocr.cameras.Camera` and :class:`.OCR` services on the Raspberry Pi.
 
-    This function should only be called from the ``ocr`` console script (see setup.py).
+    This function should only be called from the ``ocr`` console script *(see setup.py)*.
     """
     kwargs = ssh.parse_console_script_kwargs()
     if kwargs.get('auth_login', False) and ('username' not in kwargs or 'password' not in kwargs):
@@ -147,7 +150,7 @@ def start():
 
 
 def kill_ocr_service(*, host='raspberrypi', rpi_username='pi', rpi_password=None, **ignored):
-    """Kill the :class:`.OCR` service and shutdown the Network :class:`~msl.network.manager.Manager`.
+    """Kill the :class:`.OCR` service and shut down the Network :class:`~msl.network.manager.Manager`.
 
     Parameters
     ----------
@@ -161,5 +164,5 @@ def kill_ocr_service(*, host='raspberrypi', rpi_username='pi', rpi_password=None
         All additional keyword arguments are silently ignored.
     """
     from . import OCR_EXE_PATH
-    from .camera import kill_service
+    from .cameras import kill_service
     kill_service(exe=OCR_EXE_PATH, name='OCR', host=host, rpi_username=rpi_username, rpi_password=rpi_password)

@@ -17,12 +17,12 @@ from . import ssocr
 from . import tesseract
 from .ssocr import set_ssocr_path
 from .tesseract import set_tesseract_path
-from .camera import (
+from .cameras import (
     Camera,
     RemoteCamera,
     kill_camera_service,
 )
-from .service import kill_ocr_service
+from .services import kill_ocr_service
 
 __author__ = 'Measurement Standards Laboratory of New Zealand'
 __copyright__ = '\xa9 2020 - 2021, ' + __author__
@@ -50,22 +50,22 @@ def camera(**kwargs):
     """Connect to a camera on a Raspberry Pi.
 
     If you call this function from a script running on a Raspberry Pi then
-    a :class:`~ocr.connection.Camera` object is returned and all keyword
-    arguments are passed to :class:`~ocr.camera.Camera`.
+    a :class:`~ocr.cameras.Camera` object is returned and all keyword
+    arguments are passed to :class:`~ocr.cameras.Camera`.
 
     Otherwise a Network :class:`~msl.network.manager.Manager` is started on the
-    Raspberry Pi to run the :class:`~ocr.camera.Camera` service. In this situation
+    Raspberry Pi to run the :class:`~ocr.cameras.Camera` service. In this situation
     the keyword arguments are as follows,
 
-    * host :class:`str` : The hostname or IP address of the Raspberry Pi [default='raspberrypi'].
-    * rpi_username :class:`str` : The username for the Raspberry Pi [default='pi'].
-    * rpi_password :class:`str` : The password for `rpi_username`. [default is to prompt user]
-    * All additional keyword arguments are passed to the :class:`~ocr.camera.Camera` class
+    * host :class:`str` : The hostname or IP address of the Raspberry Pi [default is ``raspberrypi``].
+    * rpi_username :class:`str` : The username for the Raspberry Pi [default is ``pi``].
+    * rpi_password :class:`str` : The password for `rpi_username`. [default is to prompt the user]
+    * All additional keyword arguments are passed to the :class:`~ocr.cameras.Camera` class
       or to the :func:`~msl.network.ssh.start_manager` function.
 
     Returns
     -------
-    :class:`~ocr.camera.Camera` or :class:`~ocr.camera.RemoteCamera`
+    :class:`~ocr.cameras.Camera` or :class:`~ocr.cameras.RemoteCamera`
         The connection to the camera.
     """
     if ON_RPI:
@@ -87,7 +87,7 @@ def camera(**kwargs):
 
 def service(host='raspberrypi', rpi_username='pi', rpi_password=None, **kwargs):
     """Start the Network :class:`~msl.network.manager.Manager` and the
-    :class:`~ocr.service.OCR` service on a Raspberry Pi to apply OCR.
+    :class:`~ocr.services.OCR` service on a Raspberry Pi.
 
     Parameters
     ----------
@@ -103,10 +103,10 @@ def service(host='raspberrypi', rpi_username='pi', rpi_password=None, **kwargs):
 
     Returns
     -------
-    :class:`~ocr.service.RemoteOCR`
-        The connection to the :class:`~ocr.service.OCR` service on the Raspberry Pi.
+    :class:`~ocr.services.RemoteOCR`
+        The connection to the :class:`~ocr.services.OCR` service on the Raspberry Pi.
     """
-    from .service import RemoteOCR
+    from .services import RemoteOCR
     utils.logger.debug('connecting to the OCR service at {} ...'.format(host))
 
     console_script_path = '/home/{}/{}'.format(rpi_username, OCR_EXE_PATH)
@@ -117,7 +117,7 @@ def service(host='raspberrypi', rpi_username='pi', rpi_password=None, **kwargs):
 
 
 def configure(config=None):
-    """Create a Qt application to interact with the image and the OCR algorithm.
+    """Create a Qt application to interact with an image and the OCR algorithm.
 
     Parameters
     ----------
@@ -145,7 +145,7 @@ def apply(obj, *, tasks=None, algorithm='tesseract', **kwargs):
 
     Parameters
     ----------
-    obj : :class:`str`, :class:`~ocr.camera.Camera` or :class:`~ocr.camera.RemoteCamera`
+    obj : :class:`str`, :class:`~ocr.cameras.Camera` or :class:`~ocr.cameras.RemoteCamera`
         An image to perform OCR on. If a :class:`str` then a file path. Otherwise the image
         is captured using the camera.
     tasks : :class:`list` of :class:`tuple` or :class:`dict`, optional
@@ -181,28 +181,39 @@ def apply(obj, *, tasks=None, algorithm='tesseract', **kwargs):
 
 
 def process(image, *, tasks=None, transform_only=False):
-    """Perform image-processing tasks.
+    """Perform image-processing tasks to an image.
 
     Parameters
     ----------
     image : :class:`~ocr.utils.OpenCVImage` or :class:`PIL.Image.Image`
         The image to process.
     tasks : :class:`list` of :class:`tuple` or :class:`dict`, optional
-        Apply the transformations and the filters to the image. The
-        object is a sequence of `name`, `value` pairs. The `name` parameter
-        is the name of the transformation or filter (e.g., erode, rotate) and the
-        `value` can be a number, a sequence of numbers or a dictionary, for example,
+        Apply transformations and filters to the image. Examples,
 
-        * [('dilate', (3, 4))] apply dilation with a radius of 3 and using 4 iterations
-        * [('dilate', {'radius': 3, 'iterations': 4})]
-        * [('dilate', 3)] apply dilation with a radius of 3 and use the default number of iterations
-        * [('rotate', 90), ('dilate', 3)] specify multiple tasks, first rotate then dilate
-        * [('rotate', 180), ('greyscale',)] greyscale does not accept arguments
-        * {'rotate': 90, 'dilate': 3} using a dict instead of a list of tuple
+        * ``[('dilate', (3, 4))]`` :math:`\\rightarrow`
+          apply :func:`~utils.dilate` with radius=3 and iterations=4
+
+        * ``[('dilate', {'radius': 3, 'iterations': 4})]`` :math:`\\rightarrow`
+          equivalent to the above
+
+        * ``[('dilate', 3)]`` :math:`\\rightarrow`
+          apply :func:`~utils.dilate` with radius=3 and use the default number of iterations
+
+        * ``[('rotate', 90), ('dilate', 3)]`` :math:`\\rightarrow`
+          first :func:`~utils.rotate` by 90 degrees then :func:`~utils.dilate` with radius=3
+
+        * ``[('greyscale',)]`` :math:`\\rightarrow`
+          the :func:`~utils.greyscale` function does not accept arguments so a comma is
+          required to make `greyscale` a :class:`tuple`
+
+        * ``{'greyscale': None, 'rotate': 90, 'dilate': {'iterations': 4}}`` :math:`\\rightarrow`
+          use a :class:`dict` instead of a :class:`list`
+          (ensure that your :class:`dict` preserves key order)
 
     transform_only : :class:`bool`, optional
-        Whether to only apply the tasks that transform the image and which do
-        not edit RGB values. These correspond to the rotate and crop tasks.
+        Whether to only apply the `tasks` that transform the image and which do
+        not edit RGB values. The allowed tasks correspond to the :func:`~utils.rotate`
+        and :func:`~utils.crop` transformations.
 
     Returns
     -------
@@ -246,19 +257,19 @@ def process(image, *, tasks=None, transform_only=False):
 
 
 def load(path, **kwargs):
-    """Load a JSON file.
+    """Load a `JSON <https://www.json.org/json-en.html>`_ configuration file.
 
     Parameters
     ----------
     path : :class:`str`
-        The path to the JSON file.
+        The path to the file.
     kwargs
         All keyword arguments are passed to :func:`json.load`.
 
     Returns
     -------
     :class:`dict`
-        The data in the JSON file.
+        The configuration settings.
     """
     with open(path, mode='rt') as fp:
         return json.load(fp, **kwargs)

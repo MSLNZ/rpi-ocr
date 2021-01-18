@@ -11,8 +11,8 @@ from .. import (
     camera,
     service,
 )
-from ..camera import kill_camera_service
-from ..service import kill_ocr_service
+from ..cameras import kill_camera_service
+from ..services import kill_ocr_service
 
 
 class ConnectRPi(QtWidgets.QDialog):
