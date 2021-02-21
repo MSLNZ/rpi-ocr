@@ -8,10 +8,8 @@ from msl.qt import (
 )
 import shiboken2
 
-from . import (
-    icons,
-    ON_RPI,
-)
+from . import icons
+from .. import ON_RPI
 from .connection import prompt_for_service_kwargs
 
 
