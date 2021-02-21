@@ -151,9 +151,6 @@ install_requires = [
 
     # the following are install only on the Raspberry Pi
     'picamera ; "arm" in platform_machine',
-    'msl-package-manager ; "arm" in platform_machine',
-    'pytest ; "arm" in platform_machine',
-    'pytest-cov ; "arm" in platform_machine',
 ]
 
 tests_require = ['pytest', 'pytest-cov', 'matplotlib']

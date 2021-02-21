@@ -76,7 +76,7 @@ python -m pip install --upgrade setuptools wheel
 # install PySide2 and rpi-ocr
 cd rpi-ocr
 python -m pip install PySide2 --no-index --find-links resources/
-python -m pip install .
+python -m pip install .[tests]
 
 # check tesseract and ssocr installation
 echo
@@ -90,6 +90,7 @@ echo
 export QT_QPA_PLATFORM="offscreen"
 python -m pytest
 unset QT_QPA_PLATFORM
+deactivate
 
 # cleanup
 cd ~
