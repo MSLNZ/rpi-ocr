@@ -1,7 +1,7 @@
 """
 This was the original implementation of the GUI.
 
-It doesn't allow for multiple ROIsto be selected.
+It doesn't allow for multiple ROIs to be selected.
 It is in an unfinished and unknown state.
 """
 import os
