@@ -6,27 +6,13 @@ from msl.qt import (
     Signal,
     prompt,
 )
+import shiboken2
 
 from . import (
     icons,
     ON_RPI,
 )
 from .connection import prompt_for_service_kwargs
-
-if not ON_RPI:
-    # The only reason why we need to import shiboken2 is to delete a layout.
-    # When installing PySide2 in the virtual environment on the Raspberry Pi
-    # the shiboken2 module does not get installed. However, we don't need to
-    # delete a layout on the Raspberry Pi since ssocr and tesseract are
-    # automatically installed in the rpi-setup.sh script and therefore are
-    # always available. The layout needed to be deleted if the user was on,
-    # for example, Windows and the ssocr/tesseract executables were not
-    # available on the local computer and the user uses a Button on the layout
-    # to either connect to the OCR Service on a Raspberry Pi or to add the
-    # location of the executable to PATH. After the OCR Service is available or
-    # the path tot he executable is know the layout is redrawn with the widgets
-    # for changing the kwargs passed to the OCR algorithm.
-    import shiboken2
 
 
 class Algorithm(QtWidgets.QWidget):

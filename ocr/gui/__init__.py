@@ -17,16 +17,6 @@ from msl.qt import (
     utils,
     prompt,
 )
-
-# pyqtgraph calls PySide2.__version__ when it is imported.
-# The version of PySide2 that gets installed on the Raspberry Pi
-# does not have this __version__ attribute, but QtCore does.
-from .. import ON_RPI
-if ON_RPI:
-    import PySide2
-    if not hasattr(PySide2, '__version__'):
-        PySide2.__version__ = QtCore.__version__
-
 import pyqtgraph as pg
 
 from .. import to_cv2
