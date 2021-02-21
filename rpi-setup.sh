@@ -4,7 +4,6 @@
 # can use up to an additional 1 GB of disk space.
 # Usage: source rpi-setup.sh
 #
-set -e
 
 # install the rpi-ocr package in a virtual environment named 'ocrenv' which is
 # located in /home/pi. If you change the name of the virtual environment
