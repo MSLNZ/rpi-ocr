@@ -25,7 +25,7 @@ Make sure that you have git_ installed and then clone the repository
 .. code-block:: console
 
    sudo apt install git
-   git clone --depth 1 https://github.com/MSLNZ/rpi-ocr
+   git clone --depth 1 https://github.com/MSLNZ/rpi-ocr.git
 
 The following will install the **RPi-OCR** package in a `virtual environment`_ in the
 ``/home/pi/ocrenv`` directory *(the* ``ocrenv`` *directory will be created automatically)*.
