@@ -16,6 +16,9 @@ sudo apt-get install -y build-essential libssl-dev libffi-dev python3-dev
 # prerequisites for opencv-python
 sudo apt-get install -y libavutil56 libcairo-gobject2 libgtk-3-0 libqtgui4 libpango-1.0-0 libqtcore4 libavcodec58 libcairo2 libswscale5 libtiff5 libqt4-test libatk1.0-0 libavformat58 libgdk-pixbuf2.0-0 libilmbase23 libjasper1 libopenexr23 libpangocairo-1.0-0 libwebp6 libatlas-base-dev
 
+# prerequisites for PySide2 (in case the user is running this script starting from a Raspberry Pi OS Lite image)
+sudo apt-get install -y libdouble-conversion1
+
 cd ~
 
 # build tesseract with training tools (only if tesseract is not already installed)
