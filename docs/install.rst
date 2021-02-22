@@ -9,7 +9,7 @@ Raspberry Pi OS
 This section describe how to set up a Raspberry Pi.
 
 .. note::
-   Instructions for using SSH_ to remotely access the terminal of the Raspberry Pi
+   Instructions for using ssh_ to remotely access the terminal of the Raspberry Pi
    can be found `here <ssh_instructions_>`_.
 
 .. tip::
@@ -115,7 +115,7 @@ running Windows, Linux or macOS then follow the instructions below.
 * ssocr_ -- An executable that runs on Windows can be found at ssocr-win64_
 
 .. _virtual environment: https://docs.python.org/3/tutorial/venv.html
-.. _SSH: https://www.ssh.com/ssh/
+.. _ssh: https://www.ssh.com/ssh/
 .. _ssh_instructions: https://www.raspberrypi.org/documentation/remote-access/ssh/
 .. _git: https://git-scm.com/
 .. _pillow: https://pillow.readthedocs.io/en/stable/
