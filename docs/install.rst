@@ -84,7 +84,7 @@ To install **RPi-OCR** on a computer that is not a Raspberry Pi run
 
 .. code-block:: console
 
-   pip install https://github.com/MSLNZ/rpi-ocr/archive/master.tar.gz
+   pip install https://github.com/MSLNZ/rpi-ocr/archive/main.tar.gz
 
 Alternatively, using the :ref:`msl-package-manager-welcome` run
 
@@ -125,8 +125,8 @@ running Windows, Linux or macOS then follow the instructions below.
 .. _Qt for Python: https://doc.qt.io/qtforpython/
 .. _picamera: https://picamera.readthedocs.io/en/latest/
 .. _Tesseract-OCR: https://tesseract-ocr.github.io/tessdoc/Home.html
-.. _tessdata: https://github.com/MSLNZ/rpi-ocr/tree/master/resources/tessdata
+.. _tessdata: https://github.com/MSLNZ/rpi-ocr/tree/main/resources/tessdata
 .. _ssocr: https://www.unix-ag.uni-kl.de/~auerswal/ssocr/
 .. _Cygwin: https://www.cygwin.com/
-.. _ssocr-win64: https://github.com/MSLNZ/rpi-ocr/tree/master/resources/ssocr-win64
+.. _ssocr-win64: https://github.com/MSLNZ/rpi-ocr/tree/main/resources/ssocr-win64
 .. _Raspberry Pi OS: https://www.raspberrypi.org/software/operating-systems/#raspberry-pi-os-32-bit
