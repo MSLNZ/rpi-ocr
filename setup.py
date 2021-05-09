@@ -189,6 +189,7 @@ setup(
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Science/Research',
+        'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
@@ -216,7 +217,7 @@ setup(
             'camera = ocr.camera:start',
         ],
     },
-    include_package_data=False,
+    include_package_data=True,
 )
 
 if os.path.isfile(init_backup):
