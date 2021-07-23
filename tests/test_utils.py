@@ -259,7 +259,6 @@ def test_to_pil():
             assert img_expected.mode == pil.mode
             assert img_expected.size == pil.size
             assert img_expected.info == pil.info
-            assert img_expected.category == pil.category
             assert img_expected.getpalette() == pil.getpalette()
             assert img_expected.tobytes() == pil.tobytes()
             assert img_expected.getbands() == pil.getbands()
