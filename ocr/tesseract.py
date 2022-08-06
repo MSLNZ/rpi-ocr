@@ -35,7 +35,7 @@ def set_tesseract_path(path):
     """
     global is_available
     cmd = get_executable_path(path, 'tesseract')
-    logger.debug('set tesseract executable to {!r}'.format(cmd))
+    logger.debug('set tesseract executable to %r', cmd)
     pytesseract.pytesseract.tesseract_cmd = cmd
     is_available = True
 
@@ -49,7 +49,7 @@ def version():
         The version number.
     """
     ver = str(pytesseract.get_tesseract_version())
-    logger.debug('tesseract version: ' + ver)
+    logger.debug('tesseract version: %s', ver)
     return ver
 
 
@@ -64,7 +64,7 @@ def languages():
     cmd = [pytesseract.pytesseract.tesseract_cmd, '--list-langs']
     out = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
     langs = out.decode('utf-8').splitlines()[1:]
-    logger.debug('tesseract languages: ' + ', '.join(langs))
+    logger.debug('tesseract languages: %s', ', '.join(langs))
     return langs
 
 
@@ -122,6 +122,6 @@ def apply(image, *, language='eng', psm=8, oem=3, whitelist='0123456789+-.', tim
         cfg += ' -c tessedit_char_whitelist=' + whitelist
     if config:
         cfg += ' ' + config
-    logger.info('tesseract params: language={!r} config={!r} nice={} timeout={}'.format(language, cfg, nice, timeout))
+    logger.info('tesseract params: language=%r config=%r nice=%s timeout=%s', language, cfg, nice, timeout)
     string = pytesseract.image_to_string(to_cv2(image), lang=language, config=cfg, nice=nice, timeout=timeout)
     return string.strip()

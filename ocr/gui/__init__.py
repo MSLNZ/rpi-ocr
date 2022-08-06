@@ -362,7 +362,7 @@ class Configure(QtWidgets.QWidget):
                     self.sig_closing.connect(self.camera_settings.main_closing)
                     self.layout().addWidget(self.camera_settings)
                 except Exception as e:
-                    prompt.critical(str(e))
+                    prompt.critical(e)
                     return
             if self.camera_settings is not None:
                 self.camera_settings.show()

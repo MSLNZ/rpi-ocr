@@ -288,7 +288,7 @@ class RemoteCamera(LinkedClient):
             All keyword arguments are passed to :func:`~msl.network.client.connect`.
         """
         super(RemoteCamera, self).__init__('Camera', **kwargs)
-        logger.debug('connected to the {} service running on {}'.format(self.service_name, self.service_os))
+        logger.debug('connected to the %s service running on %s', self.service_name, self.service_os)
 
     def disconnect(self):
         """Disconnect from and shut down the :class:`Camera` service."""
@@ -297,7 +297,7 @@ class RemoteCamera(LinkedClient):
         self.wait()
         self.shutdown_service()
         super(RemoteCamera, self).disconnect()
-        logger.debug('disconnected from the {} service'.format(self.service_name))
+        logger.debug('disconnected from the %s service', self.service_name)
 
     close = disconnect
 
@@ -312,7 +312,7 @@ class RemoteCamera(LinkedClient):
         t0 = perf_counter()
         image = to_cv2(self._link.capture(img_type='base64'))
         dt = perf_counter() - t0
-        logger.info('RemoteCamera.capture took {:.3f} seconds'.format(dt))
+        logger.info('RemoteCamera.capture took %.3f seconds', dt)
         return image
 
     def __getattr__(self, item):
@@ -322,7 +322,7 @@ class RemoteCamera(LinkedClient):
                 t0 = perf_counter()
                 reply = getattr(self._link, item)(*args, **kwargs)
                 dt = perf_counter() - t0
-                logger.info('RemoteCamera.{} took {:.3f} seconds'.format(item, dt))
+                logger.info('RemoteCamera.%s took %.3f seconds', item, dt)
                 return reply
             except Exception as e:
                 logger.error(e)
@@ -392,7 +392,7 @@ def kill_service(exe=None, name=None, host=None, rpi_username=None, rpi_password
     for pid in pids:
         try:
             ssh.exec_command(ssh_client, 'sudo kill -9 ' + pid)
-            logger.debug('killed the {} service pid={} on the Raspberry Pi'.format(name, pid))
+            logger.debug('killed the %s service pid=%s on the Raspberry Pi', name, pid)
         except Exception as e:
             logger.error(e)
     ssh_client.close()

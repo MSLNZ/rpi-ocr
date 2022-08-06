@@ -55,10 +55,10 @@ class OCRWorker(Worker):
                 t0 = perf_counter()
                 text, _ = function(image, algorithm=algorithm, **parameters)
                 dt = perf_counter() - t0
-                logger.info('applying OCR with {!r} took {:.3f} seconds'.format(algorithm, dt))
+                logger.info('applying OCR with %r took %.3f seconds', algorithm, dt)
             except BaseException as e:
                 message = e.message if hasattr(e, 'message') else str(e)
-                logger.error('OCRWorkerError: {}'.format(message))
+                logger.error('OCRWorkerError: %s', message)
                 text = ''
             self.sig_ocr_text.emit(text)
 

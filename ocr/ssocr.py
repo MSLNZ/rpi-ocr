@@ -84,7 +84,7 @@ def set_ssocr_path(path):
     """
     global ssocr_exe, is_available
     path = get_executable_path(path, 'ssocr')
-    logger.debug('set ssocr executable to {!r}'.format(path))
+    logger.debug('set ssocr executable to %r', path)
     ssocr_exe = path
     is_available = True
 
@@ -255,7 +255,7 @@ def _run(command, stdin=None, debug=False):
             'Call ocr.set_ssocr_path() or add the directory of the ssocr executable to PATH'
         ) from None
 
-    logger.info('ssocr command: {}'.format(' '.join(command)))
+    logger.info('ssocr command: %s', ' '.join(command))
 
     if debug:
         return p.stderr.decode() + p.stdout.rstrip().decode()

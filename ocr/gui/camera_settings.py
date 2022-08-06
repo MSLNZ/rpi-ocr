@@ -317,7 +317,7 @@ class CameraSettings(QtWidgets.QWidget):
             value = sender.isChecked()
 
         settings.update({name: value})
-        logger.info('camera set {}'.format(settings))
+        logger.info('camera set %s', settings)
         self.camera.update_settings(settings)
         self.parent().start_capture()
 
@@ -344,7 +344,7 @@ class CameraSettings(QtWidgets.QWidget):
                     text = self._key_from_value(self.iso_options, text)
                 elif name == 'rotation':
                     text = str(text)
-                logger.debug('set {} to {}'.format(child, text))
+                logger.debug('set %s to %s', child, text)
                 child.setCurrentText(text)
             elif isinstance(child, QtWidgets.QAbstractSpinBox) and not child.hasFocus():
                 if name == 'awb_gains_red':
@@ -355,11 +355,11 @@ class CameraSettings(QtWidgets.QWidget):
                     value = self.settings[name]
                     if name == 'shutter_speed':
                         value *= 1e-6
-                logger.debug('set {} to {}'.format(child, value))
+                logger.debug('set %s to %s', child, value)
                 child.setValue(value)
             elif isinstance(child, QtWidgets.QCheckBox):
                 checked = self.settings[name]
-                logger.debug('set {} to {}'.format(child, checked))
+                logger.debug('set %s to %s', child, checked)
                 child.setChecked(checked)
             elif isinstance(child, QtWidgets.QLabel):
                 if name == 'zoom':
@@ -368,7 +368,7 @@ class CameraSettings(QtWidgets.QWidget):
                     text = self._get_exposure_text(self.settings[name])
                 else:
                     text = '{:.3f}'.format(self.settings[name])
-                logger.debug('set {} to {}'.format(child, text))
+                logger.debug('set %s to %s', child, text)
                 child.setText(text)
             child.blockSignals(False)
 

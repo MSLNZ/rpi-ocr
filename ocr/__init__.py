@@ -76,7 +76,7 @@ def camera(**kwargs):
     rpi_username = kwargs.pop('rpi_username', 'pi')
     rpi_password = kwargs.pop('rpi_password', None)
 
-    utils.logger.debug('connecting to a camera at {} ...'.format(host))
+    utils.logger.debug('connecting to a camera at %s ...', host)
 
     console_script_path = '/home/{}/{}'.format(rpi_username, CAMERA_EXE_PATH)
     ssh.start_manager(host, console_script_path, ssh_username=rpi_username,
@@ -107,7 +107,7 @@ def service(host='raspberrypi', rpi_username='pi', rpi_password=None, **kwargs):
         The connection to the :class:`~ocr.services.OCR` service on the Raspberry Pi.
     """
     from .services import RemoteOCR
-    utils.logger.debug('connecting to the OCR service at {} ...'.format(host))
+    utils.logger.debug('connecting to the OCR service at %s ...', host)
 
     console_script_path = '/home/{}/{}'.format(rpi_username, OCR_EXE_PATH)
     ssh.start_manager(host, console_script_path, ssh_username=rpi_username,
@@ -223,7 +223,7 @@ def process(image, *, tasks=None, transform_only=False):
     if not tasks:
         return image
 
-    utils.logger.info('process tasks {}'.format(tasks))
+    utils.logger.info('process tasks %s', tasks)
 
     if isinstance(tasks, dict):
         if sys.version_info[:2] < (3, 6) and not isinstance(tasks, OrderedDict):

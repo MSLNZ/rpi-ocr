@@ -160,7 +160,7 @@ def save(path, image, *, text='', font_face=cv2.FONT_HERSHEY_SIMPLEX,
         img = OpenCVImage(new_image, ext=ext)
 
     cv2.imwrite(path, cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
-    logger.debug('image saved to {!r}'.format(path))
+    logger.debug('image saved to %r', path)
     return img
 
 
@@ -226,7 +226,7 @@ def to_bytes(obj):
         try:
             with open(obj, mode='rb') as fp:
                 data = fp.read()
-            logger.debug('opened {!r} as bytes'.format(obj))
+            logger.debug('opened %r as bytes', obj)
             return data
         except OSError:
             try:
@@ -241,13 +241,13 @@ def to_bytes(obj):
         ret, buf = cv2.imencode(obj.ext, bgr_image)
         if not ret:
             raise RuntimeError('error calling cv2.imencode')
-        logger.debug('converted {} to bytes'.format(obj.__class__.__name__))
+        logger.debug('converted %s to bytes', obj.__class__.__name__)
         return buf.tobytes()
 
     if isinstance(obj, PillowImage):
         b = BytesIO()
         obj.save(b, obj.format)
-        logger.debug('converted {} to bytes'.format(obj.__class__.__name__))
+        logger.debug('converted %s to bytes', obj.__class__.__name__)
         return b.getvalue()
 
     if isinstance(obj, BytesIO):
@@ -306,23 +306,23 @@ def to_pil(obj):
         if fmt == 'JPG':
             fmt = 'JPEG'
         im.format = fmt
-        logger.debug('converted {} to Pillow image'.format(obj.__class__.__name__))
+        logger.debug('converted %s to a Pillow image', obj.__class__.__name__)
         return im
 
     if isinstance(obj, BytesIO):
         image = Image.open(obj)
-        logger.debug('converted BytesIO to Pillow image')
+        logger.debug('converted BytesIO to a Pillow image')
         return image
 
     if isinstance(obj, (bytes, memoryview, bytearray)):
         image = Image.open(BytesIO(obj))
-        logger.debug('converted {} to Pillow image'.format(obj.__class__.__name__))
+        logger.debug('converted %s to a Pillow image', obj.__class__.__name__)
         return image
 
     if isinstance(obj, str):
         try:
             image = Image.open(obj)
-            logger.debug('opened {!r} as a Pillow image'.format(obj))
+            logger.debug('opened %r as a Pillow image', obj)
         except OSError:
             try:
                 buf = base64.b64decode(obj)
@@ -330,7 +330,7 @@ def to_pil(obj):
                 raise ValueError('Invalid path or base64 string, {!r}'.format(obj)) from None
             else:
                 image = Image.open(BytesIO(buf))
-                logger.debug('converted base64 to Pillow image')
+                logger.debug('converted base64 to a Pillow image')
         return image
 
     if isinstance(obj, PillowImage):
@@ -362,7 +362,7 @@ def to_cv2(obj):
         except:
             ext = None
         img = OpenCVImage(np.asarray(obj), ext=ext)
-        logger.debug('converted {} to OpenCVImage'.format(obj.__class__.__name__))
+        logger.debug('converted %s to an OpenCVImage', obj.__class__.__name__)
         return img
 
     if isinstance(obj, str):
@@ -371,7 +371,7 @@ def to_cv2(obj):
             _, ext = os.path.splitext(obj)
             if image.ndim > 2:
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            logger.debug('opened {!r} as an OpenCVImage'.format(obj))
+            logger.debug('opened %r as an OpenCVImage', obj)
             return OpenCVImage(image, ext=ext)
 
         try:
@@ -403,7 +403,7 @@ def to_cv2(obj):
     if image.ndim > 2:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     img = OpenCVImage(image, ext=ext)
-    logger.debug('converted buffer to OpenCVImage')
+    logger.debug('converted buffer to an OpenCVImage')
     return img
 
 
@@ -421,7 +421,7 @@ def threshold(image, value):
     -------
     The image with the threshold applied.
     """
-    logger.debug('threshold value={}'.format(value))
+    logger.debug('threshold value=%s', value)
     if isinstance(image, OpenCVImage):
         _, out = cv2.threshold(image, value, 255, cv2.THRESH_BINARY)
         return OpenCVImage(out, ext=image.ext)
@@ -452,7 +452,7 @@ def erode(image, radius, iterations=1):
     -------
     The `image` with erosion applied.
     """
-    logger.debug('erode radius={} iterations={}'.format(radius, iterations))
+    logger.debug('erode radius=%s iterations=%s', radius, iterations)
     if radius is None or radius < 1 or iterations < 1:
         return image
 
@@ -490,7 +490,7 @@ def dilate(image, radius, iterations=1):
     -------
     The `image` with dilation applied.
     """
-    logger.debug('dilate radius={} iterations={}'.format(radius, iterations))
+    logger.debug('dilate radius=%s iterations=%s', radius, iterations)
     if radius is None or radius < 1 or iterations < 1:
         return image
 
@@ -526,7 +526,7 @@ def gaussian_blur(image, radius):
     -------
     The `image` with a Gaussian blur applied.
     """
-    logger.debug('gaussian_blur radius={}'.format(radius))
+    logger.debug('gaussian_blur radius=%s', radius)
     if radius is None or radius < 1:
         return image
 
@@ -559,7 +559,7 @@ def rotate(image, angle):
     -------
     The rotated image.
     """
-    logger.debug('rotate angle={}'.format(angle))
+    logger.debug('rotate angle=%s', angle)
     if angle is None or angle == 0:
         return image
 
@@ -658,7 +658,7 @@ def crop(image, x, y, w, h):
         w = int(width * w)
         h = int(height * h)
 
-    logger.debug('zoom x={} y={} w={} h={}'.format(x, y, w, h))
+    logger.debug('zoom x=%s y=%s w=%s h=%s', x, y, w, h)
 
     if isinstance(image, OpenCVImage):
         return image[y:y+h, x:x+w]
@@ -746,7 +746,7 @@ def adaptive_threshold(image, radius, *, use_mean=True, c=0):
     if radius < 1:
         return image
 
-    logger.debug('adaptive threshold radius={} use_mean={} c={}'.format(radius, use_mean, c))
+    logger.debug('adaptive threshold radius=%s use_mean=%s c=%s', radius, use_mean, c)
     if isinstance(image, OpenCVImage):
         if image.ndim > 2:
             image = greyscale(image)
@@ -782,7 +782,7 @@ def opening(image, radius, *, iterations=1):
     if radius < 1:
         return image
 
-    logger.debug('opening radius={} iterations={}'.format(radius, iterations))
+    logger.debug('opening radius=%s iterations=%s', radius, iterations)
     if isinstance(image, OpenCVImage):
         size = 2 * radius + 1
         kernel = np.ones((size, size), np.uint8)
@@ -817,7 +817,7 @@ def closing(image, radius, *, iterations=1):
     if radius < 1:
         return image
 
-    logger.debug('closing radius={} iterations={}'.format(radius, iterations))
+    logger.debug('closing radius=%s iterations=%s', radius, iterations)
 
     if isinstance(image, OpenCVImage):
         size = 2 * radius + 1

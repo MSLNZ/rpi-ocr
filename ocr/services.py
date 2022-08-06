@@ -97,7 +97,7 @@ class RemoteOCR(LinkedClient):
             All keyword arguments are passed to :func:`~msl.network.client.connect`.
         """
         super(RemoteOCR, self).__init__('OCR', **kwargs)
-        logger.debug('connected to the {} service running on {}'.format(self.service_name, self.service_os))
+        logger.debug('connected to the %s service running on %s', self.service_name, self.service_os)
 
     def apply(self, image, *, tasks=None, algorithm='tesseract', **kwargs):
         """Apply the OCR algorithm to an image.
@@ -124,14 +124,14 @@ class RemoteOCR(LinkedClient):
         t0 = perf_counter()
         text, image = self._link.apply(to_base64(image), tasks=tasks, algorithm=algorithm, **kwargs)
         dt = perf_counter() - t0
-        logger.info('RemoteOCR.apply took {:.3f} seconds'.format(dt))
+        logger.info('RemoteOCR.apply took %.3f seconds', dt)
         return text, to_cv2(image)
 
     def disconnect(self):
         """Disconnect from and shut down the :class:`.OCR` service."""
         self.shutdown_service()
         super(RemoteOCR, self).disconnect()
-        logger.debug('disconnected from the {} service'.format(self.service_name))
+        logger.debug('disconnected from the %s service', self.service_name)
 
 
 def start():
