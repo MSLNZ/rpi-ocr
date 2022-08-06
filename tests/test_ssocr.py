@@ -82,7 +82,7 @@ def test_inside_box():
 
 
 def test_version():
-    assert ssocr.version() == '2.19.0+'
+    assert ssocr.version() == '2.22.1'
 
     info = ssocr.version(include_copyright=True)
     assert info.startswith('Seven Segment Optical Character Recognition')
