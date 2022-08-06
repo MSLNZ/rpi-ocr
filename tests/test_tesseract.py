@@ -9,62 +9,55 @@ import ocr
 from ocr import tesseract
 
 
-def test_english():
+@pytest.mark.parametrize('ext', ['bmp', 'jpg', 'jpeg', 'png', 'tif', 'tiff'])
+def test_english(ext):
     expected = 'A Python Approach to Character\nRecognition'
+    params = {'psm': 3, 'whitelist': None}
 
     eng = os.path.join(os.path.dirname(__file__), 'images', 'tesseract_eng_text.png')
-    temp_paths = [tempfile.gettempdir() + '/tesseract_eng_text.' + ext
-                  for ext in ['bmp', 'jpg', 'jpeg', 'png', 'tif', 'tiff']]
-
-    params = {'psm': 3, 'whitelist': None}
+    p = tempfile.gettempdir() + '/tesseract_eng_text.' + ext
 
     assert tesseract.apply(eng, **params) == expected
 
-    for p in temp_paths:
-        ocr.save(p, eng)
+    ocr.save(p, eng)
 
-        assert tesseract.apply(p, **params) == expected
-        assert tesseract.apply(ocr.utils.to_cv2(p), **params) == expected
-        assert tesseract.apply(ocr.utils.to_pil(p), **params) == expected
-        assert tesseract.apply(ocr.utils.to_base64(p), **params) == expected
-        assert tesseract.apply(ocr.utils.to_bytes(p), **params) == expected
-        with open(p, mode='rb') as fp:
-            assert tesseract.apply(fp.read(), **params) == expected
+    assert tesseract.apply(p, **params) == expected
+    assert tesseract.apply(ocr.utils.to_cv2(p), **params) == expected
+    assert tesseract.apply(ocr.utils.to_pil(p), **params) == expected
+    assert tesseract.apply(ocr.utils.to_base64(p), **params) == expected
+    assert tesseract.apply(ocr.utils.to_bytes(p), **params) == expected
+    with open(p, mode='rb') as fp:
+        assert tesseract.apply(fp.read(), **params) == expected
 
-        os.remove(p)
-        assert not os.path.isfile(p)
+    os.remove(p)
+    assert not os.path.isfile(p)
 
 
-def test_numbers():
+@pytest.mark.parametrize('ext', ['bmp', 'jpg', 'jpeg', 'png', 'tif', 'tiff'])
+def test_numbers(ext):
     expected = '619121'
 
     numbers = os.path.join(os.path.dirname(__file__), 'images', 'tesseract_numbers.jpg')
-    temp_paths = [tempfile.gettempdir() + '/tesseract_numbers.' + ext
-                  for ext in ['bmp', 'jpg', 'jpeg', 'png', 'tif', 'tiff']]
+    p = tempfile.gettempdir() + '/tesseract_numbers.' + ext
 
     assert tesseract.apply(numbers, psm=7) == expected
 
-    for p in temp_paths:
-        ocr.save(p, numbers)
+    ocr.save(p, numbers)
 
-        assert tesseract.apply(p, psm=7) == expected
-        assert tesseract.apply(ocr.utils.to_cv2(p), psm=7) == expected
-        assert tesseract.apply(ocr.utils.to_pil(p), psm=7) == expected
-        assert tesseract.apply(ocr.utils.to_base64(p), psm=7) == expected
-        assert tesseract.apply(ocr.utils.to_bytes(p), psm=7) == expected
-        with open(p, mode='rb') as fp:
-            assert tesseract.apply(fp.read(), psm=7) == expected
+    assert tesseract.apply(p, psm=7) == expected
+    assert tesseract.apply(ocr.utils.to_cv2(p), psm=7) == expected
+    assert tesseract.apply(ocr.utils.to_pil(p), psm=7) == expected
+    assert tesseract.apply(ocr.utils.to_base64(p), psm=7) == expected
+    assert tesseract.apply(ocr.utils.to_bytes(p), psm=7) == expected
+    with open(p, mode='rb') as fp:
+        assert tesseract.apply(fp.read(), psm=7) == expected
 
-        for fcn in [ocr.utils.to_cv2, ocr.utils.to_pil]:
-            cropped = ocr.utils.crop(fcn(p), 200, 100, 180, 200)
-            assert tesseract.apply(cropped, psm=7) == expected[:2]
+    for fcn in [ocr.utils.to_cv2, ocr.utils.to_pil]:
+        cropped = ocr.utils.crop(fcn(p), 200, 100, 180, 200)
+        assert tesseract.apply(cropped, psm=7) == expected[:2]
 
-        os.remove(p)
-        assert not os.path.isfile(p)
-
-    for obj in ['does/not/exist.jpg', 'X'*10000 + '.png']:
-        with pytest.raises(ValueError, match=r'^Invalid path or base64 string'):
-            tesseract.apply(obj)
+    os.remove(p)
+    assert not os.path.isfile(p)
 
 
 def test_version():
@@ -116,3 +109,10 @@ def test_config():
     path = os.path.join(os.path.dirname(__file__), 'images', 'tesseract_numbers.jpg')
     assert tesseract.apply(path, psm=7, whitelist=None, config='-c tessedit_char_whitelist=0123456789') == '619121'
     assert '1' not in tesseract.apply(path, psm=7, config='-c tessedit_char_blacklist=1')
+
+
+def test_invalid_image():
+    # must raise ValueError instead of FileNotFoundError
+    for obj in ['does/not/exist.jpg', 'X'*10000 + '.png']:
+        with pytest.raises(ValueError, match=r'^Invalid path or base64 string'):
+            tesseract.apply(obj)

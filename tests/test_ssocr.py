@@ -7,8 +7,9 @@ import pytest
 import ocr
 from ocr import ssocr
 
-six_digits_path = os.path.join(os.path.dirname(__file__), 'images', 'six_digits.png')
-inside_box_path = os.path.join(os.path.dirname(__file__), 'images', 'inside_box.png')
+ROOT = os.path.join(os.path.dirname(__file__), 'images')
+six_digits_path = os.path.join(ROOT, 'six_digits.png')
+inside_box_path = os.path.join(ROOT, 'inside_box.png')
 
 
 # NOTE: This test must be first function in this module
@@ -46,35 +47,28 @@ def test_invalid_image():
             ssocr.apply(obj)
 
 
-def test_six_digits():
+@pytest.mark.parametrize('ext', ['bmp', 'jpg', 'jpeg', 'png', 'tif', 'tiff'])
+def test_six_digits(ext):
     expected = '431432'
-
-    temp_paths = [tempfile.gettempdir() + '/six_digits.' + ext
-                  for ext in ['bmp', 'jpg', 'jpeg', 'png', 'tif', 'tiff']]
-
     kwargs = {'absolute_threshold': False, 'iter_threshold': True}
 
-    for p in temp_paths:
-        ocr.save(p, six_digits_path)
+    p = tempfile.gettempdir() + '/six_digits.' + ext
+    ocr.save(p, six_digits_path)
 
-        assert ssocr.apply(p, **kwargs) == expected
-        assert ssocr.apply(ocr.utils.to_bytes(p), **kwargs) == expected
-        with open(p, mode='rb') as fp:
-            assert ssocr.apply(fp.read(), **kwargs) == expected
-        assert ssocr.apply(ocr.utils.to_base64(p), **kwargs) == expected
-        assert ssocr.apply(ocr.utils.to_cv2(p), **kwargs) == expected
-        assert ssocr.apply(ocr.utils.to_pil(p), **kwargs) == expected
+    assert ssocr.apply(p, **kwargs) == expected
+    assert ssocr.apply(ocr.utils.to_bytes(p), **kwargs) == expected
+    with open(p, mode='rb') as fp:
+        assert ssocr.apply(fp.read(), **kwargs) == expected
+    assert ssocr.apply(ocr.utils.to_base64(p), **kwargs) == expected
+    assert ssocr.apply(ocr.utils.to_cv2(p), **kwargs) == expected
+    assert ssocr.apply(ocr.utils.to_pil(p), **kwargs) == expected
 
-        for fcn in [ocr.utils.to_cv2, ocr.utils.to_pil]:
-            cropped = ocr.utils.crop(fcn(p), 0, 0, 100, 73)
-            assert ssocr.apply(cropped, **kwargs) == expected[:2]
+    for fcn in [ocr.utils.to_cv2, ocr.utils.to_pil]:
+        cropped = ocr.utils.crop(fcn(p), 0, 0, 100, 73)
+        assert ssocr.apply(cropped, **kwargs) == expected[:2]
 
-        os.remove(p)
-        assert not os.path.isfile(p)
-
-    for obj in ['does/not/exist.jpg', 'X'*10000 + '.png']:
-        with pytest.raises(ValueError, match=r'^Invalid path or base64 string'):
-            ssocr.apply(obj)
+    os.remove(p)
+    assert not os.path.isfile(p)
 
 
 def test_inside_box():
@@ -86,7 +80,7 @@ def test_inside_box():
         cropped = ocr.utils.crop(obj, 230, 195, 220, 60)
         assert ssocr.apply(cropped, threshold=threshold, absolute_threshold=False) == expected
 
-        thresholded = ocr.utils.threshold(cropped, 255 * threshold/100.)
+        thresholded = ocr.utils.threshold(cropped, int(255 * threshold/100.))
         assert ssocr.apply(thresholded) == expected
 
 
