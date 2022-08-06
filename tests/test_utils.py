@@ -108,7 +108,7 @@ def test_to_bytes():
     items = [(PNG_PATH, 'png'), (JPG_PATH, 'jpg'), (BMP_PATH, 'bmp')]
     for path, key in items:
         signature = utils.SIGNATURE_MAP[key]
-        with open(path, 'rb') as fp:
+        with open(path, mode='rb') as fp:
             bytes_expected = fp.read()
 
         # file path (str) -> bytes
@@ -167,7 +167,7 @@ def test_to_base64():
     items = [(PNG_PATH, 'png'), (JPG_PATH, 'jpg'), (BMP_PATH, 'bmp')]
     for path, key in items:
         signature = base64.b64encode(utils.SIGNATURE_MAP[key]).decode('ascii')[:-1]
-        with open(path, 'rb') as fp:
+        with open(path, mode='rb') as fp:
             base64_expected = base64.b64encode(fp.read()).decode('ascii')
 
         # file path (str) -> base64
@@ -249,7 +249,7 @@ def test_to_pil():
         # BytesIO -> PIL
         # BytesIO buffer -> PIL
         # bytearray -> PIL
-        with open(path, 'rb') as fp:
+        with open(path, mode='rb') as fp:
             raw = fp.read()
         for obj in [path, base64.b64encode(raw).decode('ascii'), raw,
                     BytesIO(raw), BytesIO(raw).getbuffer(), bytearray(raw)]:

@@ -224,7 +224,7 @@ def to_bytes(obj):
     """
     if isinstance(obj, str):
         try:
-            with open(obj, 'rb') as fp:
+            with open(obj, mode='rb') as fp:
                 data = fp.read()
             logger.debug('opened {!r} as bytes'.format(obj))
             return data

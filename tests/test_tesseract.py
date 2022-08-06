@@ -28,7 +28,7 @@ def test_english():
         assert tesseract.apply(ocr.utils.to_pil(p), **params) == expected
         assert tesseract.apply(ocr.utils.to_base64(p), **params) == expected
         assert tesseract.apply(ocr.utils.to_bytes(p), **params) == expected
-        with open(p, 'rb') as fp:
+        with open(p, mode='rb') as fp:
             assert tesseract.apply(fp.read(), **params) == expected
 
         os.remove(p)
@@ -52,7 +52,7 @@ def test_numbers():
         assert tesseract.apply(ocr.utils.to_pil(p), psm=7) == expected
         assert tesseract.apply(ocr.utils.to_base64(p), psm=7) == expected
         assert tesseract.apply(ocr.utils.to_bytes(p), psm=7) == expected
-        with open(p, 'rb') as fp:
+        with open(p, mode='rb') as fp:
             assert tesseract.apply(fp.read(), psm=7) == expected
 
         for fcn in [ocr.utils.to_cv2, ocr.utils.to_pil]:

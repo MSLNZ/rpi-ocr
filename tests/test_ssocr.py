@@ -59,7 +59,7 @@ def test_six_digits():
 
         assert ssocr.apply(p, **kwargs) == expected
         assert ssocr.apply(ocr.utils.to_bytes(p), **kwargs) == expected
-        with open(p, 'rb') as fp:
+        with open(p, mode='rb') as fp:
             assert ssocr.apply(fp.read(), **kwargs) == expected
         assert ssocr.apply(ocr.utils.to_base64(p), **kwargs) == expected
         assert ssocr.apply(ocr.utils.to_cv2(p), **kwargs) == expected
