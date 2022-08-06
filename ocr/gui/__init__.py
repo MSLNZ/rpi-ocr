@@ -290,7 +290,7 @@ class Configure(QtWidgets.QWidget):
         """Set the image and the title of the Window."""
         img = to_cv2(image)
         self.image_item.setImage(img, autoLevels=False)
-        self.setWindowTitle('{} [{}x{}]'.format(prefix, img.width, img.height))
+        self.setWindowTitle(f'{prefix} [{img.width}x{img.height}]')
         for roi, preview in self.rois.items():
             roi.maxBounds = self.image_item.boundingRect()
             preview.update_image(roi)
@@ -398,6 +398,6 @@ class Configure(QtWidgets.QWidget):
         if image is None or self.is_capture_paused:
             return
         self.capture_index += 1
-        self.set_image(image, 'Capture {}'.format(self.capture_index))
+        self.set_image(image, f'Capture {self.capture_index}')
         self.camera_settings.update_displayed_values(self.capture_thread.settings)
         self.single_capture()

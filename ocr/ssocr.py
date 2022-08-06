@@ -32,11 +32,11 @@ class SSOCREnum(Enum):
             try:
                 return cls[name.upper()].value
             except KeyError:
-                raise ValueError('{} does not contain a {!r} member'.format(cls, name)) from None
+                raise ValueError(f'{cls} does not contain a {name!r} member') from None
         elif isinstance(name, Enum):
             return name.value
         else:
-            raise TypeError('invalid type {} for SSOCREnum'.format(type(name)))
+            raise TypeError(f'invalid type {type(name)} for SSOCREnum')
 
 
 class Luminance(SSOCREnum):
@@ -208,15 +208,15 @@ def apply(image, *,
     """
     command = [
         ssocr_exe,
-        '-t{}'.format(threshold),
-        '-n{}'.format(needed_pixels),
-        '-i{}'.format(ignored_pixels),
-        '-d{}'.format(num_digits),
-        '-r{}'.format(one_ratio),
-        '-m{}'.format(minus_ratio),
-        '-f{}'.format(Colour.get_value(foreground)),
-        '-l{}'.format(Luminance.get_value(luminance)),
-        '-c{}'.format(Charset.get_value(charset)),
+        f'-t{threshold}',
+        f'-n{needed_pixels}',
+        f'-i{ignored_pixels}',
+        f'-d{num_digits}',
+        f'-r{one_ratio}',
+        f'-m{minus_ratio}',
+        f'-f{Colour.get_value(foreground)}',
+        f'-l{Luminance.get_value(luminance)}',
+        f'-c{Charset.get_value(charset)}',
     ]
 
     if absolute_threshold:

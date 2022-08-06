@@ -167,6 +167,6 @@ class SSOCR(Algorithm):
         layout.addRow('As hex', self.as_hex)
         layout.addRow('Omit decimal', self.omit_decimal_point)
         layout.addRow('Charset', self.charset)
-        layout.addWidget(QtWidgets.QLabel('<html><i>ssocr {}</i></html>'.format(self._version)))
+        layout.addWidget(QtWidgets.QLabel(f'<html><i>ssocr {self._version}</i></html>'))
         layout.addItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
         self.setLayout(layout)

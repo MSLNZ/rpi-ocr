@@ -144,6 +144,6 @@ class Tesseract(Algorithm):
         if not IS_WINDOWS:
             layout.addRow('Nice', self.nice),
         layout.addRow('Additional', self.config)
-        layout.addWidget(QtWidgets.QLabel('<html><i>Tesseract-OCR {}</i></html>'.format(self._version)))
+        layout.addWidget(QtWidgets.QLabel(f'<html><i>Tesseract-OCR {self._version}</i></html>'))
         layout.addItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
         self.setLayout(layout)

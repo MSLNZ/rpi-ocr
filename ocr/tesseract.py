@@ -119,7 +119,7 @@ def apply(image, *, language='eng', psm=8, oem=3, whitelist='0123456789+-.', tim
     :class:`str`
         The OCR text.
     """
-    cfg = '--psm {} --oem {}'.format(psm, oem)
+    cfg = f'--psm {psm} --oem {oem}'
     if whitelist:
         cfg += ' -c tessedit_char_whitelist=' + whitelist
     if config:

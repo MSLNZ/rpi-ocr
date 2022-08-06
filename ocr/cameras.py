@@ -203,7 +203,7 @@ class Camera(Service):
                 return self._converters[img_type](buffer)
             except KeyError:
                 allowed = ', '.join(self._converters)
-                raise ValueError('invalid img_type={!r}, must be one of: {}'.format(img_type, allowed)) from None
+                raise ValueError(f'invalid img_type={img_type!r}, must be one of: {allowed}') from None
 
     def capture_with_settings(self):
         """Capture an image and get the camera settings.
@@ -387,7 +387,7 @@ def kill_service(exe=None, name=None, host=None, rpi_username=None, rpi_password
         The password for `rpi_username`.
     """
     ssh_client = ssh.connect(host, username=rpi_username, password=rpi_password)
-    lines = ssh.exec_command(ssh_client, 'ps aux | grep {}'.format(name.lower()))
+    lines = ssh.exec_command(ssh_client, f'ps aux | grep {name.lower()}')
     pids = [line.split()[1] for line in lines if exe in line]
     for pid in pids:
         try:

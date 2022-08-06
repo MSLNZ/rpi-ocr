@@ -74,7 +74,7 @@ class ROIPreview(QtWidgets.QWidget):
         self.main_image_item = parent.image_item
         self.roi = roi
         self.config = parent.config
-        self.setWindowTitle('ROI-{}'.format(1+len(parent.rois)))
+        self.setWindowTitle(f'ROI-{1+len(parent.rois)}')
         self.ocr_params = parent.ocr_params
         self.image_processed = OpenCVImage([])
         self.image_unprocessed = OpenCVImage([])
@@ -122,7 +122,7 @@ class ROIPreview(QtWidgets.QWidget):
         button_layout.addWidget(self.cache_button)
         button_layout.addWidget(self.update_name_button)
         for n in sorted(self.task_list.widget_map):
-            b = Button(text=n, left_click=self.task_list.on_add_item, tooltip='Add a {} task'.format(n))
+            b = Button(text=n, left_click=self.task_list.on_add_item, tooltip=f'Add a {n} task')
             b.setObjectName(n)
             button_layout.addWidget(b)
         button_layout.addStretch()
@@ -164,7 +164,7 @@ class ROIPreview(QtWidgets.QWidget):
 
     def update_name(self):
         """Slot for the update-name button."""
-        text = prompt.text('Enter a new name, currently {!r}'.format(self.name))
+        text = prompt.text(f'Enter a new name, currently {self.name!r}')
         if text:
             if self.name in self.ocr_params['rois']:
                 self.ocr_params['rois'][text] = self.ocr_params['rois'].pop(self.name)
@@ -247,7 +247,7 @@ class ROIPreview(QtWidgets.QWidget):
             function = widget.camera.apply
             image = to_base64(self.image_processed)
         else:
-            assert False, 'should never get here: {}'.format(self)
+            assert False, f'should never get here: {self}'
 
         # Only keep the latest request in the queue.
         # In particular, if the ROI is being dragged then this

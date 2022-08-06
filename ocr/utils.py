@@ -88,7 +88,7 @@ class OpenCVImage(np.ndarray):
 
     def __str__(self):
         # mimic what PIL returns
-        return '<OpenCVImage ext={} size={}x{} at {:#x}>'.format(self.ext, self.width, self.height, id(self))
+        return f'<OpenCVImage ext={self.ext} size={self.width}x{self.height} at {id(self):#x}>'
 
 
 def save(path, image, *, text='', font_face=cv2.FONT_HERSHEY_SIMPLEX,
@@ -187,7 +187,7 @@ def get_executable_path(path, executable):
 
     if os.path.isfile(path):
         if os.path.basename(path) != executable:
-            raise FileNotFoundError('Invalid path to {!r}'.format(executable))
+            raise FileNotFoundError(f'Invalid path to {executable!r}')
     elif os.path.isdir(path):
         found_it = False
         for root, _, _ in os.walk(path):
@@ -197,7 +197,7 @@ def get_executable_path(path, executable):
                 found_it = True
                 break
         if not found_it:
-            raise FileNotFoundError('Cannot find the {!r} executable'.format(executable))
+            raise FileNotFoundError(f'Cannot find the {executable!r} executable')
     else:
         raise FileNotFoundError('The path is not a valid file or directory')
 
@@ -234,7 +234,7 @@ def to_bytes(obj):
                 logger.debug('converted base64 to bytes')
                 return data
             except ValueError:
-                raise ValueError('Invalid path or base64 string, {!r}'.format(obj)) from None
+                raise ValueError(f'Invalid path or base64 string, {obj!r}') from None
 
     if isinstance(obj, OpenCVImage):
         bgr_image = cv2.cvtColor(obj, code=cv2.COLOR_RGB2BGR)
@@ -266,7 +266,7 @@ def to_bytes(obj):
         logger.debug('returned original bytes object')
         return obj
 
-    raise TypeError('Cannot convert {} to bytes'.format(type(obj)))
+    raise TypeError(f'Cannot convert {type(obj)} to bytes')
 
 
 def to_base64(obj):
@@ -327,7 +327,7 @@ def to_pil(obj):
             try:
                 buf = base64.b64decode(obj)
             except ValueError:
-                raise ValueError('Invalid path or base64 string, {!r}'.format(obj)) from None
+                raise ValueError(f'Invalid path or base64 string, {obj!r}') from None
             else:
                 image = Image.open(BytesIO(buf))
                 logger.debug('converted base64 to a Pillow image')
@@ -336,7 +336,7 @@ def to_pil(obj):
     if isinstance(obj, PillowImage):
         return obj
 
-    raise TypeError('Cannot convert {} to a Pillow image'.format(type(obj)))
+    raise TypeError(f'Cannot convert {type(obj)} to a Pillow image')
 
 
 def to_cv2(obj):
@@ -378,7 +378,7 @@ def to_cv2(obj):
             obj = base64.b64decode(obj)
             logger.debug('decode base64 for OpenCVImage conversion')
         except ValueError:
-            raise ValueError('Invalid path or base64 string, {!r}'.format(obj)) from None
+            raise ValueError(f'Invalid path or base64 string, {obj!r}') from None
 
     if isinstance(obj, BytesIO):
         buffer = obj.getbuffer()
@@ -388,7 +388,7 @@ def to_cv2(obj):
     try:
         arr = np.frombuffer(buffer, dtype=np.uint8)
     except TypeError:
-        raise TypeError('Cannot convert {} to an OpenCV image'.format(type(obj))) from None
+        raise TypeError(f'Cannot convert {type(obj)} to an OpenCV image') from None
 
     if isinstance(buffer, memoryview):
         buffer = buffer[:10].tobytes()

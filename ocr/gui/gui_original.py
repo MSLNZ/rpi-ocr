@@ -267,7 +267,7 @@ class Gui(QtWidgets.QWidget):
                 basename = os.path.basename(self.path)
             except OSError:
                 basename = 'UNKNOWN'
-            self.setWindowTitle('OCR || {} [{} x {}]'.format(basename, width, height))
+            self.setWindowTitle(f'OCR || {basename} [{width} x {height}]')
         else:
             self.setAcceptDrops(False)
             self.original_image = None
@@ -414,12 +414,12 @@ class Gui(QtWidgets.QWidget):
 
     def update_rotate(self, value):
         self.ocr_params['rotate'] = value if value != 0 else None
-        self.rotate_label.setText('<html>Rotate [{}&deg;]</html>'.format(value))
+        self.rotate_label.setText(f'<html>Rotate [{value}&deg;]</html>')
         self.apply_ocr()
 
     def update_blur(self, value):
         self.ocr_params['blur'] = value if value > 0 else None
-        self.blur_label.setText('Gaussian blur [{}]'.format(value))
+        self.blur_label.setText(f'Gaussian blur [{value}]')
         self.apply_ocr()
 
     def update_threshold(self, value):
@@ -427,7 +427,7 @@ class Gui(QtWidgets.QWidget):
             self.ocr_params['threshold'] = value
         else:
             self.ocr_params['threshold'] = None
-        self.threshold_label.setText('Threshold [{}]'.format(value))
+        self.threshold_label.setText(f'Threshold [{value}]')
         self.apply_ocr()
 
     def update_threshold_checkbox(self, value):
@@ -439,7 +439,7 @@ class Gui(QtWidgets.QWidget):
             self.ocr_params['dilate'] = None
         else:
             self.ocr_params['dilate'] = {'radius': value, 'iterations': self.dilate_spinbox.value()}
-        self.dilate_label.setText('Dilate [{}]'.format(value))
+        self.dilate_label.setText(f'Dilate [{value}]')
         self.apply_ocr()
 
     def update_dilate_iter(self, *ignore):
@@ -450,7 +450,7 @@ class Gui(QtWidgets.QWidget):
             self.ocr_params['erode'] = None
         else:
             self.ocr_params['erode'] = {'radius': value, 'iterations': self.erode_spinbox.value()}
-        self.erode_label.setText('Erode [{}]'.format(value))
+        self.erode_label.setText(f'Erode [{value}]')
         self.apply_ocr()
 
     def update_erode_iter(self, *ignore):
@@ -488,7 +488,7 @@ class Gui(QtWidgets.QWidget):
         self.capture_index += 1
         self.original_image = self.capture_thread.original_image
         height, width = self.original_image.shape[:2]
-        self.setWindowTitle('OCR || Capture {} [{} x {}]'.format(self.capture_index, width, height))
+        self.setWindowTitle(f'OCR || Capture {self.capture_index} [{width} x {height}]')
         self.apply_ocr()
         for k, v in self.client_queue.items():
             getattr(self.client, k)(v)

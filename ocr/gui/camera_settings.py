@@ -74,11 +74,11 @@ class CameraSettings(QtWidgets.QWidget):
         self.iso.setCurrentText(text)
         self.iso.currentTextChanged.connect(self.update_camera)
 
-        self.digital_gain = QtWidgets.QLabel('{:.3f}'.format(self.settings['digital_gain']))
+        self.digital_gain = QtWidgets.QLabel(f'{self.settings["digital_gain"]:.3f}')
         self.digital_gain.setObjectName('digital_gain')
         self.digital_gain.setToolTip('Digital gain')
 
-        self.analog_gain = QtWidgets.QLabel('{:.3f}'.format(self.settings['analog_gain']))
+        self.analog_gain = QtWidgets.QLabel(f'{self.settings["analog_gain"]:.3f}')
         self.analog_gain.setObjectName('analog_gain')
         self.analog_gain.setToolTip('Analog gain')
 
@@ -216,7 +216,8 @@ class CameraSettings(QtWidgets.QWidget):
         # self.image_denoise.setChecked(self.settings['image_denoise'])
         # self.image_denoise.stateChanged.connect(self.update_camera)
 
-        self.zoom = QtWidgets.QLabel('x={:.3f} y={:.3f} w={:.3f} h={:.3f}'.format(*self.settings['zoom']))
+        x, y, w, h = self.settings['zoom']
+        self.zoom = QtWidgets.QLabel(f'x={x:.3f} y={y:.3f} w={w:.3f} h={h:.3f}')
         self.zoom.setObjectName('zoom')
 
         width = max(self.exposure_mode.sizeHint().width(), self.awb_mode.sizeHint().width())
@@ -363,11 +364,12 @@ class CameraSettings(QtWidgets.QWidget):
                 child.setChecked(checked)
             elif isinstance(child, QtWidgets.QLabel):
                 if name == 'zoom':
-                    text = 'x={:.3f} y={:.3f} w={:.3f} h={:.3f}'.format(*self.settings[name])
+                    x, y, w, h = self.settings[name]
+                    text = f'x={x:.3f} y={y:.3f} w={w:.3f} h={h:.3f}'
                 elif name == 'exposure_speed':
                     text = self._get_exposure_text(self.settings[name])
                 else:
-                    text = '{:.3f}'.format(self.settings[name])
+                    text = f'{self.settings[name]:.3f}'
                 logger.debug('set %s to %s', child, text)
                 child.setText(text)
             child.blockSignals(False)
@@ -389,5 +391,5 @@ class CameraSettings(QtWidgets.QWidget):
     def _get_exposure_text(self, exposure_speed):
         value, suffix = number_to_si(exposure_speed * 1e-6)
         if suffix:
-            return '{:.2f} {}s'.format(value, suffix)
-        return '{:.2f} s'.format(value)
+            return f'{value:.2f} {suffix}s'
+        return f'{value:.2f} s'

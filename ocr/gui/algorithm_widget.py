@@ -54,14 +54,14 @@ class Algorithm(QtWidgets.QWidget):
 
     def create_default_layout(self):
         """The default layout to display if the algorithm is not available."""
-        message = '<html>{0} is not available. You have three options:' \
-                  '<ul>' \
-                  '<li>set the path to the {0} executable by calling' \
-                  ' ocr.set_{0}_path() before showing the GUI,</li>' \
-                  '<li>connect to a Raspberry Pi, or</li>' \
-                  '<li>browse for the executable.</li>' \
-                  '</ul>' \
-                  '</html>'.format(self.name)
+        message = f'<html>{self.name} is not available. You have three options:' \
+                  f'<ul>' \
+                  f'<li>set the path to the {self.name} executable by calling' \
+                  f' ocr.set_{self.name}_path() before showing the GUI,</li>' \
+                  f'<li>connect to a Raspberry Pi, or</li>' \
+                  f'<li>browse for the executable.</li>' \
+                  f'</ul>' \
+                  f'</html>'
         layout = QtWidgets.QFormLayout()
         label = QtWidgets.QLabel(message)
         label.setWordWrap(True)
@@ -90,9 +90,9 @@ class Algorithm(QtWidgets.QWidget):
         return parent
 
     def browse(self):
-        title = 'Select the {} executable'.format(self.name)
+        title = f'Select the {self.name} executable'
         extn = '.exe' if sys.platform == 'win32' else ''
-        filters = 'OCR ({}{})'.format(self.name, extn)
+        filters = f'OCR ({self.name}{extn})'
         filename = prompt.filename(title=title, filters=filters)
         if filename:
             self.update_executable_path(filename)

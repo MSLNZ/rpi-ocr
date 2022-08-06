@@ -78,7 +78,7 @@ def camera(**kwargs):
 
     utils.logger.debug('connecting to a camera at %s ...', host)
 
-    console_script_path = '/home/{}/{}'.format(rpi_username, CAMERA_EXE_PATH)
+    console_script_path = f'/home/{rpi_username}/{CAMERA_EXE_PATH}'
     ssh.start_manager(host, console_script_path, ssh_username=rpi_username,
                       ssh_password=rpi_password, as_sudo=True, **kwargs)
 
@@ -109,7 +109,7 @@ def service(host='raspberrypi', rpi_username='pi', rpi_password=None, **kwargs):
     from .services import RemoteOCR
     utils.logger.debug('connecting to the OCR service at %s ...', host)
 
-    console_script_path = '/home/{}/{}'.format(rpi_username, OCR_EXE_PATH)
+    console_script_path = f'/home/{rpi_username}/{OCR_EXE_PATH}'
     ssh.start_manager(host, console_script_path, ssh_username=rpi_username,
                       ssh_password=rpi_password, as_sudo=True, **kwargs)
 
