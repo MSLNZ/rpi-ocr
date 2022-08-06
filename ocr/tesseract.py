@@ -48,6 +48,8 @@ def version():
     :class:`str`
         The version number.
     """
+    # pytesseract.get_tesseract_version() returns an object of type
+    # <class 'packaging.version.Version'>, so cast to str
     ver = str(pytesseract.get_tesseract_version())
     logger.debug('tesseract version: %s', ver)
     return ver
