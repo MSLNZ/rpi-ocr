@@ -82,6 +82,8 @@ def test_inside_box():
 
 
 def test_version():
+    # explicitly match the version to check for a new release
+    # when running the tests on GitHub Actions
     assert ssocr.version() == '2.22.1'
 
     info = ssocr.version(include_copyright=True)
