@@ -8,13 +8,15 @@ from pytesseract import TesseractNotFoundError
 import ocr
 from ocr import tesseract
 
+IMAGE_ROOT = os.path.join(os.path.dirname(__file__), 'images')
+
 
 @pytest.mark.parametrize('ext', ['bmp', 'jpg', 'jpeg', 'png', 'tif', 'tiff'])
 def test_english(ext):
     expected = 'A Python Approach to Character\nRecognition'
     params = {'psm': 3, 'whitelist': None}
 
-    eng = os.path.join(os.path.dirname(__file__), 'images', 'tesseract_eng_text.png')
+    eng = os.path.join(IMAGE_ROOT, 'tesseract_eng_text.png')
     p = tempfile.gettempdir() + '/tesseract_eng_text.' + ext
 
     assert tesseract.apply(eng, **params) == expected
@@ -37,7 +39,7 @@ def test_english(ext):
 def test_numbers(ext):
     expected = '619121'
 
-    numbers = os.path.join(os.path.dirname(__file__), 'images', 'tesseract_numbers.jpg')
+    numbers = os.path.join(IMAGE_ROOT, 'tesseract_numbers.jpg')
     p = tempfile.gettempdir() + '/tesseract_numbers.' + ext
 
     assert tesseract.apply(numbers, psm=7) == expected
@@ -64,20 +66,18 @@ def test_version():
     assert isinstance(tesseract.version(), str)
 
 
+@pytest.mark.skipif(sys.platform != 'win32', reason='non-Windows OS')
 def test_set_tesseract_path():
     expected = '619121'
-    numbers_path = os.path.join(os.path.dirname(__file__), 'images', 'tesseract_numbers.jpg')
+    numbers_path = os.path.join(IMAGE_ROOT, 'tesseract_numbers.jpg')
 
     # make sure tesseract is available
     assert tesseract.apply(numbers_path, psm=7) == expected
 
     # make sure the executable is not available on PATH
-    tesseract_exe = 'tesseract'
-    if sys.platform == 'win32':
-        tesseract_exe += '.exe'
     environ_path = None
     for path in os.environ['PATH'].split(os.pathsep):
-        if os.path.isfile(os.path.join(path, tesseract_exe)):
+        if os.path.isfile(os.path.join(path, 'tesseract.exe')):
             environ_path = path
             os.environ['PATH'] = os.environ['PATH'].replace(path, '')
             break
@@ -99,14 +99,14 @@ def test_languages():
 
 
 def test_letsgodigital():
-    path = os.path.join(os.path.dirname(__file__), 'images', 'letsgodigital.png')
+    path = os.path.join(IMAGE_ROOT, 'letsgodigital.png')
     tasks = [('greyscale',), ('threshold', 40), ('erode', 3)]
     text, _ = ocr.apply(path, tasks=tasks, algorithm='tesseract', language='letsgodigital')
     assert text == '22.3'
 
 
 def test_config():
-    path = os.path.join(os.path.dirname(__file__), 'images', 'tesseract_numbers.jpg')
+    path = os.path.join(IMAGE_ROOT, 'tesseract_numbers.jpg')
     assert tesseract.apply(path, psm=7, whitelist=None, config='-c tessedit_char_whitelist=0123456789') == '619121'
     assert '1' not in tesseract.apply(path, psm=7, config='-c tessedit_char_blacklist=1')
 

@@ -7,22 +7,20 @@ import pytest
 import ocr
 from ocr import ssocr
 
-ROOT = os.path.join(os.path.dirname(__file__), 'images')
-six_digits_path = os.path.join(ROOT, 'six_digits.png')
-inside_box_path = os.path.join(ROOT, 'inside_box.png')
+ROOT = os.path.dirname(__file__)
+IMAGE_ROOT = os.path.join(ROOT, 'images')
+six_digits_path = os.path.join(IMAGE_ROOT, 'six_digits.png')
+inside_box_path = os.path.join(IMAGE_ROOT, 'inside_box.png')
 
 
 # NOTE: This test must be first function in this module
 # because it adds the ssocr executable to the PATH
+@pytest.mark.skipif(sys.platform != 'win32', reason='non-Windows OS')
 def test_environ_path():
-    ssorc_exe = 'ssocr'
-    if sys.platform == 'win32':
-        ssorc_exe += '.exe'
-
-    # make sure the executable is not available on PATH
+    # make sure the ssocr executable is not available on PATH
     environ_path = None
     for path in os.environ['PATH'].split(os.pathsep):
-        if os.path.isfile(os.path.join(path, ssorc_exe)):
+        if os.path.isfile(os.path.join(path, 'ssocr.exe')):
             environ_path = path
             os.environ['PATH'] = os.environ['PATH'].replace(path, '')
             break
@@ -34,9 +32,8 @@ def test_environ_path():
     # make sure that the ssocr executable is available for the remainder of the tests in this module
     if environ_path:
         os.environ['PATH'] += os.pathsep + environ_path
-    elif sys.platform == 'win32':
-        # set the path to ssocr.exe
-        p = os.path.join(os.path.dirname(__file__), '..', 'resources', 'ssocr-win64', 'bin', 'ssocr.exe')
+    else:
+        p = os.path.join(ROOT, '..', 'resources', 'ssocr-win64', 'bin', 'ssocr.exe')
         ssocr.set_ssocr_path(p)
 
 
@@ -100,7 +97,7 @@ def test_set_ssocr_path():
             ssocr.set_ssocr_path(path)
 
     # a valid top-level directory but cannot find the ssocr executable
-    for path in [os.path.dirname(__file__)]:
+    for path in [ROOT]:
         assert os.path.isdir(path) and path.endswith('tests')
         with pytest.raises(FileNotFoundError, match='Cannot find'):
             ssocr.set_ssocr_path(path)
@@ -114,7 +111,7 @@ def test_set_ssocr_path():
     # ensure that this does not raise an exception
     if sys.platform == 'win32':
         # finds the ssocr.exe executable in the rpi-ocr/resources/ssocr-win64 directory
-        root = os.path.join(os.path.dirname(__file__), '..')
+        root = os.path.join(ROOT, '..')
         ssocr.set_ssocr_path(root)
     else:
         ssocr.set_ssocr_path('/usr/local/bin/ssocr')
