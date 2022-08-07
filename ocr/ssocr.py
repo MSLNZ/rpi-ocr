@@ -234,7 +234,13 @@ def apply(image, *,
     if omit_decimal_point:
         command.append('-C')
 
-    if isinstance(image, str) and os.path.isfile(image):
+    try:
+        is_file = isinstance(image, str) and os.path.isfile(image)
+    except ValueError:
+        # ValueError: stat: path too long for Windows
+        is_file = False
+
+    if is_file:
         command.append(image)
         data = None
     else:
