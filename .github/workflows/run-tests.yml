@@ -38,11 +38,10 @@ jobs:
       - name: Install tesseract-ocr (Windows)
         if: ${{ matrix.os == 'windows' }}
         run: |
-          curl https://digi.bib.uni-mannheim.de/tesseract/tesseract-ocr-w64-setup-v5.2.0.20220712.exe -o tesseract-setup.exe
+          curl https://digi.bib.uni-mannheim.de/tesseract/tesseract-ocr-w64-setup-v5.2.0.20220712.exe -L -o tesseract-setup.exe
           7z x tesseract-setup.exe -otesseract
-          Add-Content $env:GITHUB_PATH .\tesseract
-          "TESSDATA_PREFIX=.\tesseract\tessdata" >> $env:GITHUB_ENV
-          curl $env:LETSGODIGITAL -o .\tesseract\tessdata\letsgodigital.traineddata
+          Add-Content $env:GITHUB_PATH tesseract
+          curl $env:LETSGODIGITAL -LO --output-dir tesseract\tessdata
       - name: Build and install ssocr (Ubuntu)
         if: ${{ matrix.os == 'ubuntu' }}
         run: |
