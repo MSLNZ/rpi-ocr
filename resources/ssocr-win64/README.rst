@@ -13,7 +13,7 @@ hard drive and let Python know where the ``ssocr-win64`` directory is located,
 Alternatively, add ``C:\where\you\copied\ssocr-win64`` to your ``PATH`` environment variable.
 
 The ``ssocr.exe`` file (located in the ``ssocr-win64\bin`` directory) was built using Cygwin_.
-It was compiled from the main_ branch (commit: e65a5c87c8b90aa410fe2dc499c71f0cb3f8b0c1)
+It was compiled from the main_ branch (commit: 629ecd05f65f9a48d8330100380c30b5fd9147e4)
 
 The following should be followed if one wanted to recompile ssocr_ to update
 ``ssocr-win64\bin\ssocr.exe`` so that an alternate version of ssocr_ is used.
